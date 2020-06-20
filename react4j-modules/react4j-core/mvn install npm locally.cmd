@@ -1,0 +1,1 @@
+ mvn com.github.eirslett:frontend-maven-plugin:install-node-and-npm
