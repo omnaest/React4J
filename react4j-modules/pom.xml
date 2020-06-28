@@ -12,6 +12,8 @@
 		<module>react4j-core</module>
 		<module>react4j-test</module>
 		<module>react4j</module>
+		<module>react4j-data</module>
+		<module>react4j-data-datagrid</module>
 	</modules>
 
 	<parent>
