@@ -17,6 +17,7 @@ import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.raw.UIComponentRenderer;
 import org.omnaest.react4j.service.internal.nodes.TableNode;
+import org.omnaest.utils.ClassUtils;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MapperUtils;
 
@@ -62,6 +63,34 @@ public class TableImpl extends AbstractUIComponentWithSubComponents<Table> imple
         RowImpl row = new RowImpl(this.getUiComponentFactory());
         rowConsumer.accept(row);
         this.rows.add(row);
+        return this;
+    }
+
+    @Override
+    public Table fromCSVResource(String resourcePath)
+    {
+        return this.fromCSV(ClassUtils.loadResource(this, resourcePath)
+                                      .map(resource -> resource.asString())
+                                      .orElse(null));
+    }
+
+    @Override
+    public Table fromCSV(String csv)
+    {
+        return this.fromDataTable(org.omnaest.utils.table.Table.newInstance()
+                                                               .deserialize()
+                                                               .fromCsv(csv));
+    }
+
+    @Override
+    public Table fromDataTable(org.omnaest.utils.table.Table table)
+    {
+        this.withColumnTitles(table.getColumnTitles());
+        this.addRows(table.stream(), (rowFactory, dataRow) -> dataRow.forEach(dataCell ->
+        {
+            rowFactory.addCell(cell -> cell.withContent(f -> f.newText()
+                                                              .addText(dataCell)));
+        }));
         return this;
     }
 

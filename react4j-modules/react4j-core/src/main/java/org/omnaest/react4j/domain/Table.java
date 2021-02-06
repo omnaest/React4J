@@ -33,4 +33,10 @@ public interface Table extends UIComponent<Table>
     {
 
     }
+
+    public Table fromCSVResource(String resourcePath);
+
+    public Table fromCSV(String csv);
+
+    public Table fromDataTable(org.omnaest.utils.table.Table table);
 }

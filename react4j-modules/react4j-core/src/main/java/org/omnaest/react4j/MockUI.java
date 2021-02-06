@@ -56,22 +56,24 @@ public class MockUI
                                                                {
                                                                    System.out.println("Clicked in the card!");
                                                                })))
-                   .addNewComponent(factory -> factory.newForm()
-                                                      .withDataContext((form,
-                                                                        defaultDataContext) -> form.addInputField(input -> input.attachToField(defaultDataContext,
-                                                                                                                                               "field1")
-                                                                                                                                .withLabel("Field1:")
-                                                                                                                                .withPlaceholder("Write something!!")
-                                                                                                                                .withDescription("Dont tell me anything!!!"))
-                                                                                                   .addButton(button -> button.withText("Submit")
-                                                                                                                              .attachTo(defaultDataContext)
-                                                                                                                              .onClick((data, dataContext) ->
-                                                                                                                              {
-                                                                                                                                  System.out.println("Form submitted: "
-                                                                                                                                          + data);
-                                                                                                                                  return data;
-                                                                                                                              })
-                                                                                                                              .saveOnClick())));
+            //                   .addNewComponent(factory -> factory.newForm()
+            //                                                      .withDataContext((form,
+            //                                                                        defaultDataContext) -> form.addInputField(input -> input.attachToField(defaultDataContext,
+            //                                                                                                                                               "field1")
+            //                                                                                                                                .withLabel("Field1:")
+            //                                                                                                                                .withPlaceholder("Write something!!")
+            //                                                                                                                                .withDescription("Dont tell me anything!!!"))
+            //                                                                                                   .addButton(button -> button.withText("Submit")
+            //                                                                                                                              .attachTo(defaultDataContext)
+            //                                                                                                                              .onClick((data, dataContext) ->
+            //                                                                                                                              {
+            //                                                                                                                                  System.out.println("Form submitted: "
+            //                                                                                                                                          + data);
+            //                                                                                                                                  return data;
+            //                                                                                                                              })
+            //                                                                                                                              .saveOnClick()))
+            //                                                      )
+            ;
         });
     }
 }

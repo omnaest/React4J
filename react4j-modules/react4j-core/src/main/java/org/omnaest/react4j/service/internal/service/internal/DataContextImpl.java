@@ -6,17 +6,19 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.omnaest.react4j.data.Repository;
-import org.omnaest.react4j.data.RepositoryProvider;
 import org.omnaest.react4j.data.Repository.AddEntry;
 import org.omnaest.react4j.data.Repository.Entry;
 import org.omnaest.react4j.data.Repository.EntryOperationResult;
 import org.omnaest.react4j.data.Repository.Id;
 import org.omnaest.react4j.data.Repository.PutEntry;
+import org.omnaest.react4j.data.RepositoryProvider;
 import org.omnaest.react4j.data.RepositoryProvider.Tenant;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Locations;
 import org.omnaest.react4j.domain.data.Data;
 import org.omnaest.react4j.domain.data.SingletonDataContext;
+import org.omnaest.react4j.domain.data.collection.CollectionDataContext;
+import org.omnaest.react4j.domain.data.collection.TypedCollectionDataContext;
 import org.omnaest.utils.EncoderUtils.TextEncoderAndDecoderFactory;
 import org.omnaest.utils.MapUtils;
 import org.omnaest.utils.StringUtils;
@@ -140,5 +142,19 @@ public class DataContextImpl implements SingletonDataContext
                 }
             }
         };
+    }
+
+    @Override
+    public CollectionDataContext asUntypedCollection()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public <T> TypedCollectionDataContext<T> asTypedCollection(Class<T> elementType)
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

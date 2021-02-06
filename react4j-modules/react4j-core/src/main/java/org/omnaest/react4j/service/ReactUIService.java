@@ -20,4 +20,6 @@ public interface ReactUIService
 
     public ReactUIService enableCaching(boolean active);
 
+    public ReactUIService withCacheDurationInSeconds(int cacheDurationInSeconds);
+
 }

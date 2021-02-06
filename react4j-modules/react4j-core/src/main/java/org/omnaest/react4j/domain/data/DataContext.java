@@ -10,8 +10,6 @@ public interface DataContext
 {
     public String getId(Location location);
 
-    public SingletonDataContext enableSingleton();
-
     public PersistResult persist(Data data);
 
     public static interface PersistResult extends Supplier<Data>

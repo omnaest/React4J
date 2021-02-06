@@ -20,6 +20,7 @@ import { HomePage, HomePageNode } from "./components/HomePage";
 import { Form, FormNode } from "./components/Form";
 import { Text, TextNode } from "./components/Text";
 import { ScrollbarContainerNode, ScrollbarContainer } from "./components/ScrollbarContainer";
+import { AnkerButton, AnkerButtonNode } from "./components/AnkerButton";
 
 export interface Node
 {
@@ -102,6 +103,10 @@ export class Renderer
             else if (node.type === Anker.TYPE)
             {
                 return <Anker node={node as AnkerNode} />
+            }
+            else if (node.type === AnkerButton.TYPE)
+            {
+                return <AnkerButton node={node as AnkerButtonNode} />
             }
             else if (node.type === VerticalContentSwitcher.TYPE)
             {

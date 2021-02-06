@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.omnaest.react4j.domain.Anker;
+import org.omnaest.react4j.domain.AnkerButton;
 import org.omnaest.react4j.domain.BlockQuote;
 import org.omnaest.react4j.domain.Button;
 import org.omnaest.react4j.domain.Card;
@@ -19,6 +20,8 @@ import org.omnaest.react4j.domain.Image;
 import org.omnaest.react4j.domain.ImageIndex;
 import org.omnaest.react4j.domain.Jumbotron;
 import org.omnaest.react4j.domain.NavigationBar;
+import org.omnaest.react4j.domain.NavigationBar.NavigationBarConsumer;
+import org.omnaest.react4j.domain.NavigationBar.NavigationBarProvider;
 import org.omnaest.react4j.domain.Paragraph;
 import org.omnaest.react4j.domain.ReactUI;
 import org.omnaest.react4j.domain.ScrollbarContainer;
@@ -28,13 +31,12 @@ import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.UnsortedList;
 import org.omnaest.react4j.domain.VerticalContentSwitcher;
-import org.omnaest.react4j.domain.NavigationBar.NavigationBarConsumer;
-import org.omnaest.react4j.domain.NavigationBar.NavigationBarProvider;
 import org.omnaest.react4j.domain.i18n.UILocale;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.ReactUIService;
+import org.omnaest.react4j.service.internal.component.AnkerButtonImpl;
 import org.omnaest.react4j.service.internal.component.AnkerImpl;
 import org.omnaest.react4j.service.internal.component.BlockQuoteImpl;
 import org.omnaest.react4j.service.internal.component.ButtonImpl;
@@ -54,6 +56,7 @@ import org.omnaest.react4j.service.internal.component.TableImpl;
 import org.omnaest.react4j.service.internal.component.TextImpl;
 import org.omnaest.react4j.service.internal.component.UnsortedListImpl;
 import org.omnaest.react4j.service.internal.component.VerticalContentSwitcherImpl;
+import org.omnaest.react4j.service.internal.configuration.ProfileFlagConfiguration.UICacheEnabledFlag;
 import org.omnaest.react4j.service.internal.domain.ReactUIInternal;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.nodes.CompositeNode;
@@ -65,6 +68,7 @@ import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService
 import org.omnaest.react4j.service.internal.service.ReactUIContextManager;
 import org.omnaest.react4j.service.internal.service.ReactUIContextManager.ReactUIInternalProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -79,13 +83,26 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
     @Autowired
     protected DataContextFactory dataContextFactory;
 
-    protected ReactUIContextManager uiManager      = new ReactUIContextManager();
-    protected boolean               cachingEnabled = true;
+    protected ReactUIContextManager uiManager = new ReactUIContextManager();
+
+    @Value("${ui.cache.duration:10}")
+    protected int cacheDurationInSeconds;
+
+    @Autowired
+    @UICacheEnabledFlag
+    protected boolean cachingEnabled;
 
     @Override
     public ReactUIService enableCaching(boolean active)
     {
         this.cachingEnabled = active;
+        return this;
+    }
+
+    @Override
+    public ReactUIService withCacheDurationInSeconds(int cacheDurationInSeconds)
+    {
+        this.cacheDurationInSeconds = cacheDurationInSeconds;
         return this;
     }
 
@@ -110,7 +127,7 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
     @Override
     public ReactUIService getOrCreateRoot(String contextPath, Consumer<ReactUI> reactUIConsumer)
     {
-        this.uiManager.computeIfAbsent(contextPath, ReactUIInternalProvider.fromFactory(this.cachingEnabled, () ->
+        this.uiManager.computeIfAbsent(contextPath, ReactUIInternalProvider.fromFactory(this.cachingEnabled, this.cacheDurationInSeconds, () ->
         {
             ReactUIInternal reactUIInternal = this.createRootInternal(contextPath);
             reactUIConsumer.accept(reactUIInternal);
@@ -122,7 +139,7 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
     @Override
     public ReactUIService createRoot(String contextPath, Consumer<ReactUI> reactUIConsumer)
     {
-        this.uiManager.putAndGet(contextPath, ReactUIInternalProvider.fromFactory(this.cachingEnabled, () ->
+        this.uiManager.putAndGet(contextPath, ReactUIInternalProvider.fromFactory(this.cachingEnabled, this.cacheDurationInSeconds, () ->
         {
             ReactUIInternal reactUIInternal = this.createRootInternal(contextPath);
             reactUIConsumer.accept(reactUIInternal);
@@ -219,6 +236,12 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                     public Anker newAnker()
                     {
                         return new AnkerImpl(this.context);
+                    }
+
+                    @Override
+                    public AnkerButton newAnkerButton()
+                    {
+                        return new AnkerButtonImpl(this.context);
                     }
 
                     @Override

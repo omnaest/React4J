@@ -8,6 +8,8 @@ public interface UIComponentFactory
 
     public Anker newAnker();
 
+    public AnkerButton newAnkerButton();
+
     public BlockQuote newBlockQuote();
 
     public Card newCard();

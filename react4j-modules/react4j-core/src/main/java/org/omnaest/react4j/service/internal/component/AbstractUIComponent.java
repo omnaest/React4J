@@ -12,6 +12,7 @@ import org.omnaest.react4j.domain.Locations;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.data.DataContext;
+import org.omnaest.react4j.domain.data.DataContextMapper;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.i18n.UILocale;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
@@ -117,10 +118,17 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
     }
 
     @SuppressWarnings("unchecked")
-    @Override
     public UIC withDataContext(BiConsumer<UIC, DataContext> dataContextConsumer)
     {
         dataContextConsumer.accept((UIC) this, this.dataContext.get());
+        return (UIC) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <DC extends DataContext> UIC withDataContext(DataContextMapper<DC> dataContextType, BiConsumer<UIC, DC> dataContextConsumer)
+    {
+        dataContextConsumer.accept((UIC) this, (DC) this.dataContext.get());
         return (UIC) this;
     }
 

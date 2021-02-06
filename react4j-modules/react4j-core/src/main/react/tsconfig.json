@@ -17,11 +17,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react"
+    "jsx": "react",
+    "noFallthroughCasesInSwitch": true
   },
   "include": [
     "src",
-	"node_modules/*/*.d.ts",
-	"node_modules/*/*/*.d.ts"
+    "node_modules/*/*.d.ts",
+    "node_modules/*/*/*.d.ts"
   ]
 }

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class DataContextFactoryImpl implements DataContextFactory
 {
-    @Autowired
+    @Autowired(required = false)
     protected RepositoryProvider repositoryProvider;
 
     @Override
