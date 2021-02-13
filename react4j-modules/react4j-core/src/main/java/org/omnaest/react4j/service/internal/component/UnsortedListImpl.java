@@ -1,21 +1,23 @@
 package org.omnaest.react4j.service.internal.component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.omnaest.react4j.domain.Icon;
 import org.omnaest.react4j.domain.Location;
+import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UnsortedList;
-import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.raw.UIComponentRenderer;
 import org.omnaest.react4j.service.internal.nodes.UnsortedListNode;
-import org.omnaest.utils.element.bi.BiElement;
 
 public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implements UnsortedList
 {
-    private List<BiElement<I18nText, Icon>> texts = new ArrayList<>();
+    private List<UIComponent<?>> elements = new ArrayList<>();
 
     public UnsortedListImpl(ComponentContext context)
     {
@@ -31,22 +33,25 @@ public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implemen
             public Node render(Location parentLocation)
             {
                 Location location = Location.of(parentLocation, UnsortedListImpl.this.getId());
-                return new UnsortedListNode().setElements(UnsortedListImpl.this.texts.stream()
-                                                                                     .map(bi -> new UnsortedListNode.ULElement().setText(UnsortedListImpl.this.getTextResolver()
-                                                                                                                                                              .apply(bi.getFirst(),
-                                                                                                                                                                     location))
-                                                                                                                                .setIcon(Optional.ofNullable(bi.getSecond())
-                                                                                                                                                 .map(icon -> icon.get())
-                                                                                                                                                 .orElse(null)))
-                                                                                     .collect(Collectors.toList()));
+                return new UnsortedListNode().setElements(UnsortedListImpl.this.elements.stream()
+                                                                                        .map(component -> component.asRenderer()
+                                                                                                                   .render(location))
+                                                                                        .collect(Collectors.toList()));
             }
         };
     }
 
     @Override
-    public UnsortedList addText(Icon icon, String text)
+    public UnsortedList addText(Icon.StandardIcon icon, String text)
     {
-        this.texts.add(BiElement.of(I18nText.of(this.getLocations(), text, this.getDefaultLocale()), icon));
+        this.elements.add(this.getUiComponentFactory()
+                              .newComposite()
+                              .addComponents(Arrays.asList(this.getUiComponentFactory()
+                                                               .newIcon()
+                                                               .from(icon),
+                                                           this.getUiComponentFactory()
+                                                               .newText()
+                                                               .addText(text))));
         return this;
     }
 
@@ -54,6 +59,22 @@ public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implemen
     public UnsortedList addText(String text)
     {
         return this.addText(null, text);
+    }
+
+    @Override
+    public UnsortedList addEntry(UIComponent<?> component)
+    {
+        this.elements.add(component);
+        return this;
+    }
+
+    @Override
+    public UnsortedList addEntries(List<UIComponent<?>> components)
+    {
+        Optional.ofNullable(components)
+                .orElse(Collections.emptyList())
+                .forEach(this::addEntry);
+        return this;
     }
 
 }

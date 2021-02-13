@@ -1,5 +1,8 @@
 package org.omnaest.react4j.domain;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -35,6 +38,14 @@ public interface ContainerGrid extends UIComponent<ContainerGrid>
          * @return
          */
         public <E> Row addCells(Stream<E> elements, BiConsumer<Cell, E> cellConsumer);
+
+        public default <E> Row addCells(Collection<E> elements, BiConsumer<Cell, E> cellConsumer)
+        {
+            return this.addCells(Optional.ofNullable(elements)
+                                         .orElse(Collections.emptyList())
+                                         .stream(),
+                                 cellConsumer);
+        }
 
         /**
          * Adds a {@link Cell} spanning the whole row with the given content

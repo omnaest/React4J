@@ -98,9 +98,11 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
                                                                                                                                                                                                                              / rowAndIndex.getFirst()
                                                                                                                                                                                                                                           .getCells()
                                                                                                                                                                                                                                           .size()))
-                                                                                                                                                                                                     .setContent(cell.getContent()
-                                                                                                                                                                                                                     .asRenderer()
-                                                                                                                                                                                                                     .render(cellLocation));
+                                                                                                                                                                                                     .setContent(Optional.ofNullable(cell)
+                                                                                                                                                                                                                         .map(CellImpl::getContent)
+                                                                                                                                                                                                                         .map(UIComponent::asRenderer)
+                                                                                                                                                                                                                         .map(renderer -> renderer.render(cellLocation))
+                                                                                                                                                                                                                         .orElse(null));
                                                                                                                                                           })
                                                                                                                                                           .collect(Collectors.toList())))
                                                                                   .collect(Collectors.toList()));
@@ -144,6 +146,13 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
         public Row withContent(UIComponent<?> component)
         {
             return this.addCell(cell -> cell.withContent(component));
+        }
+
+        @Override
+        public Row withContent(List<UIComponent<?>> components)
+        {
+            return this.withContent(this.uiComponentFactory.newComposite()
+                                                           .addComponents(components));
         }
 
         @Override

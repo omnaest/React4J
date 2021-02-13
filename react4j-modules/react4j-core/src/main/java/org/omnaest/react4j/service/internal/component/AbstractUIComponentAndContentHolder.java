@@ -1,5 +1,7 @@
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.List;
+
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
@@ -19,6 +21,14 @@ public abstract class AbstractUIComponentAndContentHolder<UIC extends UIComponen
     public UIC withContent(UIComponentProvider<?> componentProvider)
     {
         return this.withContent(componentProvider.get());
+    }
+
+    @Override
+    public UIC withContent(List<UIComponent<?>> components)
+    {
+        return this.withContent(this.getUiComponentFactory()
+                                    .newComposite()
+                                    .addComponents(components));
     }
 
     @Override

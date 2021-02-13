@@ -9,6 +9,9 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.omnaest.react4j.domain.Anker;
+import org.omnaest.react4j.domain.AnkerButton;
+import org.omnaest.react4j.domain.Composite;
+import org.omnaest.react4j.domain.Icon.StandardIcon;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Paragraph;
 import org.omnaest.react4j.domain.UIComponent;
@@ -32,9 +35,35 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
     @Override
     public Paragraph addText(I18nText text)
     {
+        return this.addText(null, text);
+    }
+
+    @Override
+    public Paragraph addText(StandardIcon icon, I18nText text)
+    {
+        Composite composite = this.getUiComponentFactory()
+                                  .newComposite();
+        if (icon != null)
+        {
+            composite.addComponent(this.getUiComponentFactory()
+                                       .newIcon()
+                                       .from(icon));
+        }
+        if (text != null)
+        {
+            composite.addComponent(this.getUiComponentFactory()
+                                       .newText()
+                                       .addText(text));
+        }
+        this.elements.add(composite);
+        return this;
+    }
+
+    @Override
+    public Paragraph addLineBreak()
+    {
         this.elements.add(this.getUiComponentFactory()
-                              .newText()
-                              .addText(text));
+                              .newLineBreak());
         return this;
     }
 
@@ -68,11 +97,27 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
     }
 
     @Override
+    public Paragraph addText(StandardIcon icon, String text)
+    {
+        return this.addText(icon, this.toI18nText(text));
+    }
+
+    @Override
     public Paragraph addLink(Consumer<Anker> ankerConsumer)
     {
         Anker anker = this.getUiComponentFactory()
                           .newAnker();
         ankerConsumer.accept(anker);
+        this.elements.add(anker);
+        return this;
+    }
+
+    @Override
+    public Paragraph addLinkButton(Consumer<AnkerButton> ankerButtonConsumer)
+    {
+        AnkerButton anker = this.getUiComponentFactory()
+                                .newAnkerButton();
+        ankerButtonConsumer.accept(anker);
         this.elements.add(anker);
         return this;
     }

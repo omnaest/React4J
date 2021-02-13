@@ -1,6 +1,6 @@
 import React from "react";
 import { JumboTron, JumbotronNode } from "./components/JumboTron";
-import { ListNode, List } from "./components/List";
+import { UnorderedListNode, UnorderedList } from "./components/UnorderedList";
 import { ImageNode, Image } from "./components/Image";
 import { Button, ButtonNode } from "./components/Button";
 import { ImageIndex, ImageIndexNode } from "./components/ImageIndex";
@@ -21,6 +21,10 @@ import { Form, FormNode } from "./components/Form";
 import { Text, TextNode } from "./components/Text";
 import { ScrollbarContainerNode, ScrollbarContainer } from "./components/ScrollbarContainer";
 import { AnkerButton, AnkerButtonNode } from "./components/AnkerButton";
+import { LineBreakNode, LineBreak } from "./components/LineBreak";
+import { Toaster, ToasterNode } from "./components/Toaster";
+import { Icon, IconNode } from "./components/Icon";
+import { PaddingContainer, PaddingContainerNode } from "./components/PaddingContainer";
 
 export interface Node
 {
@@ -41,13 +45,17 @@ export class Renderer
                     render={node => this.render(node)}
                 />;
             }
-            else if (node.type === "LIST")
+            else if (node.type === UnorderedList.TYPE)
             {
-                return <List node={node as ListNode} />
+                return <UnorderedList node={node as UnorderedListNode} />
             }
             else if (node.type === Image.TYPE)
             {
                 return <Image node={node as ImageNode} />;
+            }
+            else if (node.type === Icon.TYPE)
+            {
+                return <Icon node={node as IconNode} />;
             }
             else if (node.type === Button.TYPE)
             {
@@ -59,6 +67,10 @@ export class Renderer
                     node={node as ImageIndexNode}
                     render={node => this.render(node)}
                 />
+            }
+            else if (node.type === PaddingContainer.TYPE)
+            {
+                return <PaddingContainer node={node as PaddingContainerNode} />;
             }
             else if (node.type === NavigationBar.TYPE)
             {
@@ -108,6 +120,10 @@ export class Renderer
             {
                 return <AnkerButton node={node as AnkerButtonNode} />
             }
+            else if (node.type === LineBreak.TYPE)
+            {
+                return <LineBreak node={node as LineBreakNode} />
+            }
             else if (node.type === VerticalContentSwitcher.TYPE)
             {
                 return <VerticalContentSwitcher node={node as VerticalContentSwitcherNode} />
@@ -127,6 +143,10 @@ export class Renderer
             else if (node.type === Text.TYPE)
             {
                 return <Text node={node as TextNode} />
+            }
+            else if (node.type === Toaster.TYPE)
+            {
+                return <Toaster node={node as ToasterNode} />
             }
             else 
             {

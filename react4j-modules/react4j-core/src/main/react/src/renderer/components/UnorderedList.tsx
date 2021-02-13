@@ -1,25 +1,21 @@
 import React from "react";
-import { Node } from "../Renderer";
+import { Node, Renderer } from "../Renderer";
 import { I18nTextValue, I18nRenderer } from "./I18nText";
 
-export interface ListNode extends Node
+export interface UnorderedListNode extends Node
 {
-    elements: ListElement[];
-}
-
-export interface ListElement
-{
-    text: I18nTextValue;
-    icon?: string;
+    elements: Node[];
 }
 
 export interface Props
 {
-    node: ListNode;
+    node: UnorderedListNode;
 }
 
-export class List extends React.Component<Props, {}>
+export class UnorderedList extends React.Component<Props, {}>
 {
+    public static TYPE: string = "UNORDEREDLIST";
+
     public render(): JSX.Element
     {
         return (
@@ -27,8 +23,7 @@ export class List extends React.Component<Props, {}>
                 {
                     this.props.node.elements.map(element =>
                         <li className="list-item">
-                            {element.icon ? <i className={"fas fa-" + element.icon}>&nbsp;</i> : <></>}
-                            {I18nRenderer.render(element.text)}
+                            {Renderer.render(element)}
                         </li>
                     )
                 }

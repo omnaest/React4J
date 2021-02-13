@@ -1,6 +1,8 @@
 package org.omnaest.react4j.service.internal.service.internal;
 
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -16,16 +18,16 @@ import org.omnaest.react4j.data.RepositoryProvider.Tenant;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Locations;
 import org.omnaest.react4j.domain.data.Data;
-import org.omnaest.react4j.domain.data.SingletonDataContext;
-import org.omnaest.react4j.domain.data.collection.CollectionDataContext;
-import org.omnaest.react4j.domain.data.collection.TypedCollectionDataContext;
+import org.omnaest.react4j.domain.data.DataContext;
+import org.omnaest.react4j.domain.data.DefineableDataContext;
+import org.omnaest.react4j.domain.data.TypedDataContext;
 import org.omnaest.utils.EncoderUtils.TextEncoderAndDecoderFactory;
 import org.omnaest.utils.MapUtils;
 import org.omnaest.utils.StringUtils;
 import org.omnaest.utils.StringUtils.StringEncoderAndDecoder;
 import org.omnaest.utils.element.cached.CachedElement;
 
-public class DataContextImpl implements SingletonDataContext
+public class DataContextImpl<T> implements DefineableDataContext, TypedDataContext<T>
 {
     private Function<Location, String> idFunction = location -> this.encodeLocation(location);
     private Locations                  locations;
@@ -48,7 +50,7 @@ public class DataContextImpl implements SingletonDataContext
     }
 
     @Override
-    public SingletonDataContext enableSingleton()
+    public DefineableDataContext enableSingleton()
     {
         CachedElement<String> firstId = CachedElement.of(() -> null);
         this.idFunction = location -> firstId.setSuppliedValueLazy(this.encodeLocation(location))
@@ -70,7 +72,7 @@ public class DataContextImpl implements SingletonDataContext
     }
 
     @Override
-    public SingletonDataContext withId(String id)
+    public DefineableDataContext withId(String id)
     {
         this.idFunction = location -> id;
         return this;
@@ -144,17 +146,69 @@ public class DataContextImpl implements SingletonDataContext
         };
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public CollectionDataContext asUntypedCollection()
+    public <TN> TypedDataContext<TN> asTypedDataContext(Class<TN> elementType)
+    {
+        return (TypedDataContext<TN>) this;
+    }
+
+    @Override
+    public Selector selector()
+    {
+        return new Selector()
+        {
+            private AtomicReference<String> selectedId                 = new AtomicReference<>();
+            private Supplier<DataContext>   currentDataContextProvider = () -> DataContextImpl.this; // TODO this has to resolve the data context in the threadcontext also
+
+            @Override
+            public Selector selectEntryById(String id)
+            {
+                this.selectedId.set(id);
+                return this;
+            }
+
+            @Override
+            public Selection getCurrentSelection()
+            {
+                return new Selection()
+                {
+                    @Override
+                    public Field getField(String fieldName)
+                    {
+                        return new Field()
+                        {
+
+                            @Override
+                            public String getFieldName()
+                            {
+                                return fieldName;
+                            }
+
+                            @Override
+                            public DataContext getDataContext()
+                            {
+                                return currentDataContextProvider.get();
+                            }
+                        };
+                    }
+                };
+            }
+        };
+    }
+
+    @Override
+    public PersistResult persist(String id, T dataElement)
     {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public <T> TypedCollectionDataContext<T> asTypedCollection(Class<T> elementType)
+    public Optional<T> findById(String id)
     {
         // TODO Auto-generated method stub
         return null;
     }
+
 }

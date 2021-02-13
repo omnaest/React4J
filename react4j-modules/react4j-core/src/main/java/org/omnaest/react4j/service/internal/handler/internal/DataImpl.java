@@ -10,8 +10,11 @@ import org.omnaest.utils.MapUtils;
 import org.omnaest.utils.MapUtils.MapDelta;
 import org.omnaest.utils.optional.NullOptional;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonAutoDetect(fieldVisibility = Visibility.ANY, isGetterVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DataImpl implements Data
 {
     @JsonProperty

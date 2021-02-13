@@ -3,6 +3,7 @@ package org.omnaest.react4j.service.internal.component;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -11,8 +12,8 @@ import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Locations;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
-import org.omnaest.react4j.domain.data.DataContext;
-import org.omnaest.react4j.domain.data.DataContextMapper;
+import org.omnaest.react4j.domain.data.DefineableDataContext;
+import org.omnaest.react4j.domain.data.TypedDataContext;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.i18n.UILocale;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
@@ -22,20 +23,24 @@ import org.omnaest.utils.element.cached.CachedElement;
 
 public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements UIComponent<UIC>
 {
-    private static int                   idCounter   = 0;
-    private String                       id          = this.getClass()
-                                                           .getSimpleName()
-                                                           .toLowerCase()
-            + idCounter++;
-    private List<UIComponent<?>>         parents     = new ArrayList<>();
-    protected ComponentContext           context;
-    protected CachedElement<DataContext> dataContext = CachedElement.of(() -> this.context.getDataContextFactory()
-                                                                                          .newInstance(this.getLocations()));
+    private static AtomicInteger                   idCounter   = new AtomicInteger();
+    private String                                 id          = this.newComponentId(this.getClass());
+    private List<UIComponent<?>>                   parents     = new ArrayList<>();
+    protected ComponentContext                     context;
+    protected CachedElement<DefineableDataContext> dataContext = CachedElement.of(() -> this.context.getDataContextFactory()
+                                                                                                    .newInstance(this.getLocations()));
 
     public AbstractUIComponent(ComponentContext context)
     {
         super();
         this.context = context;
+    }
+
+    protected String newComponentId(Class<?> type)
+    {
+        return type.getSimpleName()
+                   .toLowerCase()
+                + idCounter.getAndIncrement();
     }
 
     @Override
@@ -117,19 +122,18 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
         return this.context.getDataContextFactory();
     }
 
+    @Override
     @SuppressWarnings("unchecked")
-    public UIC withDataContext(BiConsumer<UIC, DataContext> dataContextConsumer)
+    public UIC withDataContext(BiConsumer<UIC, DefineableDataContext> dataContextConsumer)
     {
         dataContextConsumer.accept((UIC) this, this.dataContext.get());
         return (UIC) this;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <DC extends DataContext> UIC withDataContext(DataContextMapper<DC> dataContextType, BiConsumer<UIC, DC> dataContextConsumer)
+    public <T> UIC withDataContext(Class<T> type, BiConsumer<UIC, TypedDataContext<T>> dataContextConsumer)
     {
-        dataContextConsumer.accept((UIC) this, (DC) this.dataContext.get());
-        return (UIC) this;
+        return this.withDataContext((component, dataContext) -> dataContextConsumer.accept(component, dataContext.asTypedDataContext(type)));
     }
 
 }

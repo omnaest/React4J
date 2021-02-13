@@ -2,6 +2,7 @@ package org.omnaest.react4j.service.internal.component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.omnaest.react4j.domain.Composite;
@@ -58,4 +59,11 @@ public class CompositeImpl extends AbstractUIComponentWithSubComponents<Composit
         return this.addComponent(componentProvider.get());
     }
 
+    @Override
+    public Composite addComponents(List<UIComponent<?>> components)
+    {
+        Optional.ofNullable(components)
+                .ifPresent(consumer -> consumer.forEach(this::addComponent));
+        return this;
+    }
 }

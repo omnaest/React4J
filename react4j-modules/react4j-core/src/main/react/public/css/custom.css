@@ -5,6 +5,7 @@
 
 .card-header {
 	color: white;
+	background-color: blue;
 }
 
 .page-title {
@@ -149,4 +150,16 @@ li {
 .scrollbar-container-content.full-content-width
 {
 	width:max-content;
+}
+
+.toast-location 
+{
+	position: fixed; 
+	bottom: 0;
+}
+
+.toast
+{
+	max-width: 100vw !important;
+	width: 100%;
 }

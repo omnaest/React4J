@@ -1,6 +1,5 @@
 import React from "react";
 import { Node, Renderer } from "../Renderer";
-import { I18nTextValue, I18nRenderer } from "./I18nText";
 
 export interface ParagraphNode extends Node
 {
@@ -20,9 +19,11 @@ export class Paragraph extends React.Component<Props, {}>
     {
         return (
             <>
-                {this.props.node.elements.map((element, index) => (
-                    <p key={index}>{Renderer.render(element)}</p>
-                ))}
+                <p>
+                    {this.props.node.elements.map((element, index) => (
+                        <span key={index}>{Renderer.render(element)}</span>
+                    ))}
+                </p>
             </>
         );
     }

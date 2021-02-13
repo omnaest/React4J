@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.omnaest.react4j.domain.Form;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.data.DataContext;
+import org.omnaest.react4j.domain.data.DataContext.Field;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.FormElementNode;
 import org.omnaest.react4j.domain.raw.Node;
@@ -41,8 +42,9 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             @Override
             public Node render(Location parentLocation)
             {
+                Location location = Location.of(parentLocation, FormImpl.this.getId());
                 return new FormNode().setElements(FormImpl.this.elements.stream()
-                                                                        .map(element -> element.render(parentLocation))
+                                                                        .map(element -> element.render(location))
                                                                         .collect(Collectors.toList()));
             }
         };
@@ -54,19 +56,19 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         LocalizedTextResolverService textResolver = FormImpl.this.getTextResolver();
         Function<String, I18nText> i18nTextMapper = FormImpl.this.i18nTextMapper();
         EventHandlerRegistry eventHandlerRegistry = this.getEventHandlerRegistry();
-        CachedElement<DataContext> dataContext = this.dataContext;
+        CachedElement<? extends DataContext> dataContext = this.dataContext;
         FormElement<?> formElement = formElementFactoryConsumer.apply(new FormElementFactory()
         {
             @Override
             public InputFormElement newInputField()
             {
-                return new InputFormElementImpl(textResolver, i18nTextMapper, eventHandlerRegistry, dataContext);
+                return new InputFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext);
             }
 
             @Override
             public ButtonFormElement newButton()
             {
-                return new ButtonFormElementImpl(textResolver, i18nTextMapper, eventHandlerRegistry, dataContext);
+                return new ButtonFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext);
             }
         });
         return this.add(formElement);
@@ -106,10 +108,11 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         private I18nText         text;
         private DataEventHandler eventHandler;
 
-        protected ButtonFormElementImpl(LocalizedTextResolverService textResolver, Function<String, I18nText> i18nTextMapper,
-                                        EventHandlerRegistry eventHandlerRegistry, Supplier<DataContext> parentDataContext)
+        protected ButtonFormElementImpl(Function<Class<?>, String> identityProvider, LocalizedTextResolverService textResolver,
+                                        Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry,
+                                        Supplier<? extends DataContext> parentDataContext)
         {
-            super(textResolver, i18nTextMapper, eventHandlerRegistry, parentDataContext);
+            super(identityProvider, textResolver, i18nTextMapper, eventHandlerRegistry, parentDataContext);
         }
 
         @Override
@@ -157,10 +160,11 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
     {
         private I18nText placeholder;
 
-        protected InputFormElementImpl(LocalizedTextResolverService textResolver, Function<String, I18nText> i18nTextMapper,
-                                       EventHandlerRegistry eventHandlerRegistry, Supplier<DataContext> parentDataContext)
+        protected InputFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver,
+                                       Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry,
+                                       Supplier<? extends DataContext> parentDataContext)
         {
-            super(textResolver, i18nTextMapper, eventHandlerRegistry, parentDataContext);
+            super(identitiyProvider, textResolver, i18nTextMapper, eventHandlerRegistry, parentDataContext);
         }
 
         @Override
@@ -179,10 +183,10 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         }
 
         @Override
-        public InputFormElement attachToField(DataContext dataContext, String field)
+        public InputFormElement attachToField(DataContext.Field field)
         {
-            this.dataContext = dataContext;
             this.field = field;
+            this.dataContext = field.getDataContext();
             return this;
         }
     }
@@ -193,27 +197,33 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         protected final Function<String, I18nText>   i18nTextMapper;
         protected final EventHandlerRegistry         eventHandlerRegistry;
 
-        protected String                field;
-        protected DataContext           dataContext = null;
+        protected DataContext.Field     field;
+        protected DataContext           dataContext;
         protected Supplier<DataContext> parentDataContext;
 
         private I18nText label;
         private I18nText description;
+        private String   id;
 
-        protected AbstractFormElementImpl(LocalizedTextResolverService textResolver, Function<String, I18nText> i18nTextMapper,
-                                          EventHandlerRegistry eventHandlerRegistry, Supplier<DataContext> parentDataContext)
+        @SuppressWarnings("unchecked")
+        protected AbstractFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver,
+                                          Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry,
+                                          Supplier<? extends DataContext> parentDataContext)
         {
+            this.id = identitiyProvider.apply(this.getClass());
             this.textResolver = textResolver;
             this.i18nTextMapper = i18nTextMapper;
             this.eventHandlerRegistry = eventHandlerRegistry;
-            this.parentDataContext = parentDataContext;
+            this.parentDataContext = (Supplier<DataContext>) parentDataContext;
         }
 
         @Override
         public FormElementNode render(Location parentLocation)
         {
             DataContext dataContext = this.getEffectiveDataContext();
-            Location location = Location.of(parentLocation, this.getField());
+            Location location = Optional.ofNullable(this.getField())
+                                        .map(field -> Location.of(Location.of(parentLocation, this.id), field))
+                                        .orElse(Location.of(parentLocation, this.id));
             return this.renderNode(new FormNode.FormElementNodeImpl().setField(this.getField())
                                                                      .setContextId(dataContext.getId(location))
                                                                      .setLabel(this.textResolver.apply(this.label, location))
@@ -231,7 +241,9 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
 
         private String getField()
         {
-            return this.field;
+            return Optional.ofNullable(this.field)
+                           .map(Field::getFieldName)
+                           .orElse(null);
         }
 
         @SuppressWarnings("unchecked")

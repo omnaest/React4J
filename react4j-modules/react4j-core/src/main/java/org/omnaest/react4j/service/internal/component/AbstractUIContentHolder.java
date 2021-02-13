@@ -1,5 +1,7 @@
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.List;
+
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
@@ -20,6 +22,13 @@ public abstract class AbstractUIContentHolder<R> implements UIContentHolder<R>
     public R withContent(UIComponentProvider<?> componentProvider)
     {
         return this.withContent(componentProvider.get());
+    }
+
+    @Override
+    public R withContent(List<UIComponent<?>> components)
+    {
+        return this.withContent(this.uiComponentFactory.newComposite()
+                                                       .addComponents(components));
     }
 
     @Override

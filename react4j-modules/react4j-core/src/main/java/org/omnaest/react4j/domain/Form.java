@@ -29,7 +29,8 @@ public interface Form extends UIComponent<Form>
 
     public static interface FormFieldElement<FE extends FormFieldElement<?>> extends FormElement<FE>
     {
-        public FE attachToField(DataContext dataContext, String field);
+
+        public FE attachToField(DataContext.Field field);
     }
 
     public static interface InputFormElement extends FormFieldElement<InputFormElement>

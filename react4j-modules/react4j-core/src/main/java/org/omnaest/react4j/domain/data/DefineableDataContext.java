@@ -1,14 +1,14 @@
 package org.omnaest.react4j.domain.data;
 
-import org.omnaest.react4j.domain.data.collection.CollectionDataContext;
-import org.omnaest.react4j.domain.data.collection.TypedCollectionDataContext;
-
+/**
+ * {@link DataContext} that can be defined during declaration
+ * 
+ * @author omnaest
+ */
 public interface DefineableDataContext extends DataContext
 {
-    public SingletonDataContext enableSingleton();
+    public DefineableDataContext withId(String id);
 
-    public CollectionDataContext asUntypedCollection();
-
-    public <T> TypedCollectionDataContext<T> asTypedCollection(Class<T> elementType);
+    public DefineableDataContext enableSingleton();
 
 }

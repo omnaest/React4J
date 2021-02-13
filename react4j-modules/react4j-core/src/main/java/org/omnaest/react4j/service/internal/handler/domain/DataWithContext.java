@@ -14,6 +14,18 @@ public class DataWithContext extends AbstractJSONSerializable
     @JsonProperty
     private Map<String, Object> data;
 
+    public DataWithContext(String contextId, Map<String, Object> data)
+    {
+        super();
+        this.contextId = contextId;
+        this.data = data;
+    }
+
+    protected DataWithContext()
+    {
+        super();
+    }
+
     public String getContextId()
     {
         return this.contextId;
@@ -22,6 +34,12 @@ public class DataWithContext extends AbstractJSONSerializable
     public Map<String, Object> getData()
     {
         return this.data;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "DataWithContext [contextId=" + this.contextId + ", data=" + this.data + "]";
     }
 
 }

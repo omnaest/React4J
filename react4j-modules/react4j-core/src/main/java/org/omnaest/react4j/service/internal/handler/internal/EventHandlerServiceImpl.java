@@ -11,6 +11,7 @@ import org.omnaest.react4j.domain.data.Data;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.handler.EventHandlerService;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
+import org.omnaest.react4j.service.internal.handler.domain.DataWithContext;
 import org.omnaest.react4j.service.internal.handler.domain.EventBody;
 import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.ResponseBody;
@@ -48,13 +49,14 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
         return Optional.ofNullable(eventBody)
                        .map(body -> body.getTarget())
                        .map(target -> this.handlers.get(target))
-                       .filter(handlers -> handlers.isEmpty())
-                       .map(handlers -> handlers.stream()
-                                                .map(handler -> handler.invoke(Optional.ofNullable(eventBody.getDataWithContext())
-                                                                                       .map(dwc -> Data.of(dwc.getContextId(), dwc.getData()))
-                                                                                       .orElse(Data.EMPTY)))
-                                                .reduce((d1, d2) -> d1.mergeWith(d2)))
-                       .map(data -> new ResponseBody());
+                       .filter(handlers -> !handlers.isEmpty())
+                       .flatMap(handlers -> handlers.stream()
+                                                    .map(handler -> handler.invoke(Optional.ofNullable(eventBody.getDataWithContext())
+                                                                                           .map(dwc -> Data.of(dwc.getContextId(), dwc.getData()))
+                                                                                           .orElse(Data.EMPTY)))
+                                                    .reduce((d1, d2) -> d1.mergeWith(d2)))
+                       .map(data -> new ResponseBody().setTarget(eventBody.getTarget())
+                                                      .setDataWithContext(new DataWithContext(data.getContextId(), data.toMap())));
     }
 
 }

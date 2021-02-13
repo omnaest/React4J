@@ -1,16 +1,19 @@
 package org.omnaest.react4j.domain.support;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.omnaest.react4j.domain.ScrollbarContainer;
-import org.omnaest.react4j.domain.UIComponent;
-import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.ScrollbarContainer.HorizontalBoxMode;
 import org.omnaest.react4j.domain.ScrollbarContainer.VerticalBoxMode;
+import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.UIComponentFactory;
 
 public interface UIContentHolder<R>
 {
     public R withContent(UIComponent<?> component);
+
+    public R withContent(List<UIComponent<?>> components);
 
     public R withContent(UIComponentProvider<?> componentProvider);
 

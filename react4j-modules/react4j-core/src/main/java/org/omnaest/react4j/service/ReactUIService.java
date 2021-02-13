@@ -3,6 +3,7 @@ package org.omnaest.react4j.service;
 import java.util.function.Consumer;
 
 import org.omnaest.react4j.domain.ReactUI;
+import org.omnaest.react4j.domain.configuration.HomePageConfiguration;
 
 public interface ReactUIService
 {
@@ -22,4 +23,5 @@ public interface ReactUIService
 
     public ReactUIService withCacheDurationInSeconds(int cacheDurationInSeconds);
 
+    public ReactUIService configureHomePage(Consumer<HomePageConfiguration> configurationConsumer);
 }

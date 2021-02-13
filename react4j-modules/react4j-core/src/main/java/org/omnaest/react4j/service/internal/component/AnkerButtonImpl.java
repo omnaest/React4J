@@ -12,7 +12,7 @@ public class AnkerButtonImpl extends AbstractUIComponent<AnkerButton> implements
 {
     private I18nText text;
     private String   link;
-    private Style    style;
+    private Style    style = Style.PRIMARY;
 
     public AnkerButtonImpl(ComponentContext context)
     {

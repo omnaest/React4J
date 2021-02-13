@@ -1,28 +1,15 @@
 package org.omnaest.react4j.domain;
 
-import java.util.function.Supplier;
+import java.util.List;
 
 public interface UnsortedList extends UIComponent<UnsortedList>
 {
     public UnsortedList addText(String text);
 
-    public UnsortedList addText(Icon icon, String text);
+    public UnsortedList addText(Icon.StandardIcon icon, String text);
 
-    public static enum Icon implements Supplier<String>
-    {
-        ENVELOPE("envelope-open-text"), DOLLAR_SIGN("dollar-sign"), MICROSCOPE("microscope"), HEARTBEAT("heartbeat"), DNA("dna");
+    public UnsortedList addEntry(UIComponent<?> component);
 
-        private String key;
+    public UnsortedList addEntries(List<UIComponent<?>> components);
 
-        private Icon(String key)
-        {
-            this.key = key;
-        }
-
-        @Override
-        public String get()
-        {
-            return key;
-        }
-    }
 }

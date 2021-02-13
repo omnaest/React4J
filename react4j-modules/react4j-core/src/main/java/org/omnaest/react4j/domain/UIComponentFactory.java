@@ -1,5 +1,12 @@
 package org.omnaest.react4j.domain;
 
+import java.util.List;
+
+/**
+ * Factory for all UI relevant {@link UIComponent}s like grids, forms, paragraphs, cards, ankers, buttons, etc.
+ * 
+ * @author omnaest
+ */
 public interface UIComponentFactory
 {
     public Paragraph newParagraph();
@@ -39,4 +46,19 @@ public interface UIComponentFactory
     public ScrollbarContainer newScrollbarContainer();
 
     public Text newText();
+
+    public List<UIComponent<?>> newMarkdownText(String markdown);
+
+    public List<Card> newMarkdownCards(String markdown);
+
+    public Card newMarkdownCard(String markdown);
+
+    public LineBreak newLineBreak();
+
+    public Toaster newToaster();
+
+    public Icon newIcon();
+
+    public PaddingContainer newPaddingContainer();
+
 }
