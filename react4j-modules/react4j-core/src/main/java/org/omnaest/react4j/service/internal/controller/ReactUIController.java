@@ -2,11 +2,15 @@ package org.omnaest.react4j.service.internal.controller;
 
 import java.util.Optional;
 
+import javax.annotation.PostConstruct;
+
 import org.omnaest.react4j.service.internal.handler.EventHandlerService;
 import org.omnaest.react4j.service.internal.handler.domain.EventBody;
 import org.omnaest.react4j.service.internal.handler.domain.ResponseBody;
 import org.omnaest.react4j.service.internal.nodes.NodeHierarchy;
 import org.omnaest.react4j.service.internal.nodes.service.RootNodeResolverService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -19,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ReactUIController
 {
+    private static Logger LOG = LoggerFactory.getLogger(ReactUIController.class);
+
     @Autowired
     private RootNodeResolverService resolverService;
 
@@ -46,4 +52,11 @@ public class ReactUIController
         return this.eventHandlerService.handleEvent(eventBody);
     }
 
+    @PostConstruct
+    public void postInit()
+    {
+        LOG.info(this.getClass()
+                     .getSimpleName()
+                + " enabled.");
+    }
 }

@@ -14,6 +14,7 @@
 		<module>react4j</module>
 		<module>react4j-data</module>
 		<module>react4j-data-datagrid</module>
+		<module>react4j-app-starter-parent</module>
 	</modules>
 
 	<parent>
