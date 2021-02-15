@@ -50,7 +50,6 @@ export class Toaster extends React.Component<Props, State>
                     aria-atomic="true"
                 >
                     <div className="toast-header">
-                        <img style={{ display: "none" }} src="..." className="rounded mr-2" alt="..." />
                         <strong className="mr-auto"> {I18nRenderer.render(this.props.node.title)}</strong>
                         <small className="text-muted"></small>
                         <button
