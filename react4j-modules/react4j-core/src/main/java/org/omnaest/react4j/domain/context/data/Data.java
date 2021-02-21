@@ -1,9 +1,10 @@
-package org.omnaest.react4j.domain.data;
+package org.omnaest.react4j.domain.context.data;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
+import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.react4j.service.internal.handler.internal.DataImpl;
 import org.omnaest.utils.optional.NullOptional;
 
@@ -53,5 +54,7 @@ public interface Data
     public Data setFieldValue(String field, Object value);
 
     public <O> O getFieldValue(String field);
+
+    public <O> O getFieldValue(Field field);
 
 }

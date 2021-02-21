@@ -15,6 +15,7 @@
 		<module>react4j-data</module>
 		<module>react4j-data-datagrid</module>
 		<module>react4j-app-starter-parent</module>
+		<module>react4j-data-inmemory</module>
 	</modules>
 
 	<parent>

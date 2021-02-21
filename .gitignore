@@ -31,3 +31,8 @@
 /react4j-modules/react4j-app-starter-parent/.project
 /react4j-modules/react4j-app-starter-parent/.settings
 /react4j-modules/react4j-app-starter-parent/.classpath
+/react4j-modules/react4j-data-inmemory/.project
+/react4j-modules/react4j-data-inmemory/.settings
+/react4j-modules/react4j-data-inmemory/target
+/react4j-modules/react4j-data-inmemory/.classpath
+/react4j-modules/react4j-core/logs

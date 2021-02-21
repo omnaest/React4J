@@ -3,7 +3,7 @@ package org.omnaest.react4j.service.internal.component;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.i18n.UILocale;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
-import org.omnaest.react4j.service.internal.service.DataContextFactory;
+import org.omnaest.react4j.service.internal.service.ContextFactory;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 
 public class ComponentContext
@@ -12,17 +12,17 @@ public class ComponentContext
     protected LocalizedTextResolverService textResolver;
     protected EventHandlerRegistry         eventHandlerRegistry;
     protected UIComponentFactory           uiComponentFactory;
-    protected DataContextFactory           dataContextFactory;
+    protected ContextFactory               contextFactory;
 
     public ComponentContext(UILocale defaultLocale, LocalizedTextResolverService textResolver, EventHandlerRegistry eventHandlerRegistry,
-                            UIComponentFactory uiComponentFactory, DataContextFactory dataContextFactory)
+                            UIComponentFactory uiComponentFactory, ContextFactory contextFactory)
     {
         super();
         this.defaultLocale = defaultLocale;
         this.textResolver = textResolver;
         this.eventHandlerRegistry = eventHandlerRegistry;
         this.uiComponentFactory = uiComponentFactory;
-        this.dataContextFactory = dataContextFactory;
+        this.contextFactory = contextFactory;
     }
 
     public UILocale getDefaultLocale()
@@ -30,9 +30,9 @@ public class ComponentContext
         return this.defaultLocale;
     }
 
-    public DataContextFactory getDataContextFactory()
+    public ContextFactory getContextFactory()
     {
-        return this.dataContextFactory;
+        return this.contextFactory;
     }
 
     public LocalizedTextResolverService getTextResolver()
@@ -54,7 +54,7 @@ public class ComponentContext
     public String toString()
     {
         return "ComponentContext [defaultLocale=" + this.defaultLocale + ", textResolver=" + this.textResolver + ", eventHandlerRegistry="
-                + this.eventHandlerRegistry + ", uiComponentFactory=" + this.uiComponentFactory + ", dataContextFactory=" + this.dataContextFactory + "]";
+                + this.eventHandlerRegistry + ", uiComponentFactory=" + this.uiComponentFactory + ", dataContextFactory=" + this.contextFactory + "]";
     }
 
 }

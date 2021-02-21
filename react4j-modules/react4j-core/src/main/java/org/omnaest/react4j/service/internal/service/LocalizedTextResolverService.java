@@ -10,6 +10,8 @@ import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
 public interface LocalizedTextResolverService extends BiFunction<I18nText, Location, I18nTextValue>
 {
+    public static final String DEFAULT_LOCALE_KEY = "DEFAULT";
+
     public default List<I18nTextValue> apply(List<I18nText> texts, Location location)
     {
         return texts.stream()

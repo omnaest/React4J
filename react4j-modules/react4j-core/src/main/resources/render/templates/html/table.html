@@ -1,0 +1,19 @@
+
+<table className="table">
+	<thead>
+		<tr>
+			<#list columns as title>
+			<th scope="col">${title}</th>
+			</#list>
+		</tr>
+	</thead>
+	<tbody>
+		<#list rows as row>
+		<tr>
+			<#list row as cell>
+			<td>${cell}</td>
+			</#list>
+		</tr>
+		</#list>
+	</tbody>
+</table>

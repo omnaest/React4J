@@ -12,4 +12,8 @@ public interface UnsortedList extends UIComponent<UnsortedList>
 
     public UnsortedList addEntries(List<UIComponent<?>> components);
 
+    UnsortedList enableBulletPoints(boolean enableBulletPoints);
+
+    UnsortedList enableBulletPoints();
+
 }

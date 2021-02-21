@@ -8,6 +8,11 @@ import org.omnaest.react4j.domain.i18n.I18nText;
 
 public interface Paragraph extends UIComponent<Paragraph>
 {
+    /**
+     * @see Text
+     * @param text
+     * @return
+     */
     public Paragraph addText(String text);
 
     public Paragraph addText(I18nText i18nText);
@@ -15,6 +20,14 @@ public interface Paragraph extends UIComponent<Paragraph>
     public Paragraph addText(StandardIcon icon, String text);
 
     public Paragraph addText(StandardIcon icon, I18nText text);
+
+    /**
+     * @see Heading
+     * @param text
+     * @param level
+     * @return
+     */
+    public Paragraph addHeading(String text, int level);
 
     public Paragraph addLink(Consumer<Anker> ankerConsumer);
 
@@ -29,5 +42,9 @@ public interface Paragraph extends UIComponent<Paragraph>
     public Paragraph addTextsByClasspathResource(String resourcePath);
 
     public Paragraph addLineBreak();
+
+    public Paragraph withBoldStyle(boolean bold);
+
+    public Paragraph withBoldStyle();
 
 }

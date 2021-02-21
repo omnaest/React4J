@@ -7,15 +7,22 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Form;
 import org.omnaest.react4j.domain.Location;
-import org.omnaest.react4j.domain.data.DataContext;
-import org.omnaest.react4j.domain.data.DataContext.Field;
+import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.Context;
+import org.omnaest.react4j.domain.context.data.DataContext;
+import org.omnaest.react4j.domain.context.document.Document;
+import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.FormElementNode;
 import org.omnaest.react4j.domain.raw.Node;
-import org.omnaest.react4j.domain.raw.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.components.LocationSupport;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
@@ -39,14 +46,34 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
     {
         return new UIComponentRenderer()
         {
+
             @Override
-            public Node render(Location parentLocation)
+            public Location getLocation(LocationSupport locationSupport)
             {
-                Location location = Location.of(parentLocation, FormImpl.this.getId());
+                return locationSupport.createLocation(FormImpl.this.getId());
+            }
+
+            @Override
+            public Node render(RenderingProcessor renderingProcessor, Location location)
+            {
                 return new FormNode().setElements(FormImpl.this.elements.stream()
                                                                         .map(element -> element.render(location))
                                                                         .collect(Collectors.toList()));
             }
+
+            @Override
+            public void manageNodeRenderers(NodeRendererRegistry registry)
+            {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public Stream<UIComponent<?>> getSubComponents()
+            {
+                return Stream.empty();
+            }
+
         };
     }
 
@@ -56,7 +83,7 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         LocalizedTextResolverService textResolver = FormImpl.this.getTextResolver();
         Function<String, I18nText> i18nTextMapper = FormImpl.this.i18nTextMapper();
         EventHandlerRegistry eventHandlerRegistry = this.getEventHandlerRegistry();
-        CachedElement<? extends DataContext> dataContext = this.dataContext;
+        CachedElement<? extends DataContext> dataContext = this.dataContextProvider;
         FormElement<?> formElement = formElementFactoryConsumer.apply(new FormElementFactory()
         {
             @Override
@@ -118,7 +145,7 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         @Override
         protected FormElementNode renderNode(FormElementNodeImpl node, Location location)
         {
-            DataContext dataContext = this.getEffectiveDataContext();
+            Context dataContext = this.getEffectiveContext();
             Target target = Target.from(location);
             this.eventHandlerRegistry.register(target, this.eventHandler);
             node.setType("BUTTON")
@@ -137,21 +164,23 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         @Override
         public ButtonFormElement onClick(ButtonEventHandler eventHandler)
         {
-            this.eventHandler = data -> eventHandler.apply(data, this.getEffectiveDataContext());
+            this.eventHandler = data -> eventHandler.apply(data, this.getEffectiveContext());
             return this;
         }
 
         @Override
-        public ButtonFormElement attachTo(DataContext dataContext)
+        public ButtonFormElement attachTo(Document document)
         {
-            this.dataContext = dataContext;
+            this.document = document;
             return this;
         }
 
         @Override
         public ButtonFormElement saveOnClick()
         {
-            return this.onClick((data, dataContext) -> dataContext.persist(data)
+            return this.onClick((data, dataContext) -> dataContext.asDataContext()
+                                                                  .orElseThrow(() -> new IllegalArgumentException("A DataContext must be provided"))
+                                                                  .persist(data)
                                                                   .get());
         }
     }
@@ -183,10 +212,10 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         }
 
         @Override
-        public InputFormElement attachToField(DataContext.Field field)
+        public InputFormElement attachToField(Document.Field field)
         {
             this.field = field;
-            this.dataContext = field.getDataContext();
+            this.document = field.getDocument();
             return this;
         }
     }
@@ -197,8 +226,8 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         protected final Function<String, I18nText>   i18nTextMapper;
         protected final EventHandlerRegistry         eventHandlerRegistry;
 
-        protected DataContext.Field     field;
-        protected DataContext           dataContext;
+        protected Field                 field;
+        protected Document              document;
         protected Supplier<DataContext> parentDataContext;
 
         private I18nText label;
@@ -220,21 +249,22 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         @Override
         public FormElementNode render(Location parentLocation)
         {
-            DataContext dataContext = this.getEffectiveDataContext();
+            Context context = this.getEffectiveContext();
             Location location = Optional.ofNullable(this.getField())
                                         .map(field -> Location.of(Location.of(parentLocation, this.id), field))
                                         .orElse(Location.of(parentLocation, this.id));
             return this.renderNode(new FormNode.FormElementNodeImpl().setField(this.getField())
-                                                                     .setContextId(dataContext.getId(location))
+                                                                     .setContextId(context.getId(location))
                                                                      .setLabel(this.textResolver.apply(this.label, location))
                                                                      .setDescription(this.textResolver.apply(this.description, location)),
                                    location);
         }
 
-        protected DataContext getEffectiveDataContext()
+        protected Context getEffectiveContext()
         {
-            return Optional.ofNullable(this.dataContext)
-                           .orElse(this.parentDataContext.get());
+            return Optional.ofNullable(this.document)
+                           .map(Document::getContext)
+                           .orElseGet(this.parentDataContext::get);
         }
 
         protected abstract FormElementNode renderNode(FormElementNodeImpl node, Location location);

@@ -27,6 +27,7 @@ import org.omnaest.react4j.domain.Image;
 import org.omnaest.react4j.domain.ImageIndex;
 import org.omnaest.react4j.domain.Jumbotron;
 import org.omnaest.react4j.domain.LineBreak;
+import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.NavigationBar;
 import org.omnaest.react4j.domain.NavigationBar.NavigationBarConsumer;
 import org.omnaest.react4j.domain.NavigationBar.NavigationBarProvider;
@@ -44,6 +45,10 @@ import org.omnaest.react4j.domain.VerticalContentSwitcher;
 import org.omnaest.react4j.domain.configuration.HomePageConfiguration;
 import org.omnaest.react4j.domain.i18n.UILocale;
 import org.omnaest.react4j.domain.raw.Node;
+import org.omnaest.react4j.domain.rendering.RenderableUIComponent;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
+import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.ReactUIService;
@@ -78,11 +83,14 @@ import org.omnaest.react4j.service.internal.nodes.CompositeNode;
 import org.omnaest.react4j.service.internal.nodes.HomePageNode;
 import org.omnaest.react4j.service.internal.nodes.NodeHierarchy;
 import org.omnaest.react4j.service.internal.nodes.service.RootNodeResolverService;
-import org.omnaest.react4j.service.internal.service.DataContextFactory;
+import org.omnaest.react4j.service.internal.service.ContextFactory;
 import org.omnaest.react4j.service.internal.service.HomePageConfigurationService;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
+import org.omnaest.react4j.service.internal.service.NodeHierarchyStaticRenderer;
+import org.omnaest.react4j.service.internal.service.NodeHierarchyStaticRenderer.NodeHierarchyRenderingProcessor;
 import org.omnaest.react4j.service.internal.service.ReactUIContextManager;
 import org.omnaest.react4j.service.internal.service.ReactUIContextManager.ReactUIInternalProvider;
+import org.omnaest.react4j.service.internal.service.internal.RenderingProcessorImpl;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MatcherUtils;
 import org.omnaest.utils.MatcherUtils.Match;
@@ -106,10 +114,13 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
     protected EventHandlerRegistry eventHandlerRegistry;
 
     @Autowired
-    protected DataContextFactory dataContextFactory;
+    protected ContextFactory dataContextFactory;
 
     @Autowired
     protected HomePageConfigurationService homePageConfigurationService;
+
+    @Autowired
+    protected NodeHierarchyStaticRenderer nodeHierarchyStaticRenderer;
 
     protected ReactUIContextManager uiManager = new ReactUIContextManager();
 
@@ -382,7 +393,8 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                         return StreamUtils.aggregateByStart(MarkdownUtils.parse(markdown, options -> options.enableWrapIntoParagraphs())
                                                                          .get(),
                                                             element -> element.asHeading()
-                                                                              .isPresent(),
+                                                                              .map(heading -> heading.getStrength() <= 1)
+                                                                              .orElse(false),
                                                             group ->
                                                             {
                                                                 BiElement<Optional<Element>, Stream<Element>> titleAndText = StreamUtils.splitOne(group);
@@ -412,6 +424,15 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                                                                                            .filter(PredicateUtils.notNull())
                                                                                                                            .map(v -> (UIComponent<?>) v),
                                                                                                           element -> Stream.of(element)
+                                                                                                                           .map(Element::asHeading)
+                                                                                                                           .filter(Optional::isPresent)
+                                                                                                                           .map(Optional::get)
+                                                                                                                           .map(heading -> this.newParagraph()
+                                                                                                                                               .addHeading(heading.getText(),
+                                                                                                                                                           heading.getStrength()))
+                                                                                                                           .filter(PredicateUtils.notNull())
+                                                                                                                           .map(v -> (UIComponent<?>) v),
+                                                                                                          element -> Stream.of(element)
                                                                                                                            .map(Element::asUnorderedList)
                                                                                                                            .filter(Optional::isPresent)
                                                                                                                            .map(Optional::get)
@@ -426,33 +447,8 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                     {
                         return markdownList ->
                         {
-                            //                            markdownList.getElements()
-                            //                                        .forEach(element ->
-                            //                                        {
-                            //                                            element.asText()
-                            //                                                   .ifPresent(text ->
-                            //                                                   {
-                            //                                                       MatchResult matchResult = MatcherUtils.matcher()
-                            //                                                                                             .ofRegEx("^\\[ICON\\:([a-zA-Z])\\](.*)")
-                            //                                                                                             .findInAnd(text.getValue());
-                            //                                                       Optional<Match> match = matchResult.getFirst();
-                            //                                                       if (match.isPresent())
-                            //                                                       {
-                            //                                                           unsortedList.addText(match.get()
-                            //                                                                                     .getSubGroup(1)
-                            //                                                                                     .flatMap(StandardIcon::of)
-                            //                                                                                     .orElse(null),
-                            //                                                                                match.get()
-                            //                                                                                     .getSubGroup(2)
-                            //                                                                                     .orElse(""));
-                            //                                                       }
-                            //                                                       else
-                            //                                                       {
-                            //                                                           unsortedList.addText(text.getValue());
-                            //                                                       }
-                            //                                                   });
-                            //                                        });
                             return this.newUnsortedList()
+                                       .enableBulletPoints()
                                        .addEntries(markdownList.getElements()
                                                                .stream()
                                                                .map(Element::asParagraph)
@@ -481,6 +477,14 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                  element.asText()
                                                         .ifPresent(text ->
                                                         {
+                                                            //
+                                                            boolean bold = text.isBold();
+                                                            if (bold)
+                                                            {
+                                                                paragraph.withBoldStyle();
+                                                            }
+
+                                                            //
                                                             MatchResult matchResult = MatcherUtils.matcher()
                                                                                                   .ofRegEx("^\\[ICON\\:([a-zA-Z\\_]+)\\](.*)")
                                                                                                   .findInAnd(text.getValue());
@@ -499,6 +503,11 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                             {
                                                                 paragraph.addText(text.getValue());
                                                             }
+                                                        });
+                                                 element.asHeading()
+                                                        .ifPresent(heading ->
+                                                        {
+                                                            paragraph.addHeading(heading.getText(), heading.getStrength());
                                                         });
                                                  element.asLineBreak()
                                                         .ifPresent(lineBreak -> paragraph.addLineBreak());
@@ -566,15 +575,42 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
             @Override
             public NodeHierarchy asNodeHierarchy()
             {
+                RenderingProcessor renderingProcessor = this.createRenderingProcessor();
                 List<Node> elements = this.components.stream()
-                                                     .map(component -> component.asRenderer()
-                                                                                .render())
+                                                     .map(component -> renderingProcessor.process(component, Location.empty()))
                                                      .collect(Collectors.toList());
                 return new NodeHierarchy(new HomePageNode().setNavigation(Optional.ofNullable(this.navigationBar)
-                                                                                  .map(nb -> nb.asRenderer()
-                                                                                               .render())
+                                                                                  .map(nb -> renderingProcessor.process(nb, Location.empty()))
                                                                                   .orElse(null))
                                                            .setBody(new CompositeNode().setElements(elements)));
+            }
+
+            @Override
+            public void collectNodeRenderers(NodeRendererRegistry registry)
+            {
+                this.components.stream()
+                               .filter(component -> component instanceof RenderableUIComponent)
+                               .map(component -> (RenderableUIComponent<?>) component)
+                               .flatMap(this.createRecursiveComponentFlattener())
+                               .filter(component -> component instanceof RenderableUIComponent)
+                               .map(component -> (RenderableUIComponent<?>) component)
+                               .forEach(component -> component.asRenderer()
+                                                              .manageNodeRenderers(registry));
+            }
+
+            private Function<RenderableUIComponent<?>, Stream<RenderableUIComponent<?>>> createRecursiveComponentFlattener()
+            {
+                Function<RenderableUIComponent<?>, Stream<RenderableUIComponent<?>>> componentFlattener = component -> component.asRenderer()
+                                                                                                                                .getSubComponents()
+                                                                                                                                .filter(iComponent -> iComponent instanceof RenderableUIComponent)
+                                                                                                                                .map(iComponent -> (RenderableUIComponent<?>) iComponent);
+                return component -> Stream.concat(Stream.of(component), componentFlattener.apply(component)
+                                                                                          .flatMap(this.createRecursiveComponentFlattener()));
+            }
+
+            private RenderingProcessor createRenderingProcessor()
+            {
+                return new RenderingProcessorImpl();
             }
 
             @Override
@@ -598,6 +634,21 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
     public NodeHierarchy resolveDefaultNodeHierarchy()
     {
         return this.resolveNodeHierarchy(DEFAULT_CONTEXT_PATH);
+    }
+
+    @Override
+    public String renderDefaultNodeHierarchyAsStatic(NodeRenderType nodeRenderType)
+    {
+        return this.renderDefaultNodeHierarchyAsStatic(nodeRenderType, DEFAULT_CONTEXT_PATH);
+    }
+
+    public String renderDefaultNodeHierarchyAsStatic(NodeRenderType nodeRenderType, String contextPath)
+    {
+        NodeHierarchyRenderingProcessor nodeRenderingProcessor = this.nodeHierarchyStaticRenderer.newNodeRenderingProcessor();
+        this.uiManager.get(contextPath)
+                      .orElseThrow(() -> new IllegalArgumentException("No UI defined for context path: " + contextPath))
+                      .collectNodeRenderers(nodeRenderingProcessor);
+        return nodeRenderingProcessor.render(this.resolveNodeHierarchy(contextPath), nodeRenderType);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package org.omnaest.react4j.domain.data;
+package org.omnaest.react4j.domain.context.data;
 
 /**
  * {@link DataContext} that can be defined during declaration

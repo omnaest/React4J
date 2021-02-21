@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Anker;
 import org.omnaest.react4j.domain.AnkerButton;
@@ -17,7 +18,13 @@ import org.omnaest.react4j.domain.Paragraph;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
-import org.omnaest.react4j.domain.raw.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.components.LocationSupport;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
+import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.ParagraphNode;
 import org.omnaest.utils.ClassUtils;
 import org.omnaest.utils.ClassUtils.Resource;
@@ -26,6 +33,7 @@ import org.omnaest.utils.StringUtils;
 public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Paragraph
 {
     private List<UIComponent<?>> elements = new ArrayList<>();
+    private boolean              bold     = false;
 
     public ParagraphImpl(ComponentContext context)
     {
@@ -60,10 +68,33 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
     }
 
     @Override
+    public Paragraph addHeading(String text, int level)
+    {
+        this.elements.add(this.getUiComponentFactory()
+                              .newHeading()
+                              .withLevel(level)
+                              .withText(text));
+        return this;
+    }
+
+    @Override
     public Paragraph addLineBreak()
     {
         this.elements.add(this.getUiComponentFactory()
                               .newLineBreak());
+        return this;
+    }
+
+    @Override
+    public Paragraph withBoldStyle()
+    {
+        return this.withBoldStyle(true);
+    }
+
+    @Override
+    public Paragraph withBoldStyle(boolean bold)
+    {
+        this.bold = bold;
         return this;
     }
 
@@ -128,15 +159,47 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
         return new UIComponentRenderer()
         {
             @Override
-            public Node render(Location parentLocation)
+            public Location getLocation(LocationSupport locationSupport)
             {
-                Location location = Location.of(parentLocation, ParagraphImpl.this.getId());
+                return locationSupport.createLocation(ParagraphImpl.this.getId());
+            }
+
+            @Override
+            public Node render(RenderingProcessor renderingProcessor, Location location)
+            {
                 return new ParagraphNode().setId(ParagraphImpl.this.getId())
+                                          .setBold(ParagraphImpl.this.bold)
                                           .setElements(ParagraphImpl.this.elements.stream()
-                                                                                  .map(element -> element.asRenderer()
-                                                                                                         .render(location))
+                                                                                  .map(element -> renderingProcessor.process(element, location))
                                                                                   .collect(Collectors.toList()));
             }
+
+            @Override
+            public void manageNodeRenderers(NodeRendererRegistry registry)
+            {
+                NodeRenderer<ParagraphNode> nodeRenderer = new NodeRenderer<ParagraphNode>()
+                {
+                    @Override
+                    public String render(ParagraphNode node, NodeRenderingProcessor nodeRenderingProcessor)
+                    {
+                        String body = node.getElements()
+                                          .stream()
+                                          .map(nodeRenderingProcessor::render)
+                                          .collect(Collectors.joining());
+                        return "<p>" + body + "</p>";
+                    }
+
+                };
+                registry.register(ParagraphNode.class, NodeRenderType.HTML, nodeRenderer);
+                registry.registerChildrenMapper(ParagraphNode.class, ParagraphNode::getElements);
+            }
+
+            @Override
+            public Stream<UIComponent<?>> getSubComponents()
+            {
+                return ParagraphImpl.this.elements.stream();
+            }
+
         };
     }
 }

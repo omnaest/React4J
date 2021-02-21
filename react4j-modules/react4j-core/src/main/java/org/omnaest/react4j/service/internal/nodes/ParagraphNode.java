@@ -18,6 +18,9 @@ public class ParagraphNode extends AbstractNode implements Node
     @JsonProperty
     private List<Node> elements = new ArrayList<>();
 
+    @JsonProperty
+    private boolean bold;
+
     public String getId()
     {
         return this.id;
@@ -43,6 +46,17 @@ public class ParagraphNode extends AbstractNode implements Node
     public ParagraphNode setElements(List<Node> elements)
     {
         this.elements = elements;
+        return this;
+    }
+
+    public boolean isBold()
+    {
+        return this.bold;
+    }
+
+    public ParagraphNode setBold(boolean bold)
+    {
+        this.bold = bold;
         return this;
     }
 

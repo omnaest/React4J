@@ -1,12 +1,16 @@
 package org.omnaest.react4j.service.internal.component;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.ScrollbarContainer;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.raw.Node;
-import org.omnaest.react4j.domain.raw.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.components.LocationSupport;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.service.internal.nodes.ScrollbarContainerNode;
 
 public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<ScrollbarContainer> implements ScrollbarContainer
@@ -25,12 +29,18 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
     {
         return new UIComponentRenderer()
         {
+
             @Override
-            public Node render(Location parentLocation)
+            public Location getLocation(LocationSupport locationSupport)
+            {
+                return locationSupport.createLocation(ScrollbarContainerImpl.this.getId());
+            }
+
+            @Override
+            public Node render(RenderingProcessor renderingProcessor, Location location)
             {
                 return new ScrollbarContainerNode().setContent(Optional.ofNullable(ScrollbarContainerImpl.this.content)
-                                                                       .map(content -> content.asRenderer()
-                                                                                              .render(parentLocation))
+                                                                       .map(content -> renderingProcessor.process(content, location))
                                                                        .orElse(null))
                                                    .setVerticalBoxMode(ScrollbarContainerImpl.this.verticalBoxMode.name()
                                                                                                                   .replaceAll("_", "-")
@@ -39,6 +49,20 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
                                                                                                                       .replaceAll("_", "-")
                                                                                                                       .toLowerCase());
             }
+
+            @Override
+            public void manageNodeRenderers(NodeRendererRegistry registry)
+            {
+                // TODO Auto-generated method stub
+                registry.registerChildMapper(ScrollbarContainerNode.class, ScrollbarContainerNode::getContent);
+            }
+
+            @Override
+            public Stream<UIComponent<?>> getSubComponents()
+            {
+                return Stream.of(ScrollbarContainerImpl.this.content);
+            }
+
         };
     }
 

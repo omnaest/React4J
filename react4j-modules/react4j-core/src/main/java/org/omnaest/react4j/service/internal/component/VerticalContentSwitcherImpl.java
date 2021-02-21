@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
@@ -13,7 +14,10 @@ import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.VerticalContentSwitcher;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
-import org.omnaest.react4j.domain.raw.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.components.LocationSupport;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.service.internal.nodes.VerticalContentSwitcherNode;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 
@@ -31,10 +35,16 @@ public class VerticalContentSwitcherImpl extends AbstractUIComponent<VerticalCon
     {
         return new UIComponentRenderer()
         {
+
             @Override
-            public Node render(Location parentLocation)
+            public Location getLocation(LocationSupport locationSupport)
             {
-                Location location = Location.of(parentLocation, VerticalContentSwitcherImpl.this.getId());
+                return locationSupport.createLocation(VerticalContentSwitcherImpl.this.getId());
+            }
+
+            @Override
+            public Node render(RenderingProcessor renderingProcessor, Location location)
+            {
                 LocalizedTextResolverService textResolver = VerticalContentSwitcherImpl.this.getTextResolver();
                 return new VerticalContentSwitcherNode().setElements(VerticalContentSwitcherImpl.this.elements.stream()
                                                                                                               .map(element -> new VerticalContentSwitcherNode.ContentElement().setTitle(textResolver.apply(element.getTitle(),
@@ -42,13 +52,29 @@ public class VerticalContentSwitcherImpl extends AbstractUIComponent<VerticalCon
                                                                                                                                                                               .setActive(element.isActive())
                                                                                                                                                                               .setDisabled(element.isDisabled())
                                                                                                                                                                               .setContent(Optional.ofNullable(element.getComponent())
-                                                                                                                                                                                                  .map(component -> component.asRenderer()
-                                                                                                                                                                                                                             .render())
+                                                                                                                                                                                                  .map(component -> renderingProcessor.process(component,
+                                                                                                                                                                                                                                               location))
                                                                                                                                                                                                   .orElse(null))
 
                                                                                                               )
                                                                                                               .collect(Collectors.toList()));
             }
+
+            @Override
+            public void manageNodeRenderers(NodeRendererRegistry registry)
+            {
+                // TODO Auto-generated method stub
+                registry.registerChildrenMapper(VerticalContentSwitcherNode.class, VerticalContentSwitcherNode::getElements)
+                        .registerChildMapper(VerticalContentSwitcherNode.ContentElement.class, VerticalContentSwitcherNode.ContentElement::getContent);
+            }
+
+            @Override
+            public Stream<UIComponent<?>> getSubComponents()
+            {
+                return VerticalContentSwitcherImpl.this.elements.stream()
+                                                                .map(VerticalContentImpl::getComponent);
+            }
+
         };
     }
 

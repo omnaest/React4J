@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -14,12 +15,17 @@ import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.raw.Node;
-import org.omnaest.react4j.domain.raw.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.components.LocationSupport;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.ContainerGridNode;
+import org.omnaest.react4j.service.internal.nodes.ContainerGridNode.RowNode;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MapperUtils;
+import org.omnaest.utils.element.bi.BiElement;
 
 public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<ContainerGrid> implements ContainerGrid
 {
@@ -74,39 +80,69 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
     {
         return new UIComponentRenderer()
         {
+
             @Override
-            public Node render(Location parentLocation)
+            public Location getLocation(LocationSupport locationSupport)
             {
-                Location location = Location.of(parentLocation, ContainerGridImpl.this.getId());
+                return locationSupport.createLocation(ContainerGridImpl.this.getId());
+            }
+
+            @Override
+            public Node render(RenderingProcessor renderingProcessor, Location location)
+            {
                 return new ContainerGridNode().setLocator(ContainerGridImpl.this.locator)
                                               .setUnlimitedColumns(ContainerGridImpl.this.unlimitedColumns)
                                               .setRows(ContainerGridImpl.this.rows.stream()
                                                                                   .map(MapperUtils.withIntCounter())
-                                                                                  .map(rowAndIndex -> new ContainerGridNode.RowNode().setCells(rowAndIndex.getFirst()
-                                                                                                                                                          .getCells()
-                                                                                                                                                          .stream()
-                                                                                                                                                          .map(MapperUtils.withIntCounter())
-                                                                                                                                                          .map(cellAndIndex ->
-                                                                                                                                                          {
-                                                                                                                                                              Location cellLocation = location.and("row"
-                                                                                                                                                                      + rowAndIndex.getSecond())
-                                                                                                                                                                                              .and("cell"
-                                                                                                                                                                                                      + cellAndIndex.getSecond());
-                                                                                                                                                              CellImpl cell = cellAndIndex.getFirst();
-                                                                                                                                                              return new ContainerGridNode.CellNode().setColspan(cell.getColumnSpan()
-                                                                                                                                                                                                                     .orElse(12
-                                                                                                                                                                                                                             / rowAndIndex.getFirst()
-                                                                                                                                                                                                                                          .getCells()
-                                                                                                                                                                                                                                          .size()))
-                                                                                                                                                                                                     .setContent(Optional.ofNullable(cell)
-                                                                                                                                                                                                                         .map(CellImpl::getContent)
-                                                                                                                                                                                                                         .map(UIComponent::asRenderer)
-                                                                                                                                                                                                                         .map(renderer -> renderer.render(cellLocation))
-                                                                                                                                                                                                                         .orElse(null));
-                                                                                                                                                          })
-                                                                                                                                                          .collect(Collectors.toList())))
+                                                                                  .map(this.createRowMapper(renderingProcessor, location))
                                                                                   .collect(Collectors.toList()));
             }
+
+            private Function<BiElement<RowImpl, Integer>, RowNode> createRowMapper(RenderingProcessor renderingProcessor, Location location)
+            {
+                return rowAndIndex -> new ContainerGridNode.RowNode().setCells(rowAndIndex.getFirst()
+                                                                                          .getCells()
+                                                                                          .stream()
+                                                                                          .map(MapperUtils.withIntCounter())
+                                                                                          .map(cellAndIndex ->
+                                                                                          {
+                                                                                              Location cellLocation = location.and("row"
+                                                                                                      + rowAndIndex.getSecond())
+                                                                                                                              .and("cell"
+                                                                                                                                      + cellAndIndex.getSecond());
+                                                                                              CellImpl cell = cellAndIndex.getFirst();
+                                                                                              return new ContainerGridNode.CellNode().setColspan(cell.getColumnSpan()
+                                                                                                                                                     .orElse(12
+                                                                                                                                                             / rowAndIndex.getFirst()
+                                                                                                                                                                          .getCells()
+                                                                                                                                                                          .size()))
+                                                                                                                                     .setContent(Optional.ofNullable(cell)
+                                                                                                                                                         .map(CellImpl::getContent)
+                                                                                                                                                         .map(component -> renderingProcessor.process(component,
+                                                                                                                                                                                                      cellLocation))
+
+                                                                                                                                                         .orElse(null));
+                                                                                          })
+                                                                                          .collect(Collectors.toList()));
+            }
+
+            @Override
+            public void manageNodeRenderers(NodeRendererRegistry registry)
+            {
+                registry.registerChildrenMapper(ContainerGridNode.class, ContainerGridNode::getRows);
+                registry.registerChildrenMapper(ContainerGridNode.RowNode.class, RowNode::getCells);
+                registry.registerChildMapper(ContainerGridNode.CellNode.class, ContainerGridNode.CellNode::getContent);
+            }
+
+            @Override
+            public Stream<UIComponent<?>> getSubComponents()
+            {
+                return ContainerGridImpl.this.rows.stream()
+                                                  .map(RowImpl::getCells)
+                                                  .flatMap(List::stream)
+                                                  .map(CellImpl::getContent);
+            }
+
         };
     }
 

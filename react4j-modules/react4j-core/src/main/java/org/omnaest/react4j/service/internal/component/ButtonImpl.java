@@ -1,10 +1,16 @@
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.stream.Stream;
+
 import org.omnaest.react4j.domain.Button;
 import org.omnaest.react4j.domain.Location;
+import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
-import org.omnaest.react4j.domain.raw.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.components.LocationSupport;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.ButtonNode;
@@ -41,9 +47,14 @@ public class ButtonImpl extends AbstractUIComponent<Button> implements Button
         return new UIComponentRenderer()
         {
             @Override
-            public Node render(Location parentLocation)
+            public Location getLocation(LocationSupport locationSupport)
             {
-                Location location = Location.of(parentLocation, ButtonImpl.this.getId());
+                return locationSupport.createLocation(ButtonImpl.this.getId());
+            }
+
+            @Override
+            public Node render(RenderingProcessor renderingProcessor, Location location)
+            {
                 Target target = Target.from(location);
                 ButtonImpl.this.getEventHandlerRegistry()
                                .register(target, ButtonImpl.this.eventHandler);
@@ -53,6 +64,20 @@ public class ButtonImpl extends AbstractUIComponent<Button> implements Button
                                                                       .toLowerCase())
                                        .setOnClick(new ServerHandler(target));
             }
+
+            @Override
+            public void manageNodeRenderers(NodeRendererRegistry registry)
+            {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public Stream<UIComponent<?>> getSubComponents()
+            {
+                return Stream.empty();
+            }
+
         };
     }
 

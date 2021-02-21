@@ -11,7 +11,5 @@ import org.omnaest.react4j.domain.configuration.HomePageConfiguration;
  */
 public interface HomePageConfigurationService extends HomePageConfiguration
 {
-
-    Map<String, String> getConfigurations();
-
+    public Map<String, String> getConfigurations();
 }

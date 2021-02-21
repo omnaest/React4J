@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -15,11 +16,21 @@ import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
-import org.omnaest.react4j.domain.raw.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.components.LocationSupport;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
+import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.TableNode;
+import org.omnaest.react4j.service.internal.nodes.TableNode.CellNode;
 import org.omnaest.utils.ClassUtils;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MapperUtils;
+import org.omnaest.utils.element.bi.BiElement;
+import org.omnaest.utils.template.TemplateUtils;
+import org.omnaest.utils.template.TemplateUtils.TemplateProcessorBuilder;
 
 public class TableImpl extends AbstractUIComponentWithSubComponents<Table> implements Table
 {
@@ -99,10 +110,16 @@ public class TableImpl extends AbstractUIComponentWithSubComponents<Table> imple
     {
         return new UIComponentRenderer()
         {
+
             @Override
-            public Node render(Location parentLocation)
+            public Location getLocation(LocationSupport locationSupport)
             {
-                Location location = Location.of(parentLocation, TableImpl.this.getId());
+                return locationSupport.createLocation(TableImpl.this.getId());
+            }
+
+            @Override
+            public Node render(RenderingProcessor renderingProcessor, Location location)
+            {
                 return new TableNode().setColumnTitles(TableImpl.this.getTextResolver()
                                                                      .apply(TableImpl.this.columnTitles, location))
                                       .setRows(TableImpl.this.rows.stream()
@@ -111,20 +128,67 @@ public class TableImpl extends AbstractUIComponentWithSubComponents<Table> imple
                                                                                                                                   .getCells()
                                                                                                                                   .stream()
                                                                                                                                   .map(MapperUtils.withIntCounter())
-                                                                                                                                  .map(cellAndIndex ->
-                                                                                                                                  {
-                                                                                                                                      Location cellLocation = location.and("row"
-                                                                                                                                              + rowAndIndex.getSecond())
-                                                                                                                                                                      .and("cell"
-                                                                                                                                                                              + cellAndIndex.getSecond());
-                                                                                                                                      CellImpl cell = cellAndIndex.getFirst();
-                                                                                                                                      return new TableNode.CellNode().setContent(cell.getContent()
-                                                                                                                                                                                     .asRenderer()
-                                                                                                                                                                                     .render(cellLocation));
-                                                                                                                                  })
+                                                                                                                                  .map(this.createCellRenderer(renderingProcessor,
+                                                                                                                                                               location,
+                                                                                                                                                               rowAndIndex))
                                                                                                                                   .collect(Collectors.toList())))
                                                                   .collect(Collectors.toList()));
             }
+
+            private Function<BiElement<CellImpl, Integer>, CellNode> createCellRenderer(RenderingProcessor renderingProcessor, Location location,
+                                                                                        BiElement<RowImpl, Integer> rowAndIndex)
+            {
+                return cellAndIndex ->
+                {
+                    Location cellLocation = location.and("row" + rowAndIndex.getSecond())
+                                                    .and("cell" + cellAndIndex.getSecond());
+                    CellImpl cell = cellAndIndex.getFirst();
+                    return new TableNode.CellNode().setContent(renderingProcessor.process(cell.getContent(), cellLocation)
+
+                    );
+                };
+            }
+
+            @Override
+            public void manageNodeRenderers(NodeRendererRegistry registry)
+            {
+                NodeRenderer<TableNode> nodeRenderer = new NodeRenderer<TableNode>()
+                {
+                    @Override
+                    public String render(TableNode node, NodeRenderingProcessor nodeRenderingProcessor)
+                    {
+                        TemplateProcessorBuilder templateProcessorBuilder = TemplateUtils.builder();
+                        List<String> titles = node.getColumnTitles()
+                                                  .stream()
+                                                  .map(nodeRenderingProcessor::render)
+                                                  .collect(Collectors.toList());
+                        templateProcessorBuilder.add("columns", titles);
+                        templateProcessorBuilder.add("rows", node.getRows()
+                                                                 .stream()
+                                                                 .map(rowNode -> rowNode.getCells()
+                                                                                        .stream()
+                                                                                        .map(CellNode::getContent)
+                                                                                        .map(nodeRenderingProcessor::render)
+                                                                                        .collect(Collectors.toList()))
+                                                                 .collect(Collectors.toList()));
+                        return templateProcessorBuilder.useTemplateClassResource(this.getClass(), "/render/templates/html/table.html")
+                                                       .build()
+                                                       .get();
+                    }
+
+                };
+                registry.register(TableNode.class, NodeRenderType.HTML, nodeRenderer);
+            }
+
+            @Override
+            public Stream<UIComponent<?>> getSubComponents()
+            {
+                return TableImpl.this.rows.stream()
+                                          .map(RowImpl::getCells)
+                                          .flatMap(List::stream)
+                                          .map(CellImpl::getContent);
+            }
+
         };
     }
 

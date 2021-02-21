@@ -1,10 +1,16 @@
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.stream.Stream;
+
 import org.omnaest.react4j.domain.Image;
 import org.omnaest.react4j.domain.Location;
+import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
-import org.omnaest.react4j.domain.raw.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.components.LocationSupport;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.service.internal.nodes.ImageNode;
 
 public class ImageImpl extends AbstractUIComponent<Image> implements Image
@@ -23,13 +29,32 @@ public class ImageImpl extends AbstractUIComponent<Image> implements Image
         return new UIComponentRenderer()
         {
             @Override
-            public Node render(Location parentLocation)
+            public Location getLocation(LocationSupport locationSupport)
             {
-                Location location = Location.of(parentLocation, ImageImpl.this.getId());
+                return locationSupport.createLocation(ImageImpl.this.getId());
+            }
+
+            @Override
+            public Node render(RenderingProcessor renderingProcessor, Location location)
+            {
                 return new ImageNode().setImage(ImageImpl.this.image)
                                       .setName(ImageImpl.this.getTextResolver()
                                                              .apply(ImageImpl.this.name, location));
             }
+
+            @Override
+            public void manageNodeRenderers(NodeRendererRegistry registry)
+            {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public Stream<UIComponent<?>> getSubComponents()
+            {
+                return Stream.empty();
+            }
+
         };
     }
 

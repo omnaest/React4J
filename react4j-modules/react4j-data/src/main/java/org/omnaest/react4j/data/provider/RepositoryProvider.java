@@ -1,4 +1,4 @@
-package org.omnaest.react4j.data;
+package org.omnaest.react4j.data.provider;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.omnaest.react4j.data.RepositoryProvider.Tenant;
+import org.omnaest.react4j.data.Repository;
+import org.omnaest.react4j.data.Repository.Id;
+import org.omnaest.react4j.data.provider.RepositoryProvider.Tenant;
 
 public interface RepositoryProvider extends Function<Tenant.Id, Tenant>
 {

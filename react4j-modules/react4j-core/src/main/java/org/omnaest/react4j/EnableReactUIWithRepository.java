@@ -6,7 +6,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.omnaest.react4j.data.EnableReactUIRepository;
+import org.omnaest.react4j.data.annotations.EnableReactUIInMemoryRepository;
+import org.omnaest.react4j.data.annotations.EnableReactUIRepository;
 
 /**
  * This is a short cut which defines {@link EnableReactUI} and {@link EnableReactUIRepository}
@@ -16,7 +17,7 @@ import org.omnaest.react4j.data.EnableReactUIRepository;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @EnableReactUI
-@EnableReactUIRepository
+@EnableReactUIInMemoryRepository
 @Inherited
 public @interface EnableReactUIWithRepository
 {

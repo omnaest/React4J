@@ -33,15 +33,21 @@ p {
 }
 
 .body-top {
-	height: 80px;
+	height: 90px;
 	width: 100%;
 	overflow-x: auto;
 	overflow-y: hidden;
+	display: flex;
 }
 
 .body-bottom {
-	height: calc(100% - 80px);
+	height: calc(100% - 90px);
 	overflow-y: auto;
+}
+
+.body-bottom-top-padding {
+	height: 30px;
+	width: 100%;
 }
 
 .body-full {
@@ -163,3 +169,16 @@ li {
 	max-width: 100vw !important;
 	width: 100%;
 }
+
+.navbar-menu-icon-container {
+	position: absolute;
+	top: 10px;
+	left: 0px;
+	z-index: 1;
+}
+
+.navbar-menu-icon-container > nav {
+    background-color: rgba(255, 255, 255, 0.0) !important;
+}
+
+

@@ -4,7 +4,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.omnaest.react4j.domain.data.Data;
+import org.omnaest.react4j.domain.context.data.Data;
+import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.utils.JSONHelper;
 import org.omnaest.utils.MapUtils;
 import org.omnaest.utils.MapUtils.MapDelta;
@@ -54,6 +55,12 @@ public class DataImpl implements Data
     public <O> O getFieldValue(String field)
     {
         return (O) this.map.get(field);
+    }
+
+    @Override
+    public <O> O getFieldValue(Field field)
+    {
+        return this.getFieldValue(field.getFieldName());
     }
 
     @Override

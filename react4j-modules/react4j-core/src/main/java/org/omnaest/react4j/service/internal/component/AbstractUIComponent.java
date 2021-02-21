@@ -12,23 +12,27 @@ import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Locations;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
-import org.omnaest.react4j.domain.data.DefineableDataContext;
-import org.omnaest.react4j.domain.data.TypedDataContext;
+import org.omnaest.react4j.domain.context.data.DefineableDataContext;
+import org.omnaest.react4j.domain.context.data.TypedDataContext;
+import org.omnaest.react4j.domain.context.ui.UIContext;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.i18n.UILocale;
+import org.omnaest.react4j.domain.rendering.RenderableUIComponent;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
-import org.omnaest.react4j.service.internal.service.DataContextFactory;
+import org.omnaest.react4j.service.internal.service.ContextFactory;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 import org.omnaest.utils.element.cached.CachedElement;
 
-public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements UIComponent<UIC>
+public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements RenderableUIComponent<UIC>
 {
-    private static AtomicInteger                   idCounter   = new AtomicInteger();
-    private String                                 id          = this.newComponentId(this.getClass());
-    private List<UIComponent<?>>                   parents     = new ArrayList<>();
+    private static AtomicInteger                   idCounter           = new AtomicInteger();
+    private String                                 id                  = this.newComponentId(this.getClass());
+    private List<UIComponent<?>>                   parents             = new ArrayList<>();
     protected ComponentContext                     context;
-    protected CachedElement<DefineableDataContext> dataContext = CachedElement.of(() -> this.context.getDataContextFactory()
-                                                                                                    .newInstance(this.getLocations()));
+    protected CachedElement<DefineableDataContext> dataContextProvider = CachedElement.of(() -> this.context.getContextFactory()
+                                                                                                            .newDataContextInstance(this.getLocations()));
+    protected CachedElement<UIContext>             uiContextProvider   = CachedElement.of(() -> this.context.getContextFactory()
+                                                                                                            .newUIContextInstance(this.getLocations()));
 
     public AbstractUIComponent(ComponentContext context)
     {
@@ -117,16 +121,24 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
         return this.context.getUiComponentFactory();
     }
 
-    protected DataContextFactory getDataContextFactory()
+    protected ContextFactory getDataContextFactory()
     {
-        return this.context.getDataContextFactory();
+        return this.context.getContextFactory();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public UIC withUIContext(BiConsumer<UIC, UIContext> uiContextConsumer)
+    {
+        uiContextConsumer.accept((UIC) this, this.uiContextProvider.get());
+        return (UIC) this;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public UIC withDataContext(BiConsumer<UIC, DefineableDataContext> dataContextConsumer)
     {
-        dataContextConsumer.accept((UIC) this, this.dataContext.get());
+        dataContextConsumer.accept((UIC) this, this.dataContextProvider.get());
         return (UIC) this;
     }
 

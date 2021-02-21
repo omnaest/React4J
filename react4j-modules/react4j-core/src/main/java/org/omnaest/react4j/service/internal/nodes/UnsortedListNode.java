@@ -14,6 +14,9 @@ public class UnsortedListNode extends AbstractNode implements Node
     @JsonProperty
     private List<Node> elements;
 
+    @JsonProperty
+    private boolean enableBulletPoints;
+
     @Override
     public String getType()
     {
@@ -29,6 +32,17 @@ public class UnsortedListNode extends AbstractNode implements Node
     {
         this.elements = elements;
         return this;
+    }
+
+    public UnsortedListNode setEnableBulletPoints(boolean showBulletPoints)
+    {
+        this.enableBulletPoints = showBulletPoints;
+        return this;
+    }
+
+    public boolean isEnableBulletPoints()
+    {
+        return this.enableBulletPoints;
     }
 
 }

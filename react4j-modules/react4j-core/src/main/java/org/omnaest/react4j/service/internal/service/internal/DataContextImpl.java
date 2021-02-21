@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.omnaest.react4j.data.Repository;
 import org.omnaest.react4j.data.Repository.AddEntry;
@@ -13,14 +14,16 @@ import org.omnaest.react4j.data.Repository.Entry;
 import org.omnaest.react4j.data.Repository.EntryOperationResult;
 import org.omnaest.react4j.data.Repository.Id;
 import org.omnaest.react4j.data.Repository.PutEntry;
-import org.omnaest.react4j.data.RepositoryProvider;
-import org.omnaest.react4j.data.RepositoryProvider.Tenant;
+import org.omnaest.react4j.data.provider.RepositoryProvider;
+import org.omnaest.react4j.data.provider.RepositoryProvider.Tenant;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Locations;
-import org.omnaest.react4j.domain.data.Data;
-import org.omnaest.react4j.domain.data.DataContext;
-import org.omnaest.react4j.domain.data.DefineableDataContext;
-import org.omnaest.react4j.domain.data.TypedDataContext;
+import org.omnaest.react4j.domain.context.Context;
+import org.omnaest.react4j.domain.context.data.Data;
+import org.omnaest.react4j.domain.context.data.DataContext;
+import org.omnaest.react4j.domain.context.data.DefineableDataContext;
+import org.omnaest.react4j.domain.context.data.TypedDataContext;
+import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.utils.EncoderUtils.TextEncoderAndDecoderFactory;
 import org.omnaest.utils.MapUtils;
 import org.omnaest.utils.StringUtils;
@@ -174,23 +177,16 @@ public class DataContextImpl<T> implements DefineableDataContext, TypedDataConte
                 return new Selection()
                 {
                     @Override
-                    public Field getField(String fieldName)
+                    public DataContextDocument get(int index)
                     {
-                        return new Field()
-                        {
+                        return new DataContextDocumentImpl(currentDataContextProvider);
+                    }
 
-                            @Override
-                            public String getFieldName()
-                            {
-                                return fieldName;
-                            }
-
-                            @Override
-                            public DataContext getDataContext()
-                            {
-                                return currentDataContextProvider.get();
-                            }
-                        };
+                    @Override
+                    public int size()
+                    {
+                        // TODO Auto-generated method stub
+                        return 1;
                     }
                 };
             }
@@ -209,6 +205,85 @@ public class DataContextImpl<T> implements DefineableDataContext, TypedDataConte
     {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public View view()
+    {
+        return new View()
+        {
+            @Override
+            public Stream<Document> stream()
+            {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public int size()
+            {
+                // TODO Auto-generated method stub
+                return 0;
+            }
+
+            @Override
+            public DataContextDocument get(int index)
+            {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        };
+    }
+
+    @Override
+    public Optional<DataContext> asDataContext()
+    {
+        return Optional.of(this);
+    }
+
+    private static class DataContextDocumentImpl implements DataContextDocument
+    {
+        private Supplier<DataContext> dataContextProvider;
+
+        public DataContextDocumentImpl(Supplier<DataContext> dataContextProvider)
+        {
+            super();
+            this.dataContextProvider = dataContextProvider;
+        }
+
+        @Override
+        public Context getContext()
+        {
+            return this.dataContextProvider.get();
+        }
+
+        @Override
+        public DataContextField getField(String fieldName)
+        {
+            return new DataContextField()
+            {
+
+                @Override
+                public String getFieldName()
+                {
+                    return fieldName;
+                }
+
+                @Override
+                public Document getDocument()
+                {
+                    return null;
+                }
+
+                @Override
+                public Context getContext()
+                {
+                    return this.getDocument()
+                               .getContext();
+                }
+
+            };
+        }
     }
 
 }

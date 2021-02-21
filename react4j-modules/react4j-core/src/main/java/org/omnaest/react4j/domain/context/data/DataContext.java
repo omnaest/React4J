@@ -1,10 +1,12 @@
-package org.omnaest.react4j.domain.data;
+package org.omnaest.react4j.domain.context.data;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.omnaest.react4j.domain.Location;
+import org.omnaest.react4j.domain.context.Context;
+import org.omnaest.react4j.domain.context.document.Document;
+import org.omnaest.react4j.domain.context.document.DocumentList;
 
 /**
  * A {@link DataContext} represents a collection within the persistence and contains a list of entries.<br>
@@ -13,11 +15,26 @@ import org.omnaest.react4j.domain.Location;
  * 
  * @author omnaest
  */
-public interface DataContext
+public interface DataContext extends Context
 {
-    public String getId(Location location);
 
     public PersistResult persist(Data data);
+
+    public Selector selector();
+
+    public View view();
+
+    /**
+     * Returns a {@link TypedDataContext} wrapping the current {@link DataContext}
+     * 
+     * @param type
+     * @return
+     */
+    public <T> TypedDataContext<T> asTypedDataContext(Class<T> type);
+
+    public static interface View extends DataContextDocumentList
+    {
+    }
 
     public static interface PersistResult extends Supplier<Data>
     {
@@ -33,8 +50,6 @@ public interface DataContext
 
         public PersistResult onFailureGet(BiFunction<Exception, PersistResult, Data> supplier);
     }
-
-    public Selector selector();
 
     /**
      * A {@link Selection} of a single entry within a {@link DataContext}
@@ -53,27 +68,23 @@ public interface DataContext
         public Selection getCurrentSelection();
     }
 
-    public static interface DataContextEntry
+    public static interface DataContextDocument extends Document
     {
-        public Field getField(String fieldName);
+        @Override
+        public DataContextField getField(String fieldName);
     }
 
-    public static interface Selection extends DataContextEntry
+    public static interface DataContextDocumentList extends DocumentList
+    {
+        @Override
+        public DataContextDocument get(int index);
+    }
+
+    public static interface Selection extends DataContextDocumentList
     {
     }
 
-    public static interface Field
+    public static interface DataContextField extends Document.Field
     {
-        public DataContext getDataContext();
-
-        public String getFieldName();
     }
-
-    /**
-     * Returns a {@link TypedDataContext} wrapping the current {@link DataContext}
-     * 
-     * @param type
-     * @return
-     */
-    public <T> TypedDataContext<T> asTypedDataContext(Class<T> type);
 }

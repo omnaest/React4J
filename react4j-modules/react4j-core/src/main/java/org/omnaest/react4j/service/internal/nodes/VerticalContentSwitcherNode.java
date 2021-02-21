@@ -5,6 +5,7 @@ import java.util.List;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class VerticalContentSwitcherNode extends AbstractNode implements Node
@@ -32,7 +33,7 @@ public class VerticalContentSwitcherNode extends AbstractNode implements Node
         return this;
     }
 
-    public static class ContentElement
+    public static class ContentElement implements Node
     {
         @JsonProperty
         private I18nTextValue title;
@@ -88,6 +89,13 @@ public class VerticalContentSwitcherNode extends AbstractNode implements Node
         {
             this.content = content;
             return this;
+        }
+
+        @JsonIgnore
+        @Override
+        public String getType()
+        {
+            return "";
         }
 
     }

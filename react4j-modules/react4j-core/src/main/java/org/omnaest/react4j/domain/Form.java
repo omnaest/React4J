@@ -4,8 +4,9 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.omnaest.react4j.domain.data.Data;
-import org.omnaest.react4j.domain.data.DataContext;
+import org.omnaest.react4j.domain.context.Context;
+import org.omnaest.react4j.domain.context.data.Data;
+import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.raw.FormElementNode;
 
 public interface Form extends UIComponent<Form>
@@ -30,7 +31,7 @@ public interface Form extends UIComponent<Form>
     public static interface FormFieldElement<FE extends FormFieldElement<?>> extends FormElement<FE>
     {
 
-        public FE attachToField(DataContext.Field field);
+        public FE attachToField(Document.Field field);
     }
 
     public static interface InputFormElement extends FormFieldElement<InputFormElement>
@@ -40,7 +41,7 @@ public interface Form extends UIComponent<Form>
 
     public static interface ButtonFormElement extends FormElement<ButtonFormElement>
     {
-        public ButtonFormElement attachTo(DataContext dataContext);
+        public ButtonFormElement attachTo(Document document);
 
         public ButtonFormElement withText(String text);
 
@@ -48,7 +49,7 @@ public interface Form extends UIComponent<Form>
 
         public ButtonFormElement saveOnClick();
 
-        public static interface ButtonEventHandler extends BiFunction<Data, DataContext, Data>
+        public static interface ButtonEventHandler extends BiFunction<Data, Context, Data>
         {
         }
     }

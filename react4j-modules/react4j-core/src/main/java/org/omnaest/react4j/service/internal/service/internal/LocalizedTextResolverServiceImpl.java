@@ -17,9 +17,9 @@ public class LocalizedTextResolverServiceImpl implements LocalizedTextResolverSe
     public I18nTextValue apply(I18nText i18nText, Location location)
     {
         Map<String, String> localeToText = MapUtils.builder()
-                                                   .put("DEFAULT", Optional.ofNullable(i18nText)
-                                                                           .map(I18nText::getDefaultText)
-                                                                           .orElse(""))
+                                                   .put(DEFAULT_LOCALE_KEY, Optional.ofNullable(i18nText)
+                                                                                    .map(I18nText::getDefaultText)
+                                                                                    .orElse(""))
                                                    .build();
         return new I18nTextValue(localeToText);
     }

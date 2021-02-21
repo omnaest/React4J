@@ -11,7 +11,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.omnaest.datagrid.DataGridUtils;
 import org.omnaest.datagrid.DataGridUtils.DataGrid;
 import org.omnaest.react4j.data.Repository;
-import org.omnaest.react4j.data.RepositoryProvider;
+import org.omnaest.react4j.data.provider.RepositoryProvider;
 import org.omnaest.utils.repository.IndexElementRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

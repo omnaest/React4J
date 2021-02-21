@@ -1,14 +1,23 @@
 package org.omnaest.react4j.service.internal.component;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Card;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
-import org.omnaest.react4j.domain.raw.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.components.LocationSupport;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
+import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.CardNode;
+import org.omnaest.utils.template.TemplateUtils;
+import org.omnaest.utils.template.TemplateUtils.TemplateProcessorBuilder;
 
 public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implements Card
 {
@@ -28,18 +37,52 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
         return new UIComponentRenderer()
         {
             @Override
-            public Node render(Location parentLocation)
+            public Location getLocation(LocationSupport locationSupport)
             {
-                Location location = Location.of(parentLocation, CardImpl.this.getId());
+                return locationSupport.createLocation(CardImpl.this.getId());
+            }
+
+            @Override
+            public Node render(RenderingProcessor renderingProcessor, Location location)
+            {
                 return new CardNode().setTitle(CardImpl.this.getTextResolver()
                                                             .apply(CardImpl.this.title, location))
                                      .setLocator(CardImpl.this.locator)
                                      .setAdjust(CardImpl.this.adjust)
                                      .setContent(Optional.ofNullable(CardImpl.this.content)
-                                                         .map(content -> content.asRenderer()
-                                                                                .render(location))
+                                                         .map(content -> renderingProcessor.process(content, location))
                                                          .orElse(null));
             }
+
+            @Override
+            public void manageNodeRenderers(NodeRendererRegistry registry)
+            {
+                NodeRenderer<CardNode> nodeRenderer = new NodeRenderer<CardNode>()
+                {
+                    @Override
+                    public String render(CardNode node, NodeRenderingProcessor nodeRenderingProcessor)
+                    {
+                        TemplateProcessorBuilder templateProcessorBuilder = TemplateUtils.builder();
+
+                        templateProcessorBuilder.add("locator", node.getLocator())
+                                                .add("title", nodeRenderingProcessor.render(node.getTitle()));
+                        templateProcessorBuilder.add("content", Optional.ofNullable(node.getContent())
+                                                                        .map(nodeRenderingProcessor::render)
+                                                                        .orElse(""));
+                        return templateProcessorBuilder.useTemplateClassResource(this.getClass(), "/render/templates/html/card.html")
+                                                       .build()
+                                                       .get();
+                    }
+                };
+                registry.register(CardNode.class, NodeRenderType.HTML, nodeRenderer);
+            }
+
+            @Override
+            public Stream<UIComponent<?>> getSubComponents()
+            {
+                return Stream.of(CardImpl.this.content);
+            }
+
         };
     }
 
