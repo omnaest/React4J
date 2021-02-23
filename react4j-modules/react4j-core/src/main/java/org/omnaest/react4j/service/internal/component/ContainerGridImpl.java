@@ -18,14 +18,20 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.ContainerGridNode;
+import org.omnaest.react4j.service.internal.nodes.ContainerGridNode.CellNode;
 import org.omnaest.react4j.service.internal.nodes.ContainerGridNode.RowNode;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MapperUtils;
+import org.omnaest.utils.PredicateUtils;
 import org.omnaest.utils.element.bi.BiElement;
+import org.omnaest.utils.template.TemplateUtils;
 
 public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<ContainerGrid> implements ContainerGrid
 {
@@ -129,9 +135,29 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.registerChildrenMapper(ContainerGridNode.class, ContainerGridNode::getRows);
-                registry.registerChildrenMapper(ContainerGridNode.RowNode.class, RowNode::getCells);
-                registry.registerChildMapper(ContainerGridNode.CellNode.class, ContainerGridNode.CellNode::getContent);
+                registry.register(ContainerGridNode.class, NodeRenderType.HTML, new NodeRenderer<ContainerGridNode>()
+                {
+                    @Override
+                    public String render(ContainerGridNode node, NodeRenderingProcessor nodeRenderingProcessor)
+                    {
+                        return TemplateUtils.builder()
+                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/container_grid.html")
+                                            .add("locator", node.getLocator())
+                                            .add("rows", node.getRows()
+                                                             .stream()
+                                                             .map(row -> row.getCells()
+                                                                            .stream()
+                                                                            .map(CellNode::getContent)
+                                                                            .map(nodeRenderingProcessor::render)
+                                                                            .filter(PredicateUtils.notNull())
+                                                                            .collect(Collectors.toList()))
+                                                             .filter(PredicateUtils.notNull())
+                                                             .collect(Collectors.toList()))
+                                            .build()
+                                            .get();
+                    }
+                });
+
             }
 
             @Override

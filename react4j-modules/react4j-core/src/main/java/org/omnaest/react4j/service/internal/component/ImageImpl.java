@@ -10,8 +10,12 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.ImageNode;
+import org.omnaest.utils.template.TemplateUtils;
 
 public class ImageImpl extends AbstractUIComponent<Image> implements Image
 {
@@ -45,8 +49,19 @@ public class ImageImpl extends AbstractUIComponent<Image> implements Image
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
-
+                registry.register(ImageNode.class, NodeRenderType.HTML, new NodeRenderer<ImageNode>()
+                {
+                    @Override
+                    public String render(ImageNode node, NodeRenderingProcessor nodeRenderingProcessor)
+                    {
+                        return TemplateUtils.builder()
+                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/image.html")
+                                            .add("image", node.getImage())
+                                            .add("alternativeText", nodeRenderingProcessor.render(node.getName()))
+                                            .build()
+                                            .get();
+                    }
+                });
             }
 
             @Override

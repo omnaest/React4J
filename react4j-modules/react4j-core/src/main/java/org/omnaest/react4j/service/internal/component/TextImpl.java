@@ -52,17 +52,15 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
                 NodeRenderer<TextNode> nodeRenderer = new NodeRenderer<TextNode>()
                 {
                     @Override
                     public String render(TextNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
-                        String body = node.getTexts()
-                                          .stream()
-                                          .map(text -> nodeRenderingProcessor.render(text))
-                                          .collect(Collectors.joining());
-                        return "<span>" + body + "</span>";
+                        return node.getTexts()
+                                   .stream()
+                                   .map(text -> nodeRenderingProcessor.render(text))
+                                   .collect(Collectors.joining(" "));
                     }
 
                 };

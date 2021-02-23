@@ -2,6 +2,7 @@ package org.omnaest.react4j.service.internal.component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.BlockQuote;
@@ -12,8 +13,12 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.BlockQuoteNode;
+import org.omnaest.utils.template.TemplateUtils;
 
 public class BlockQuoteImpl extends AbstractUIComponent implements BlockQuote
 {
@@ -48,8 +53,22 @@ public class BlockQuoteImpl extends AbstractUIComponent implements BlockQuote
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
-
+                registry.register(BlockQuoteNode.class, NodeRenderType.HTML, new NodeRenderer<BlockQuoteNode>()
+                {
+                    @Override
+                    public String render(BlockQuoteNode node, NodeRenderingProcessor nodeRenderingProcessor)
+                    {
+                        return TemplateUtils.builder()
+                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/blockquote.html")
+                                            .add("footer", nodeRenderingProcessor.render(node.getFooter()))
+                                            .add("texts", node.getTexts()
+                                                              .stream()
+                                                              .map(nodeRenderingProcessor::render)
+                                                              .collect(Collectors.toList()))
+                                            .build()
+                                            .get();
+                    }
+                });
             }
 
             @Override

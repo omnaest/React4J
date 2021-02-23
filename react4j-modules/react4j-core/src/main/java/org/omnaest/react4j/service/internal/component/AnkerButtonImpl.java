@@ -1,6 +1,5 @@
 package org.omnaest.react4j.service.internal.component;
 
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.AnkerButton;
@@ -17,6 +16,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.AnkerButtonNode;
+import org.omnaest.utils.template.TemplateUtils;
 
 public class AnkerButtonImpl extends AbstractUIComponent<AnkerButton> implements AnkerButton
 {
@@ -53,20 +53,19 @@ public class AnkerButtonImpl extends AbstractUIComponent<AnkerButton> implements
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
-                NodeRenderer<AnkerButtonNode> nodeRenderer = new NodeRenderer<AnkerButtonNode>()
+                registry.register(AnkerButtonNode.class, NodeRenderType.HTML, new NodeRenderer<AnkerButtonNode>()
                 {
                     @Override
                     public String render(AnkerButtonNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
-                        String text = Optional.ofNullable(node.getText())
-                                              .map(nodeRenderingProcessor::render)
-                                              .orElse("");
-                        return "<a href=\"" + node.getLink() + "\">" + text + "</a>";
+                        return TemplateUtils.builder()
+                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/anker_button.html")
+                                            .add("link", node.getLink())
+                                            .add("text", nodeRenderingProcessor.render(node.getText()))
+                                            .build()
+                                            .get();
                     }
-
-                };
-                registry.register(AnkerButtonNode.class, NodeRenderType.HTML, nodeRenderer);
+                });
             }
 
             @Override

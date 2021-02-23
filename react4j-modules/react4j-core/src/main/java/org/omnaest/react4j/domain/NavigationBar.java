@@ -3,7 +3,7 @@ package org.omnaest.react4j.domain;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public interface NavigationBar extends UIComponent
+public interface NavigationBar extends UIComponent<NavigationBar>
 {
     public NavigationBar addEntry(Consumer<NavigationBarEntry> navigationEntryConsumer);
 

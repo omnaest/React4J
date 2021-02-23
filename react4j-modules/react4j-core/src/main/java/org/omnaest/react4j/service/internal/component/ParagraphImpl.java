@@ -29,6 +29,7 @@ import org.omnaest.react4j.service.internal.nodes.ParagraphNode;
 import org.omnaest.utils.ClassUtils;
 import org.omnaest.utils.ClassUtils.Resource;
 import org.omnaest.utils.StringUtils;
+import org.omnaest.utils.template.TemplateUtils;
 
 public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Paragraph
 {
@@ -177,21 +178,21 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                NodeRenderer<ParagraphNode> nodeRenderer = new NodeRenderer<ParagraphNode>()
+                registry.register(ParagraphNode.class, NodeRenderType.HTML, new NodeRenderer<ParagraphNode>()
                 {
                     @Override
                     public String render(ParagraphNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
-                        String body = node.getElements()
-                                          .stream()
-                                          .map(nodeRenderingProcessor::render)
-                                          .collect(Collectors.joining());
-                        return "<p>" + body + "</p>";
+                        return TemplateUtils.builder()
+                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/paragraph.html")
+                                            .add("elements", node.getElements()
+                                                                 .stream()
+                                                                 .map(nodeRenderingProcessor::render)
+                                                                 .collect(Collectors.toList()))
+                                            .build()
+                                            .get();
                     }
-
-                };
-                registry.register(ParagraphNode.class, NodeRenderType.HTML, nodeRenderer);
-                registry.registerChildrenMapper(ParagraphNode.class, ParagraphNode::getElements);
+                });
             }
 
             @Override

@@ -17,7 +17,6 @@ import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.CardNode;
 import org.omnaest.utils.template.TemplateUtils;
-import org.omnaest.utils.template.TemplateUtils.TemplateProcessorBuilder;
 
 public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implements Card
 {
@@ -57,24 +56,22 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                NodeRenderer<CardNode> nodeRenderer = new NodeRenderer<CardNode>()
+                registry.register(CardNode.class, NodeRenderType.HTML, new NodeRenderer<CardNode>()
                 {
                     @Override
                     public String render(CardNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
-                        TemplateProcessorBuilder templateProcessorBuilder = TemplateUtils.builder();
-
-                        templateProcessorBuilder.add("locator", node.getLocator())
-                                                .add("title", nodeRenderingProcessor.render(node.getTitle()));
-                        templateProcessorBuilder.add("content", Optional.ofNullable(node.getContent())
-                                                                        .map(nodeRenderingProcessor::render)
-                                                                        .orElse(""));
-                        return templateProcessorBuilder.useTemplateClassResource(this.getClass(), "/render/templates/html/card.html")
-                                                       .build()
-                                                       .get();
+                        return TemplateUtils.builder()
+                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/card.html")
+                                            .add("locator", node.getLocator())
+                                            .add("title", nodeRenderingProcessor.render(node.getTitle()))
+                                            .add("content", Optional.ofNullable(node.getContent())
+                                                                    .map(nodeRenderingProcessor::render)
+                                                                    .orElse(""))
+                                            .build()
+                                            .get();
                     }
-                };
-                registry.register(CardNode.class, NodeRenderType.HTML, nodeRenderer);
+                });
             }
 
             @Override

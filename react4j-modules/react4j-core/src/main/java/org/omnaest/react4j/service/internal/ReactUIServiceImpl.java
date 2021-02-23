@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -94,7 +95,6 @@ import org.omnaest.react4j.service.internal.service.internal.RenderingProcessorI
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MatcherUtils;
 import org.omnaest.utils.MatcherUtils.Match;
-import org.omnaest.utils.MatcherUtils.MatchResult;
 import org.omnaest.utils.PredicateUtils;
 import org.omnaest.utils.StreamUtils;
 import org.omnaest.utils.element.bi.BiElement;
@@ -416,11 +416,12 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
 
                     private List<UIComponent<?>> parseMarkdownElements(Stream<Element> elements)
                     {
+                        AtomicInteger referenceLinkCounter = new AtomicInteger(1);
                         Function<Element, Stream<UIComponent<?>>> mapper = StreamUtils.redundantFlattener(element -> Stream.of(element)
                                                                                                                            .map(Element::asParagraph)
                                                                                                                            .filter(Optional::isPresent)
                                                                                                                            .map(Optional::get)
-                                                                                                                           .map(this.createMarkdownParagraphMapper())
+                                                                                                                           .map(this.createMarkdownParagraphMapper(referenceLinkCounter))
                                                                                                                            .filter(PredicateUtils.notNull())
                                                                                                                            .map(v -> (UIComponent<?>) v),
                                                                                                           element -> Stream.of(element)
@@ -436,25 +437,35 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                                                                                            .map(Element::asUnorderedList)
                                                                                                                            .filter(Optional::isPresent)
                                                                                                                            .map(Optional::get)
-                                                                                                                           .map(this.createMarkdownUnorderedListMapper())
+                                                                                                                           .map(this.createMarkdownUnorderedListMapper(referenceLinkCounter))
                                                                                                                            .filter(PredicateUtils.notNull())
                                                                                                                            .map(v -> (UIComponent<?>) v));
                         return elements.flatMap(mapper)
                                        .collect(Collectors.toList());
                     }
 
-                    private Function<MarkdownUtils.UnorderedList, UnsortedList> createMarkdownUnorderedListMapper()
+                    private Function<MarkdownUtils.UnorderedList, UnsortedList> createMarkdownUnorderedListMapper(AtomicInteger referenceLinkCounter)
                     {
                         return markdownList ->
                         {
+                            boolean enableBulletPoints = markdownList.getElements()
+                                                                     .stream()
+                                                                     .findFirst()
+                                                                     .flatMap(Element::asParagraph)
+                                                                     .map(MarkdownUtils.Paragraph::getElements)
+                                                                     .map(List::stream)
+                                                                     .flatMap(Stream::findFirst)
+                                                                     .flatMap(Element::asText)
+                                                                     .map(text -> !StringUtils.startsWith(text.getValue(), "|"))
+                                                                     .orElse(true);
                             return this.newUnsortedList()
-                                       .enableBulletPoints()
+                                       .enableBulletPoints(enableBulletPoints)
                                        .addEntries(markdownList.getElements()
                                                                .stream()
                                                                .map(Element::asParagraph)
                                                                .filter(Optional::isPresent)
                                                                .map(Optional::get)
-                                                               .map(this.createMarkdownParagraphMapper())
+                                                               .map(this.createMarkdownParagraphMapper(referenceLinkCounter, true))
                                                                .filter(PredicateUtils.notNull())
                                                                .collect(Collectors.toList()));
                         };
@@ -466,7 +477,14 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                         return ListUtils.first(this.newMarkdownCards(markdown));
                     }
 
-                    private Function<MarkdownUtils.Paragraph, Paragraph> createMarkdownParagraphMapper()
+                    private Function<MarkdownUtils.Paragraph, Paragraph> createMarkdownParagraphMapper(AtomicInteger referenceLinkCounter)
+                    {
+                        boolean removeLeadingPipe = false;
+                        return this.createMarkdownParagraphMapper(referenceLinkCounter, removeLeadingPipe);
+                    }
+
+                    private Function<MarkdownUtils.Paragraph, Paragraph> createMarkdownParagraphMapper(AtomicInteger referenceLinkCounter,
+                                                                                                       boolean removeLeadingPipe)
                     {
                         return markdownParagraph ->
                         {
@@ -485,23 +503,24 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                             }
 
                                                             //
-                                                            MatchResult matchResult = MatcherUtils.matcher()
-                                                                                                  .ofRegEx("^\\[ICON\\:([a-zA-Z\\_]+)\\](.*)")
-                                                                                                  .findInAnd(text.getValue());
-                                                            Optional<Match> match = matchResult.getFirst();
-                                                            if (match.isPresent())
+                                                            String value = removeLeadingPipe ? StringUtils.removeStart(text.getValue(), "|") : text.getValue();
+                                                            Optional<Match> iconMatch = MatcherUtils.matcher()
+                                                                                                    .ofRegEx("^\\[ICON\\:([a-zA-Z\\_]+)\\](.*)")
+                                                                                                    .findInAnd(value)
+                                                                                                    .getFirst();
+                                                            if (iconMatch.isPresent())
                                                             {
-                                                                paragraph.addText(match.get()
-                                                                                       .getSubGroup(1)
-                                                                                       .flatMap(StandardIcon::of)
-                                                                                       .orElse(null),
-                                                                                  match.get()
-                                                                                       .getSubGroup(2)
-                                                                                       .orElse(""));
+                                                                paragraph.addText(iconMatch.get()
+                                                                                           .getSubGroup(1)
+                                                                                           .flatMap(StandardIcon::of)
+                                                                                           .orElse(null),
+                                                                                  iconMatch.get()
+                                                                                           .getSubGroup(2)
+                                                                                           .orElse(""));
                                                             }
                                                             else
                                                             {
-                                                                paragraph.addText(text.getValue());
+                                                                paragraph.addText(value);
                                                             }
                                                         });
                                                  element.asHeading()
@@ -514,25 +533,34 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                  element.asLink()
                                                         .ifPresent(link ->
                                                         {
-                                                            MatchResult matchResult = MatcherUtils.matcher()
-                                                                                                  .ofRegEx("^BUTTON(\\:([a-zA-Z]+))?\\:(.*)")
-                                                                                                  .findInAnd(link.getLabel());
-                                                            Optional<Match> match = matchResult.getFirst();
-                                                            if (match.isPresent())
+                                                            Optional<Match> buttonMatch = MatcherUtils.matcher()
+                                                                                                      .ofRegEx("^BUTTON(\\:([a-zA-Z]+))?\\:(.*)")
+                                                                                                      .findInAnd(link.getLabel())
+                                                                                                      .getFirst();
+                                                            Optional<Match> referenceLinkMatch = MatcherUtils.matcher()
+                                                                                                             .ofRegEx("\\[\\?\\]")
+                                                                                                             .findInAnd(link.getLabel())
+                                                                                                             .getFirst();
+                                                            if (buttonMatch.isPresent())
                                                             {
                                                                 paragraph.addLinkButton(anker ->
                                                                 {
-                                                                    String text = match.get()
-                                                                                       .getSubGroup(3)
-                                                                                       .orElse("");
-                                                                    String style = match.get()
-                                                                                        .getSubGroup(2)
-                                                                                        .orElse(null);
+                                                                    String text = buttonMatch.get()
+                                                                                             .getSubGroup(3)
+                                                                                             .orElse("");
+                                                                    String style = buttonMatch.get()
+                                                                                              .getSubGroup(2)
+                                                                                              .orElse(null);
                                                                     anker.withText(text)
                                                                          .withLink(link.getLink())
                                                                          .withStyle(Style.of(style)
                                                                                          .orElse(Style.PRIMARY));
                                                                 });
+                                                            }
+                                                            else if (referenceLinkMatch.isPresent())
+                                                            {
+                                                                paragraph.addLink(anker -> anker.withText("[" + referenceLinkCounter.getAndIncrement() + "]")
+                                                                                                .withLink(link.getLink()));
                                                             }
                                                             else
                                                             {
@@ -588,14 +616,14 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
             @Override
             public void collectNodeRenderers(NodeRendererRegistry registry)
             {
-                this.components.stream()
-                               .filter(component -> component instanceof RenderableUIComponent)
-                               .map(component -> (RenderableUIComponent<?>) component)
-                               .flatMap(this.createRecursiveComponentFlattener())
-                               .filter(component -> component instanceof RenderableUIComponent)
-                               .map(component -> (RenderableUIComponent<?>) component)
-                               .forEach(component -> component.asRenderer()
-                                                              .manageNodeRenderers(registry));
+                Stream.concat(Stream.of(this.navigationBar), this.components.stream())
+                      .filter(component -> component instanceof RenderableUIComponent)
+                      .map(component -> (RenderableUIComponent<?>) component)
+                      .flatMap(this.createRecursiveComponentFlattener())
+                      .filter(component -> component instanceof RenderableUIComponent)
+                      .map(component -> (RenderableUIComponent<?>) component)
+                      .forEach(component -> component.asRenderer()
+                                                     .manageNodeRenderers(registry));
             }
 
             private Function<RenderableUIComponent<?>, Stream<RenderableUIComponent<?>>> createRecursiveComponentFlattener()

@@ -2,6 +2,7 @@ package org.omnaest.react4j.service.internal.component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -15,10 +16,15 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.NavigationBarNode;
+import org.omnaest.utils.MapUtils;
+import org.omnaest.utils.template.TemplateUtils;
 
-public class NavigationBarImpl extends AbstractUIComponent implements NavigationBar
+public class NavigationBarImpl extends AbstractUIComponent<NavigationBar> implements NavigationBar
 {
     private List<NavigationEntryImpl> entries = new ArrayList<>();
 
@@ -55,7 +61,26 @@ public class NavigationBarImpl extends AbstractUIComponent implements Navigation
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
+                registry.register(NavigationBarNode.class, NodeRenderType.HTML, new NodeRenderer<NavigationBarNode>()
+                {
+                    @Override
+                    public String render(NavigationBarNode node, NodeRenderingProcessor nodeRenderingProcessor)
+                    {
+                        return TemplateUtils.builder()
+                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/navigationbar.html")
+                                            .add("entries", node.getEntries()
+                                                                .stream()
+                                                                .map(entry -> MapUtils.builder()
+                                                                                      .put("link", Optional.ofNullable(entry.getLinkedId())
+                                                                                                           .map(linkedId -> "#" + linkedId)
+                                                                                                           .orElse(entry.getLink()))
+                                                                                      .put("text", nodeRenderingProcessor.render(entry.getText()))
+                                                                                      .build())
+                                                                .collect(Collectors.toList()))
+                                            .build()
+                                            .get();
+                    }
+                });
             }
 
             @Override

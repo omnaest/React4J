@@ -1,6 +1,5 @@
 package org.omnaest.react4j.service.internal.component;
 
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Anker;
@@ -16,6 +15,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.AnkerNode;
+import org.omnaest.utils.template.TemplateUtils;
 
 public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
 {
@@ -49,20 +49,19 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
-                NodeRenderer<AnkerNode> nodeRenderer = new NodeRenderer<AnkerNode>()
+                registry.register(AnkerNode.class, NodeRenderType.HTML, new NodeRenderer<AnkerNode>()
                 {
                     @Override
                     public String render(AnkerNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
-                        String text = Optional.ofNullable(node.getText())
-                                              .map(nodeRenderingProcessor::render)
-                                              .orElse("");
-                        return "<a href=\"" + node.getLink() + "\">" + text + "</a>";
+                        return TemplateUtils.builder()
+                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/anker.html")
+                                            .add("link", node.getLink())
+                                            .add("text", nodeRenderingProcessor.render(node.getText()))
+                                            .build()
+                                            .get();
                     }
-
-                };
-                registry.register(AnkerNode.class, NodeRenderType.HTML, nodeRenderer);
+                });
             }
 
             @Override

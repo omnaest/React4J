@@ -16,8 +16,12 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.UnsortedListNode;
+import org.omnaest.utils.template.TemplateUtils;
 
 public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implements UnsortedList
 {
@@ -52,7 +56,21 @@ public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implemen
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
+                registry.register(UnsortedListNode.class, NodeRenderType.HTML, new NodeRenderer<UnsortedListNode>()
+                {
+                    @Override
+                    public String render(UnsortedListNode node, NodeRenderingProcessor nodeRenderingProcessor)
+                    {
+                        return TemplateUtils.builder()
+                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/unsorted_list.html")
+                                            .add("items", node.getElements()
+                                                              .stream()
+                                                              .map(nodeRenderingProcessor::render)
+                                                              .collect(Collectors.toList()))
+                                            .build()
+                                            .get();
+                    }
+                });
             }
 
             @Override

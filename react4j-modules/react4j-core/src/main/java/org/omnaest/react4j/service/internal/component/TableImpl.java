@@ -30,7 +30,6 @@ import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.template.TemplateUtils;
-import org.omnaest.utils.template.TemplateUtils.TemplateProcessorBuilder;
 
 public class TableImpl extends AbstractUIComponentWithSubComponents<Table> implements Table
 {
@@ -152,32 +151,30 @@ public class TableImpl extends AbstractUIComponentWithSubComponents<Table> imple
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                NodeRenderer<TableNode> nodeRenderer = new NodeRenderer<TableNode>()
+                registry.register(TableNode.class, NodeRenderType.HTML, new NodeRenderer<TableNode>()
                 {
                     @Override
                     public String render(TableNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
-                        TemplateProcessorBuilder templateProcessorBuilder = TemplateUtils.builder();
-                        List<String> titles = node.getColumnTitles()
-                                                  .stream()
-                                                  .map(nodeRenderingProcessor::render)
-                                                  .collect(Collectors.toList());
-                        templateProcessorBuilder.add("columns", titles);
-                        templateProcessorBuilder.add("rows", node.getRows()
-                                                                 .stream()
-                                                                 .map(rowNode -> rowNode.getCells()
-                                                                                        .stream()
-                                                                                        .map(CellNode::getContent)
-                                                                                        .map(nodeRenderingProcessor::render)
-                                                                                        .collect(Collectors.toList()))
-                                                                 .collect(Collectors.toList()));
-                        return templateProcessorBuilder.useTemplateClassResource(this.getClass(), "/render/templates/html/table.html")
-                                                       .build()
-                                                       .get();
+                        return TemplateUtils.builder()
+                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/table.html")
+                                            .add("columns", node.getColumnTitles()
+                                                                .stream()
+                                                                .map(nodeRenderingProcessor::render)
+                                                                .collect(Collectors.toList()))
+                                            .add("rows", node.getRows()
+                                                             .stream()
+                                                             .map(rowNode -> rowNode.getCells()
+                                                                                    .stream()
+                                                                                    .map(CellNode::getContent)
+                                                                                    .map(nodeRenderingProcessor::render)
+                                                                                    .collect(Collectors.toList()))
+                                                             .collect(Collectors.toList()))
+                                            .build()
+                                            .get();
                     }
 
-                };
-                registry.register(TableNode.class, NodeRenderType.HTML, nodeRenderer);
+                });
             }
 
             @Override
