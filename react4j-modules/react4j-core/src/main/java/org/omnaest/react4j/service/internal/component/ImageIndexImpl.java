@@ -71,7 +71,11 @@ public class ImageIndexImpl extends AbstractUIComponent<ImageIndex> implements I
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
                 // TODO Auto-generated method stub
+            }
 
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
             }
 
             @Override

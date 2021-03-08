@@ -62,4 +62,6 @@ public interface Paragraph extends UIComponent<Paragraph>
 
     public Paragraph withBoldStyle();
 
+    public Paragraph addImage(String name, String imageName);
+
 }

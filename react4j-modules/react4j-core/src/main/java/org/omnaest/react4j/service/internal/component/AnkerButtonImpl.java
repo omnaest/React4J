@@ -89,6 +89,11 @@ public class AnkerButtonImpl extends AbstractUIComponent<AnkerButton> implements
                 return Stream.empty();
             }
 
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
+            }
+
         };
     }
 

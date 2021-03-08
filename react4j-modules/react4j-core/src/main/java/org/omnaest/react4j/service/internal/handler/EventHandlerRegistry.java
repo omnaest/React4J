@@ -15,13 +15,21 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.handler;
 
+import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
+import org.omnaest.utils.functional.Provider;
 
 public interface EventHandlerRegistry
 {
     public void register(Target target, EventHandler eventHandler);
 
     public void register(Target target, DataEventHandler eventHandler);
+
+    public void register(Target target, RerenderedNodeProvider rerenderedNodeProvider);
+
+    public static interface RerenderedNodeProvider extends Provider<Node>
+    {
+    }
 }

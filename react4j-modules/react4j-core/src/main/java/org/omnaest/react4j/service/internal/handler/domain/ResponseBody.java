@@ -15,8 +15,23 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.handler.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class ResponseBody extends EventBody
 {
+    @JsonProperty
+    protected TargetNode targetNode;
+
+    public TargetNode getTargetNode()
+    {
+        return this.targetNode;
+    }
+
+    public ResponseBody setTargetNode(TargetNode targetNode)
+    {
+        this.targetNode = targetNode;
+        return this;
+    }
 
     @Override
     public ResponseBody setTarget(Target target)
@@ -31,5 +46,4 @@ public class ResponseBody extends EventBody
         super.setDataWithContext(dataWithContext);
         return this;
     }
-
 }

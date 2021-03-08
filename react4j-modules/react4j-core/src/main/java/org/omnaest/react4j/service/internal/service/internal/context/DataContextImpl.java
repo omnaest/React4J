@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.react4j.service.internal.service.internal;
+package org.omnaest.react4j.service.internal.service.internal.context;
 
 import java.util.Map;
 import java.util.Optional;
@@ -287,7 +287,7 @@ public class DataContextImpl<T> implements DefineableDataContext, TypedDataConte
                 @Override
                 public Document getDocument()
                 {
-                    return null;
+                    return DataContextDocumentImpl.this;
                 }
 
                 @Override

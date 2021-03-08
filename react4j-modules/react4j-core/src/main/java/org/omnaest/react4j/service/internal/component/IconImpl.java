@@ -60,7 +60,11 @@ public class IconImpl extends AbstractUIComponent<Icon> implements Icon
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
                 // TODO Auto-generated method stub
+            }
 
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
             }
 
             @Override

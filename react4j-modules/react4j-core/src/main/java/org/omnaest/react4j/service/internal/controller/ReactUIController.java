@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -46,21 +45,21 @@ public class ReactUIController
     @Autowired
     private EventHandlerService eventHandlerService;
 
-    @CrossOrigin("*")
+    //    @CrossOrigin("*")
     @RequestMapping(method = RequestMethod.GET, path = "/ui/{contextPath}", produces = "application/json")
     public NodeHierarchy getNodeHierarchy(@PathVariable("contextPath") String contextPath)
     {
         return this.resolverService.resolveNodeHierarchy(contextPath);
     }
 
-    @CrossOrigin("*")
+    //    @CrossOrigin("*")
     @RequestMapping(method = RequestMethod.GET, path = "/ui", produces = MediaType.APPLICATION_JSON_VALUE)
     public NodeHierarchy getNodeHierarchy()
     {
         return this.resolverService.resolveDefaultNodeHierarchy();
     }
 
-    @CrossOrigin("*")
+    //    @CrossOrigin("*")
     @RequestMapping(method = RequestMethod.POST, path = "/ui/event", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public Optional<ResponseBody> acceptEvent(@RequestBody EventBody eventBody)
     {

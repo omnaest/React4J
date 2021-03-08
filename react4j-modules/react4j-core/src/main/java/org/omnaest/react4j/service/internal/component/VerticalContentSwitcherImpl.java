@@ -79,8 +79,11 @@ public class VerticalContentSwitcherImpl extends AbstractUIComponent<VerticalCon
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
                 // TODO Auto-generated method stub
-                registry.registerChildrenMapper(VerticalContentSwitcherNode.class, VerticalContentSwitcherNode::getElements)
-                        .registerChildMapper(VerticalContentSwitcherNode.ContentElement.class, VerticalContentSwitcherNode.ContentElement::getContent);
+            }
+
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
             }
 
             @Override

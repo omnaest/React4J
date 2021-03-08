@@ -21,7 +21,7 @@ import org.omnaest.react4j.domain.raw.Node;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class ContainerGridNode extends AbstractNode
+public class GridContainerNode extends AbstractNode
 {
     @JsonProperty
     private String type = "CONTAINER";
@@ -114,7 +114,7 @@ public class ContainerGridNode extends AbstractNode
         return this.locator;
     }
 
-    public ContainerGridNode setLocator(String locator)
+    public GridContainerNode setLocator(String locator)
     {
         this.locator = locator;
         return this;
@@ -125,13 +125,13 @@ public class ContainerGridNode extends AbstractNode
         return this.rows;
     }
 
-    public ContainerGridNode setRows(List<RowNode> rows)
+    public GridContainerNode setRows(List<RowNode> rows)
     {
         this.rows = rows;
         return this;
     }
 
-    public ContainerGridNode setUnlimitedColumns(boolean unlimitedColumns)
+    public GridContainerNode setUnlimitedColumns(boolean unlimitedColumns)
     {
         this.unlimitedColumns = unlimitedColumns;
         return this;

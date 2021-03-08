@@ -102,6 +102,16 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
     }
 
     @Override
+    public Paragraph addImage(String name, String imageName)
+    {
+        this.elements.add(this.getUiComponentFactory()
+                              .newImage()
+                              .withName(name)
+                              .withImage(imageName));
+        return this;
+    }
+
+    @Override
     public Paragraph withBoldStyle()
     {
         return this.withBoldStyle(true);
@@ -208,6 +218,11 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
                                             .get();
                     }
                 });
+            }
+
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
             }
 
             @Override

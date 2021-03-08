@@ -25,8 +25,10 @@ import java.util.stream.Collectors;
 
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Locations;
+import org.omnaest.react4j.domain.RerenderingContainer;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.context.data.DefineableDataContext;
 import org.omnaest.react4j.domain.context.data.TypedDataContext;
 import org.omnaest.react4j.domain.context.ui.UIContext;
@@ -143,7 +145,7 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
 
     @SuppressWarnings("unchecked")
     @Override
-    public UIC withUIContext(BiConsumer<UIC, UIContext> uiContextConsumer)
+    public UIC withUIContext(UIContextConsumer<UIC> uiContextConsumer)
     {
         uiContextConsumer.accept((UIC) this, this.uiContextProvider.get());
         return (UIC) this;
@@ -161,6 +163,14 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
     public <T> UIC withDataContext(Class<T> type, BiConsumer<UIC, TypedDataContext<T>> dataContextConsumer)
     {
         return this.withDataContext((component, dataContext) -> dataContextConsumer.accept(component, dataContext.asTypedDataContext(type)));
+    }
+
+    @Override
+    public RerenderingContainer withRerenderingUIContext(UIContextAndDataConsumer<UIC> rerenderingUIContextConsumer)
+    {
+        return this.getUiComponentFactory()
+                   .newRerenderingContainer()
+                   .withContent(this.withUIContext((first, second) -> rerenderingUIContextConsumer.accept(first, second, Data.empty())));
     }
 
 }

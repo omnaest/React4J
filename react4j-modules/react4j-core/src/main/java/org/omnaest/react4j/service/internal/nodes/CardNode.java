@@ -26,13 +26,22 @@ public class CardNode extends AbstractNode implements Node
     private String type = "CARD";
 
     @JsonProperty
+    private I18nTextValue featuredTitle;
+
+    @JsonProperty
     private I18nTextValue title;
+
+    @JsonProperty
+    private I18nTextValue subTitle;
 
     @JsonProperty
     private String locator;
 
     @JsonProperty
     private Node content;
+
+    @JsonProperty
+    private ImageNode image;
 
     @JsonProperty
     private boolean adjust;
@@ -84,6 +93,39 @@ public class CardNode extends AbstractNode implements Node
     public CardNode setAdjust(boolean value)
     {
         this.adjust = value;
+        return this;
+    }
+
+    public I18nTextValue getFeaturedTitle()
+    {
+        return this.featuredTitle;
+    }
+
+    public CardNode setFeaturedTitle(I18nTextValue featuredTitle)
+    {
+        this.featuredTitle = featuredTitle;
+        return this;
+    }
+
+    public I18nTextValue getSubTitle()
+    {
+        return this.subTitle;
+    }
+
+    public CardNode setSubTitle(I18nTextValue subTitle)
+    {
+        this.subTitle = subTitle;
+        return this;
+    }
+
+    public ImageNode getImage()
+    {
+        return this.image;
+    }
+
+    public CardNode setImage(ImageNode image)
+    {
+        this.image = image;
         return this;
     }
 

@@ -15,23 +15,24 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain;
 
-import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
-import org.omnaest.react4j.domain.support.UIComponentProvider;
+import java.util.List;
+import java.util.function.Consumer;
 
-public interface Jumbotron extends UIComponent<Jumbotron>
+import org.omnaest.react4j.domain.support.UIComponentWithContent;
+
+public interface Jumbotron extends UIComponentWithContent<Jumbotron>
 {
     public Jumbotron withTitle(String title);
 
-    public Jumbotron addContentLeft(UIComponent<?> component);
+    public Jumbotron withFullWidth(boolean fullWidth);
 
-    public Jumbotron addContentLeft(UIComponentFactoryFunction factoryConsumer);
+    public Jumbotron withFullWidth();
 
-    public Jumbotron addContentLeft(UIComponentProvider<?> componentProvider);
+    public Jumbotron withSubTitle(String subTitle);
 
-    public Jumbotron addContentRight(UIComponent<?> component);
+    public Jumbotron withGridContent(Consumer<GridContainer> gridConsumer);
 
-    public Jumbotron addContentRight(UIComponentFactoryFunction factoryConsumer);
+    public Jumbotron withCardsContent(Card... cards);
 
-    public Jumbotron addContentRight(UIComponentProvider<?> componentProvider);
-
+    public Jumbotron withCardsContent(List<Card> cards);
 }

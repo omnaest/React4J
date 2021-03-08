@@ -17,9 +17,11 @@ package org.omnaest.react4j.domain;
 
 import java.util.function.BiConsumer;
 
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.context.data.DefineableDataContext;
 import org.omnaest.react4j.domain.context.data.TypedDataContext;
 import org.omnaest.react4j.domain.context.ui.UIContext;
+import org.omnaest.utils.functional.TriConsumer;
 
 public interface UIComponent<UIC extends UIComponent<?>>
 {
@@ -34,10 +36,19 @@ public interface UIComponent<UIC extends UIComponent<?>>
      */
     public UIC withDataContext(BiConsumer<UIC, DefineableDataContext> dataContextConsumer);
 
-    public UIC withUIContext(BiConsumer<UIC, UIContext> uiContextConsumer);
+    public UIC withUIContext(UIContextConsumer<UIC> uiContextConsumer);
+
+    public RerenderingContainer withRerenderingUIContext(UIContextAndDataConsumer<UIC> rerenderingUiContextConsumer);
 
     public <T> UIC withDataContext(Class<T> type, BiConsumer<UIC, TypedDataContext<T>> dataContextConsumer);
 
     public UIC registerParent(UIComponent<?> parent);
 
+    public static interface UIContextConsumer<UIC extends UIComponent<?>> extends BiConsumer<UIC, UIContext>
+    {
+    }
+
+    public static interface UIContextAndDataConsumer<UIC extends UIComponent<?>> extends TriConsumer<UIC, UIContext, Data>
+    {
+    }
 }

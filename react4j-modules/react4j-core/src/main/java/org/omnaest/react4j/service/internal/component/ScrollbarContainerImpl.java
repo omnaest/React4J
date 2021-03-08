@@ -68,8 +68,11 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
-                registry.registerChildMapper(ScrollbarContainerNode.class, ScrollbarContainerNode::getContent);
+            }
+
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
             }
 
             @Override

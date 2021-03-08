@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain;
 
-public interface Heading extends UIComponent
+public interface Heading extends UIComponent<Heading>
 {
     public Heading withText(String text);
 
@@ -32,4 +32,5 @@ public interface Heading extends UIComponent
             return this.ordinal() + 1;
         }
     }
+
 }

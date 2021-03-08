@@ -72,4 +72,9 @@ public abstract class AbstractUIContentHolder<R> implements UIContentHolder<R>
                                                  .withContent(factoryConsumer.apply(factory)));
     }
 
+    protected UIComponentFactory getUiComponentFactory()
+    {
+        return this.uiComponentFactory;
+    }
+
 }

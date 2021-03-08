@@ -18,9 +18,12 @@ package org.omnaest.react4j.service.internal.handler.internal;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.omnaest.react4j.domain.context.data.Data;
+import org.omnaest.react4j.domain.context.data.Value;
 import org.omnaest.react4j.domain.context.document.Document.Field;
+import org.omnaest.react4j.service.internal.service.internal.context.ValueImpl;
 import org.omnaest.utils.JSONHelper;
 import org.omnaest.utils.MapUtils;
 import org.omnaest.utils.MapUtils.MapDelta;
@@ -65,15 +68,15 @@ public class DataImpl implements Data
         return this;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <O> O getFieldValue(String field)
+    public Optional<Value> getFieldValue(String field)
     {
-        return (O) this.map.get(field);
+        return Optional.ofNullable((String) this.map.get(field))
+                       .map(v -> new ValueImpl(v));
     }
 
     @Override
-    public <O> O getFieldValue(Field field)
+    public Optional<Value> getFieldValue(Field field)
     {
         return this.getFieldValue(field.getFieldName());
     }

@@ -80,7 +80,11 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
                 // TODO Auto-generated method stub
+            }
 
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
             }
 
             @Override

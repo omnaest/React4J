@@ -64,7 +64,11 @@ public class CompositeImpl extends AbstractUIComponentWithSubComponents<Composit
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.registerChildrenMapper(CompositeNode.class, CompositeNode::getElements);
+            }
+
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
             }
 
             @Override

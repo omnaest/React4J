@@ -25,8 +25,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.omnaest.react4j.domain.ContainerGrid;
+import org.omnaest.react4j.domain.GridContainer;
 import org.omnaest.react4j.domain.Location;
+import org.omnaest.react4j.domain.TextAlignmentContainer.HorizontalAlignment;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.raw.Node;
@@ -39,28 +40,28 @@ import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
-import org.omnaest.react4j.service.internal.nodes.ContainerGridNode;
-import org.omnaest.react4j.service.internal.nodes.ContainerGridNode.CellNode;
-import org.omnaest.react4j.service.internal.nodes.ContainerGridNode.RowNode;
+import org.omnaest.react4j.service.internal.nodes.GridContainerNode;
+import org.omnaest.react4j.service.internal.nodes.GridContainerNode.CellNode;
+import org.omnaest.react4j.service.internal.nodes.GridContainerNode.RowNode;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.PredicateUtils;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.template.TemplateUtils;
 
-public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<ContainerGrid> implements ContainerGrid
+public class GridContainerImpl extends AbstractUIComponentWithSubComponents<GridContainer> implements GridContainer
 {
     private List<RowImpl> rows             = new ArrayList<>();
     private String        locator;
     private boolean       unlimitedColumns = false;
 
-    public ContainerGridImpl(ComponentContext context)
+    public GridContainerImpl(ComponentContext context)
     {
         super(context);
     }
 
     @Override
-    public ContainerGrid addRow(Consumer<Row> rowConsumer)
+    public GridContainer addRow(Consumer<Row> rowConsumer)
     {
         RowImpl row = new RowImpl(this.getUiComponentFactory());
         rowConsumer.accept(row);
@@ -69,25 +70,25 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
     }
 
     @Override
-    public ContainerGrid addRowContent(UIComponent<?> component)
+    public GridContainer addRowContent(UIComponent<?> component)
     {
         return this.addRow(row -> row.withContent(component));
     }
 
     @Override
-    public ContainerGrid addRowContent(UIComponentFactoryFunction factoryConsumer)
+    public GridContainer addRowContent(UIComponentFactoryFunction factoryConsumer)
     {
         return this.addRow(row -> row.withContent(factoryConsumer));
     }
 
     @Override
-    public ContainerGrid addRowContent(UIComponentProvider<?> componentProvider)
+    public GridContainer addRowContent(UIComponentProvider<?> componentProvider)
     {
         return this.addRow(row -> row.withContent(componentProvider));
     }
 
     @Override
-    public <E> ContainerGrid addRowsContent(Stream<E> elements, BiFunction<UIComponentFactory, E, UIComponent<?>> factoryConsumer)
+    public <E> GridContainer addRowsContent(Stream<E> elements, BiFunction<UIComponentFactory, E, UIComponent<?>> factoryConsumer)
     {
         if (elements != null)
         {
@@ -105,15 +106,15 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
             @Override
             public Location getLocation(LocationSupport locationSupport)
             {
-                return locationSupport.createLocation(ContainerGridImpl.this.getId());
+                return locationSupport.createLocation(GridContainerImpl.this.getId());
             }
 
             @Override
             public Node render(RenderingProcessor renderingProcessor, Location location)
             {
-                return new ContainerGridNode().setLocator(ContainerGridImpl.this.locator)
-                                              .setUnlimitedColumns(ContainerGridImpl.this.unlimitedColumns)
-                                              .setRows(ContainerGridImpl.this.rows.stream()
+                return new GridContainerNode().setLocator(GridContainerImpl.this.locator)
+                                              .setUnlimitedColumns(GridContainerImpl.this.unlimitedColumns)
+                                              .setRows(GridContainerImpl.this.rows.stream()
                                                                                   .map(MapperUtils.withIntCounter())
                                                                                   .map(this.createRowMapper(renderingProcessor, location))
                                                                                   .collect(Collectors.toList()));
@@ -121,7 +122,7 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
 
             private Function<BiElement<RowImpl, Integer>, RowNode> createRowMapper(RenderingProcessor renderingProcessor, Location location)
             {
-                return rowAndIndex -> new ContainerGridNode.RowNode().setCells(rowAndIndex.getFirst()
+                return rowAndIndex -> new GridContainerNode.RowNode().setCells(rowAndIndex.getFirst()
                                                                                           .getCells()
                                                                                           .stream()
                                                                                           .map(MapperUtils.withIntCounter())
@@ -132,7 +133,7 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
                                                                                                                               .and("cell"
                                                                                                                                       + cellAndIndex.getSecond());
                                                                                               CellImpl cell = cellAndIndex.getFirst();
-                                                                                              return new ContainerGridNode.CellNode().setColspan(cell.getColumnSpan()
+                                                                                              return new GridContainerNode.CellNode().setColspan(cell.getColumnSpan()
                                                                                                                                                      .orElse(12
                                                                                                                                                              / rowAndIndex.getFirst()
                                                                                                                                                                           .getCells()
@@ -150,10 +151,10 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(ContainerGridNode.class, NodeRenderType.HTML, new NodeRenderer<ContainerGridNode>()
+                registry.register(GridContainerNode.class, NodeRenderType.HTML, new NodeRenderer<GridContainerNode>()
                 {
                     @Override
-                    public String render(ContainerGridNode node, NodeRenderingProcessor nodeRenderingProcessor)
+                    public String render(GridContainerNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
                         return TemplateUtils.builder()
                                             .useTemplateClassResource(this.getClass(), "/render/templates/html/container_grid.html")
@@ -172,13 +173,17 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
                                             .get();
                     }
                 });
+            }
 
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
             }
 
             @Override
             public Stream<UIComponent<?>> getSubComponents()
             {
-                return ContainerGridImpl.this.rows.stream()
+                return GridContainerImpl.this.rows.stream()
                                                   .map(RowImpl::getCells)
                                                   .flatMap(List::stream)
                                                   .map(CellImpl::getContent);
@@ -266,8 +271,9 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
 
     private static class CellImpl extends AbstractUIContentHolder<Cell> implements Cell
     {
-        private UIComponent<?> content;
-        private Integer        columnSpan;
+        private UIComponentProvider<?> content = UIComponentProvider.empty();
+        private UIComponent<?>         layoutWrapper;
+        private Integer                columnSpan;
 
         public CellImpl(UIComponentFactory uiComponentFactory)
         {
@@ -277,7 +283,13 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
         @Override
         public Cell withContent(UIComponent<?> component)
         {
-            this.content = component;
+            return this.withContent((UIComponentProvider<UIComponent<?>>) () -> component);
+        }
+
+        @Override
+        public Cell withContent(UIComponentProvider<?> componentProvider)
+        {
+            this.content = componentProvider;
             return this;
         }
 
@@ -288,9 +300,23 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
             return this;
         }
 
+        @SuppressWarnings({ "rawtypes" })
+        @Override
+        public Cell withHorizontalAlignment(HorizontalAlignment horizontalAlignment)
+        {
+            UIComponent<?> currentLayoutWrapper = this.layoutWrapper;
+            this.layoutWrapper = this.getUiComponentFactory()
+                                     .newTextAlignmentContainer()
+                                     .withHorizontalAlignment(horizontalAlignment)
+                                     .withContent((UIComponentProvider) () -> Optional.ofNullable((UIComponent) currentLayoutWrapper)
+                                                                                      .orElseGet(this.content));
+            return this;
+        }
+
         public UIComponent<?> getContent()
         {
-            return this.content;
+            return Optional.<UIComponent<?>>ofNullable(this.layoutWrapper)
+                           .orElseGet(this.content);
         }
 
         public Optional<Integer> getColumnSpan()
@@ -301,14 +327,14 @@ public class ContainerGridImpl extends AbstractUIComponentWithSubComponents<Cont
     }
 
     @Override
-    public ContainerGrid withLinkLocator(String locator)
+    public GridContainer withLinkLocator(String locator)
     {
         this.locator = locator;
         return this;
     }
 
     @Override
-    public ContainerGrid withUnlimitedColumns()
+    public GridContainer withUnlimitedColumns()
     {
         this.unlimitedColumns = true;
         return this;

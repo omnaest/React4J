@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -94,8 +95,10 @@ public class NodeHierarchyStaticRenderer
                 @Override
                 public String render(I18nTextValue text)
                 {
-                    return StringEscapeUtils.escapeHtml4(text.getLocaleToText()
-                                                             .getOrDefault(NodeHierarchyRenderingProcessorImpl.this.locale, ""));
+                    return StringEscapeUtils.escapeHtml4(Optional.ofNullable(text)
+                                                                 .map(I18nTextValue::getLocaleToText)
+                                                                 .map(localeToText -> localeToText.get(NodeHierarchyRenderingProcessorImpl.this.locale))
+                                                                 .orElse(""));
                 }
 
                 @Override
@@ -105,22 +108,6 @@ public class NodeHierarchyStaticRenderer
                 }
             };
             return nodeRenderer.render(node, nodeRenderingProcessor);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public <N extends Node> NodeRendererRegistry registerChildMapper(Class<N> nodeType, NodeToChildMapper<N> childMapper)
-        {
-
-            return this;
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public <N extends Node> NodeRendererRegistry registerChildrenMapper(Class<N> nodeType, NodeToChildrenMapper<N> childrenMapper)
-        {
-
-            return this;
         }
 
         private static class DefaultNodeRenderer implements NodeRenderer<Node>

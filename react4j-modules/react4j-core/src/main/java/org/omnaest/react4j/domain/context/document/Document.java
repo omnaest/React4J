@@ -31,6 +31,7 @@ public interface Document
         public String getFieldName();
 
         public Document getDocument();
+
     }
 
     public Context getContext();

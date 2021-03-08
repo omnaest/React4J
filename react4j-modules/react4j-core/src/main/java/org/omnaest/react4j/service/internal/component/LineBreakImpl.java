@@ -56,7 +56,11 @@ public class LineBreakImpl extends AbstractUIComponent<LineBreak> implements Lin
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
                 // TODO Auto-generated method stub
+            }
 
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
             }
 
             @Override

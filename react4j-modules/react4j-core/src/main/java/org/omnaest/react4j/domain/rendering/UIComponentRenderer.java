@@ -25,6 +25,9 @@ import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
+import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
+import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 
 /**
  * Renderer for a particular {@link UIComponent} which creates a {@link Node} structure
@@ -65,4 +68,20 @@ public interface UIComponentRenderer
      * @return
      */
     public Stream<UIComponent<?>> getSubComponents();
+
+    /**
+     * Allows to register {@link EventHandler} to the {@link EventHandlerRegistry}
+     * 
+     * @param eventHandlerRegistrationSupport
+     */
+    public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport);
+
+    public static interface EventHandlerRegistrationSupport
+    {
+        public EventHandlerRegistrationSupport register(EventHandler eventHandler);
+
+        public EventHandlerRegistrationSupport register(DataEventHandler eventHandler);
+
+        public EventHandlerRegistrationSupport registerAsRerenderingNode();
+    }
 }

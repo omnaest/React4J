@@ -23,6 +23,15 @@ import org.omnaest.react4j.domain.UIComponent;
  * @see UIComponent
  * @author omnaest
  */
-public interface UIComponentProvider<UIC extends UIComponent<?>> extends Supplier<UIComponent<UIC>>
+public interface UIComponentProvider<UIC extends UIComponent<?>> extends Supplier<UIC>
 {
+    public static <UIC extends UIComponent<?>> UIComponentProvider<UIC> empty()
+    {
+        return () -> null;
+    }
+
+    public static <UIC extends UIComponent<?>> UIComponentProvider<UIC> of(UIC component)
+    {
+        return () -> component;
+    }
 }

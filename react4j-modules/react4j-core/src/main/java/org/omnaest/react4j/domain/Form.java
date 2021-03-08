@@ -75,5 +75,4 @@ public interface Form extends UIComponent<Form>
 
         public ButtonFormElement newButton();
     }
-
 }

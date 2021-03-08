@@ -13,12 +13,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.react4j.service.internal.service.internal;
+package org.omnaest.react4j.service.internal.service.internal.context;
 
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Location;
+import org.omnaest.react4j.domain.context.Context;
 import org.omnaest.react4j.domain.context.data.DataContext;
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.ui.UIContext;
@@ -29,6 +30,51 @@ import org.omnaest.react4j.domain.context.ui.UIContext;
  */
 public class UIContextImpl implements UIContext
 {
+    private static class DocumentImpl implements Document
+    {
+        private int       index;
+        private UIContext uiContext;
+
+        public DocumentImpl(int index, UIContext uiContext)
+        {
+            this.index = index;
+            this.uiContext = uiContext;
+        }
+
+        @Override
+        public Field getField(String fieldName)
+        {
+            return new Field()
+            {
+
+                @Override
+                public String getFieldName()
+                {
+                    return fieldName;
+                }
+
+                @Override
+                public Document getDocument()
+                {
+                    return DocumentImpl.this;
+                }
+
+                @Override
+                public Context getContext()
+                {
+                    return this.getDocument()
+                               .getContext();
+                }
+            };
+        }
+
+        @Override
+        public Context getContext()
+        {
+            return this.uiContext;
+        }
+    }
+
     @Override
     public String getId(Location location)
     {
@@ -39,15 +85,13 @@ public class UIContextImpl implements UIContext
     @Override
     public Optional<DataContext> asDataContext()
     {
-        // TODO Auto-generated method stub
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public Document get(int index)
     {
-        // TODO Auto-generated method stub
-        return null;
+        return new DocumentImpl(index, this);
     }
 
     @Override

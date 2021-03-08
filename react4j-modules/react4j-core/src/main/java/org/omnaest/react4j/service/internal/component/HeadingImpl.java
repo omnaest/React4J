@@ -27,12 +27,10 @@ import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
-import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
-import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.HeadingNode;
 
-public class HeadingImpl extends AbstractUIComponent implements Heading
+public class HeadingImpl extends AbstractUIComponent<Heading> implements Heading
 {
     private I18nText text;
     private int      level = 1;
@@ -65,21 +63,19 @@ public class HeadingImpl extends AbstractUIComponent implements Heading
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
-                NodeRenderer<HeadingNode> nodeRenderer = new NodeRenderer<HeadingNode>()
+                registry.register(HeadingNode.class, NodeRenderType.HTML, (node, nodeRenderingProcessor) ->
                 {
-                    @Override
-                    public String render(HeadingNode node, NodeRenderingProcessor nodeRenderingProcessor)
-                    {
-                        int level = node.getLevel();
-                        String body = Optional.ofNullable(node.getText())
-                                              .map(text -> nodeRenderingProcessor.render(text))
-                                              .orElse("");
-                        return "<h" + level + ">" + body + "</h" + level + ">";
-                    }
+                    int level = node.getLevel();
+                    String body = Optional.ofNullable(node.getText())
+                                          .map(nodeRenderingProcessor::render)
+                                          .orElse("");
+                    return "<h" + level + ">" + body + "</h" + level + ">";
+                });
+            }
 
-                };
-                registry.register(HeadingNode.class, NodeRenderType.HTML, nodeRenderer);
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
             }
 
             @Override

@@ -85,6 +85,10 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
                 return Stream.empty();
             }
 
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
+            }
         };
     }
 

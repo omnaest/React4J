@@ -83,6 +83,11 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
             }
 
             @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
+            }
+
+            @Override
             public Stream<UIComponent<?>> getSubComponents()
             {
                 return Stream.empty();

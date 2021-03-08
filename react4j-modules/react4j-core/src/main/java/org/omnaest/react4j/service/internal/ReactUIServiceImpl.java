@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,8 +35,8 @@ import org.omnaest.react4j.domain.Button;
 import org.omnaest.react4j.domain.Button.Style;
 import org.omnaest.react4j.domain.Card;
 import org.omnaest.react4j.domain.Composite;
-import org.omnaest.react4j.domain.ContainerGrid;
 import org.omnaest.react4j.domain.Form;
+import org.omnaest.react4j.domain.GridContainer;
 import org.omnaest.react4j.domain.Heading;
 import org.omnaest.react4j.domain.Icon;
 import org.omnaest.react4j.domain.Icon.StandardIcon;
@@ -50,18 +51,22 @@ import org.omnaest.react4j.domain.NavigationBar.NavigationBarProvider;
 import org.omnaest.react4j.domain.PaddingContainer;
 import org.omnaest.react4j.domain.Paragraph;
 import org.omnaest.react4j.domain.ReactUI;
+import org.omnaest.react4j.domain.RerenderingContainer;
 import org.omnaest.react4j.domain.ScrollbarContainer;
 import org.omnaest.react4j.domain.Table;
 import org.omnaest.react4j.domain.Text;
+import org.omnaest.react4j.domain.TextAlignmentContainer;
 import org.omnaest.react4j.domain.Toaster;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
+import org.omnaest.react4j.domain.UIComponentFactory.MarkdownComponentFactory;
 import org.omnaest.react4j.domain.UnsortedList;
 import org.omnaest.react4j.domain.VerticalContentSwitcher;
 import org.omnaest.react4j.domain.configuration.HomePageConfiguration;
 import org.omnaest.react4j.domain.i18n.UILocale;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.RenderableUIComponent;
+import org.omnaest.react4j.domain.rendering.UIComponentRenderer.EventHandlerRegistrationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
@@ -75,8 +80,8 @@ import org.omnaest.react4j.service.internal.component.ButtonImpl;
 import org.omnaest.react4j.service.internal.component.CardImpl;
 import org.omnaest.react4j.service.internal.component.ComponentContext;
 import org.omnaest.react4j.service.internal.component.CompositeImpl;
-import org.omnaest.react4j.service.internal.component.ContainerGridImpl;
 import org.omnaest.react4j.service.internal.component.FormImpl;
+import org.omnaest.react4j.service.internal.component.GridContainerImpl;
 import org.omnaest.react4j.service.internal.component.HeadingImpl;
 import org.omnaest.react4j.service.internal.component.IconImpl;
 import org.omnaest.react4j.service.internal.component.ImageImpl;
@@ -86,8 +91,10 @@ import org.omnaest.react4j.service.internal.component.LineBreakImpl;
 import org.omnaest.react4j.service.internal.component.NavigationBarImpl;
 import org.omnaest.react4j.service.internal.component.PaddingContainerImpl;
 import org.omnaest.react4j.service.internal.component.ParagraphImpl;
+import org.omnaest.react4j.service.internal.component.RerenderingContainerImpl;
 import org.omnaest.react4j.service.internal.component.ScrollbarContainerImpl;
 import org.omnaest.react4j.service.internal.component.TableImpl;
+import org.omnaest.react4j.service.internal.component.TextAlignmentContainerImpl;
 import org.omnaest.react4j.service.internal.component.TextImpl;
 import org.omnaest.react4j.service.internal.component.ToasterImpl;
 import org.omnaest.react4j.service.internal.component.UnsortedListImpl;
@@ -95,10 +102,17 @@ import org.omnaest.react4j.service.internal.component.VerticalContentSwitcherImp
 import org.omnaest.react4j.service.internal.configuration.ProfileFlagConfiguration.UICacheEnabledFlag;
 import org.omnaest.react4j.service.internal.domain.ReactUIInternal;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
+import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry.RerenderedNodeProvider;
+import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
+import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
+import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.CompositeNode;
 import org.omnaest.react4j.service.internal.nodes.HomePageNode;
 import org.omnaest.react4j.service.internal.nodes.NodeHierarchy;
 import org.omnaest.react4j.service.internal.nodes.service.RootNodeResolverService;
+import org.omnaest.react4j.service.internal.service.ContentService;
+import org.omnaest.react4j.service.internal.service.ContentService.ContentFile;
+import org.omnaest.react4j.service.internal.service.ContentService.ContentImage;
 import org.omnaest.react4j.service.internal.service.ContextFactory;
 import org.omnaest.react4j.service.internal.service.HomePageConfigurationService;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
@@ -106,6 +120,7 @@ import org.omnaest.react4j.service.internal.service.NodeHierarchyStaticRenderer;
 import org.omnaest.react4j.service.internal.service.NodeHierarchyStaticRenderer.NodeHierarchyRenderingProcessor;
 import org.omnaest.react4j.service.internal.service.ReactUIContextManager;
 import org.omnaest.react4j.service.internal.service.ReactUIContextManager.ReactUIInternalProvider;
+import org.omnaest.react4j.service.internal.service.internal.LocationSupportImpl;
 import org.omnaest.react4j.service.internal.service.internal.RenderingProcessorImpl;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MatcherUtils;
@@ -115,6 +130,7 @@ import org.omnaest.utils.StreamUtils;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.markdown.MarkdownUtils;
 import org.omnaest.utils.markdown.MarkdownUtils.Element;
+import org.omnaest.utils.stream.FilterMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -122,6 +138,47 @@ import org.springframework.stereotype.Service;
 @Service
 public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverService
 {
+    private static class EventHandlerRegistrationSupportImpl implements EventHandlerRegistrationSupport
+    {
+        private final EventHandlerRegistry     eventHandlerRegistry;
+        private final Location                 location;
+        private final Target                   target;
+        private final RenderingProcessor       renderingProcessor;
+        private final RenderableUIComponent<?> component;
+
+        private EventHandlerRegistrationSupportImpl(EventHandlerRegistry eventHandlerRegistry, Location location, Target target,
+                                                    RenderingProcessor renderingProcessor, RenderableUIComponent<?> component)
+        {
+            this.eventHandlerRegistry = eventHandlerRegistry;
+            this.location = location;
+            this.target = target;
+            this.renderingProcessor = renderingProcessor;
+            this.component = component;
+        }
+
+        @Override
+        public EventHandlerRegistrationSupport registerAsRerenderingNode()
+        {
+            RerenderedNodeProvider rerenderedNodeProvider = () -> this.renderingProcessor.process(this.component, this.location.getParent());
+            this.eventHandlerRegistry.register(this.target, rerenderedNodeProvider);
+            return this;
+        }
+
+        @Override
+        public EventHandlerRegistrationSupport register(DataEventHandler eventHandler)
+        {
+            this.eventHandlerRegistry.register(this.target, eventHandler);
+            return this;
+        }
+
+        @Override
+        public EventHandlerRegistrationSupport register(EventHandler eventHandler)
+        {
+            this.eventHandlerRegistry.register(this.target, eventHandler);
+            return this;
+        }
+    }
+
     @Autowired
     protected LocalizedTextResolverService textResolver;
 
@@ -136,6 +193,9 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
 
     @Autowired
     protected NodeHierarchyStaticRenderer nodeHierarchyStaticRenderer;
+
+    @Autowired
+    protected ContentService contentService;
 
     protected ReactUIContextManager uiManager = new ReactUIContextManager();
 
@@ -330,9 +390,9 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                     }
 
                     @Override
-                    public ContainerGrid newContainerGrid()
+                    public GridContainer newGridContainer()
                     {
-                        return new ContainerGridImpl(this.context);
+                        return new GridContainerImpl(this.context);
                     }
 
                     @Override
@@ -403,6 +463,22 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                     }
 
                     @Override
+                    public List<UIComponent<?>> newMarkdownTextFromContent(String identifier)
+                    {
+                        return this.newMarkdownText(ReactUIServiceImpl.this.contentService.findContentMarkdownFile(identifier)
+                                                                                          .map(ContentFile::asString)
+                                                                                          .orElse(""));
+                    }
+
+                    @Override
+                    public List<Card> newMarkdownCardsFromContent(String identifier)
+                    {
+                        return this.newMarkdownCards(ReactUIServiceImpl.this.contentService.findContentMarkdownFile(identifier)
+                                                                                           .map(ContentFile::asString)
+                                                                                           .orElse(""));
+                    }
+
+                    @Override
                     public List<Card> newMarkdownCards(String markdown)
                     {
                         return StreamUtils.aggregateByStart(MarkdownUtils.parse(markdown, options -> options.enableWrapIntoParagraphs())
@@ -412,6 +488,10 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                                               .orElse(false),
                                                             group ->
                                                             {
+                                                                //
+                                                                Card card = this.newCard();
+
+                                                                //
                                                                 BiElement<Optional<Element>, Stream<Element>> titleAndText = StreamUtils.splitOne(group);
                                                                 String title = titleAndText.getFirst()
                                                                                            .map(Element::asHeading)
@@ -419,14 +499,48 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                                                            .map(Optional::get)
                                                                                            .map(MarkdownUtils.Heading::getText)
                                                                                            .orElse("");
-                                                                return Stream.of(this.newCard()
-                                                                                     .withTitle(title)
+
+                                                                //
+                                                                String imageName = title.replaceAll("[^a-zA-Z0-9]+", "_")
+                                                                                        .toLowerCase();
+                                                                Optional<ContentImage> firstImageNameMatch = ReactUIServiceImpl.this.contentService.findImages(imageName
+                                                                        + "\\.(jpg)|(png)|(svg)")
+                                                                                                                                                   .findFirst();
+                                                                if (firstImageNameMatch.isPresent())
+                                                                {
+                                                                    card.withImage(image -> image.withImage(firstImageNameMatch.get()
+                                                                                                                               .getImagePath())
+                                                                                                 .withName(title));
+                                                                }
+
+                                                                //
+                                                                Predicate<Element> firstImageFilter = this.createFirstImageAsCardImageFilter(card);
+                                                                return Stream.of(card.withTitle(title)
                                                                                      .withLinkLocator(RegExUtils.replaceAll(StringUtils.lowerCase(title),
                                                                                                                             "[^a-zA-Z]+", "_"))
                                                                                      .withContent(this.newComposite()
-                                                                                                      .addComponents(this.parseMarkdownElements(titleAndText.getSecond()))));
+                                                                                                      .addComponents(this.parseMarkdownElements(titleAndText.getSecond()
+                                                                                                                                                            .filter(firstImageFilter)))));
                                                             })
                                           .collect(Collectors.toList());
+                    }
+
+                    private Predicate<Element> createFirstImageAsCardImageFilter(Card card)
+                    {
+                        return StreamUtils.filterConsumer(PredicateUtils.<Element>firstElement()
+                                                                        .and(element -> element.asParagraph()
+                                                                                               .map(org.omnaest.utils.markdown.MarkdownUtils.Paragraph::getElements)
+                                                                                               .filter(PredicateUtils.listNotEmpty())
+                                                                                               .map(ListUtils::first)
+                                                                                               .flatMap(Element::asImage)
+                                                                                               .isPresent()),
+                                                          element -> Optional.ofNullable(element)
+                                                                             .flatMap(Element::asParagraph)
+                                                                             .map(org.omnaest.utils.markdown.MarkdownUtils.Paragraph::getElements)
+                                                                             .map(ListUtils::first)
+                                                                             .flatMap(Element::asImage)
+                                                                             .ifPresent(imageElement -> card.withImage(image -> image.withName(imageElement.getLabel())
+                                                                                                                                     .withImage(imageElement.getLink()))));
                     }
 
                     private List<UIComponent<?>> parseMarkdownElements(Stream<Element> elements)
@@ -492,6 +606,61 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                         return ListUtils.first(this.newMarkdownCards(markdown));
                     }
 
+                    @Override
+                    public Card newMarkdownCardFromContent(String identifier)
+                    {
+                        return this.newMarkdownCard(ReactUIServiceImpl.this.contentService.findContentMarkdownFile(identifier)
+                                                                                          .map(ContentFile::asString)
+                                                                                          .orElse(""));
+                    }
+
+                    @Override
+                    public MarkdownComponentChoice newMarkdown()
+                    {
+                        return new MarkdownComponentChoice()
+                        {
+
+                            @Override
+                            public MarkdownComponentFactory<List<UIComponent<?>>> texts()
+                            {
+                                return new AbstractMarkdownComponentFactory<List<UIComponent<?>>>(ReactUIServiceImpl.this.contentService)
+                                {
+                                    @Override
+                                    public List<UIComponent<?>> from(String markdown)
+                                    {
+                                        return newMarkdownText(markdown);
+                                    }
+                                };
+                            }
+
+                            @Override
+                            public MarkdownComponentFactory<List<Card>> cards()
+                            {
+                                return new AbstractMarkdownComponentFactory<List<Card>>(ReactUIServiceImpl.this.contentService)
+                                {
+                                    @Override
+                                    public List<Card> from(String markdown)
+                                    {
+                                        return newMarkdownCards(markdown);
+                                    }
+                                };
+                            }
+
+                            @Override
+                            public MarkdownComponentFactory<Card> card()
+                            {
+                                return new AbstractMarkdownComponentFactory<Card>(ReactUIServiceImpl.this.contentService)
+                                {
+                                    @Override
+                                    public Card from(String markdown)
+                                    {
+                                        return newMarkdownCard(markdown);
+                                    }
+                                };
+                            }
+                        };
+                    }
+
                     private Function<MarkdownUtils.Paragraph, Paragraph> createMarkdownParagraphMapper(AtomicInteger referenceLinkCounter)
                     {
                         boolean removeLeadingPipe = false;
@@ -539,10 +708,9 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                             }
                                                         });
                                                  element.asHeading()
-                                                        .ifPresent(heading ->
-                                                        {
-                                                            paragraph.addHeading(heading.getText(), heading.getStrength());
-                                                        });
+                                                        .ifPresent(heading -> paragraph.addHeading(heading.getText(), heading.getStrength()));
+                                                 element.asImage()
+                                                        .ifPresent(image -> paragraph.addImage(image.getLabel(), image.getLink()));
                                                  element.asLineBreak()
                                                         .ifPresent(lineBreak -> paragraph.addLineBreak());
                                                  element.asLink()
@@ -612,6 +780,18 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                         return new PaddingContainerImpl(this.context);
                     }
 
+                    @Override
+                    public TextAlignmentContainer newTextAlignmentContainer()
+                    {
+                        return new TextAlignmentContainerImpl(this.context);
+                    }
+
+                    @Override
+                    public RerenderingContainer newRerenderingContainer()
+                    {
+                        return new RerenderingContainerImpl(this.context);
+                    }
+
                 };
             }
 
@@ -629,26 +809,51 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
             }
 
             @Override
-            public void collectNodeRenderers(NodeRendererRegistry registry)
+            public ReactUIInternal collectNodeRenderers(NodeRendererRegistry registry)
             {
-                Stream.concat(Stream.of(this.navigationBar), this.components.stream())
-                      .filter(component -> component instanceof RenderableUIComponent)
-                      .map(component -> (RenderableUIComponent<?>) component)
-                      .flatMap(this.createRecursiveComponentFlattener())
-                      .filter(component -> component instanceof RenderableUIComponent)
-                      .map(component -> (RenderableUIComponent<?>) component)
-                      .forEach(component -> component.asRenderer()
-                                                     .manageNodeRenderers(registry));
+                FilterMapper<UIComponent<?>, RenderableUIComponent<?>> filterMapper = StreamUtils.filterMapper(iComponent -> iComponent instanceof RenderableUIComponent,
+                                                                                                               iComponent -> (RenderableUIComponent<?>) iComponent);
+                StreamUtils.recursiveFlattened(Stream.concat(Stream.of(this.navigationBar), this.components.stream())
+                                                     .filter(filterMapper)
+                                                     .map(filterMapper),
+                                               component -> component.asRenderer()
+                                                                     .getSubComponents()
+                                                                     .filter(filterMapper)
+                                                                     .map(filterMapper))
+                           .forEach(component -> component.asRenderer()
+                                                          .manageNodeRenderers(registry));
+                return this;
             }
 
-            private Function<RenderableUIComponent<?>, Stream<RenderableUIComponent<?>>> createRecursiveComponentFlattener()
+            @SuppressWarnings("rawtypes")
+            @Override
+            public ReactUIInternal collectEventHandlers(EventHandlerRegistry registry)
             {
-                Function<RenderableUIComponent<?>, Stream<RenderableUIComponent<?>>> componentFlattener = component -> component.asRenderer()
-                                                                                                                                .getSubComponents()
-                                                                                                                                .filter(iComponent -> iComponent instanceof RenderableUIComponent)
-                                                                                                                                .map(iComponent -> (RenderableUIComponent<?>) iComponent);
-                return component -> Stream.concat(Stream.of(component), componentFlattener.apply(component)
-                                                                                          .flatMap(this.createRecursiveComponentFlattener()));
+                FilterMapper<UIComponent<?>, RenderableUIComponent<?>> filterMapper = StreamUtils.filterMapper(iComponent -> iComponent instanceof RenderableUIComponent,
+                                                                                                               iComponent -> (RenderableUIComponent<?>) iComponent);
+                StreamUtils.recursiveFlattened(Stream.concat(Stream.of(this.navigationBar), this.components.stream())
+                                                     .filter(filterMapper)
+                                                     .map(filterMapper)
+                                                     .map(component -> BiElement.of((RenderableUIComponent) component, component.asRenderer()
+                                                                                                                                .getLocation(new LocationSupportImpl(Location.empty())))),
+                                               parentComponentAndLocation -> parentComponentAndLocation.getFirst()
+                                                                                                       .asRenderer()
+                                                                                                       .getSubComponents()
+                                                                                                       .filter(filterMapper)
+                                                                                                       .map(filterMapper)
+                                                                                                       .map(component -> BiElement.of(component,
+                                                                                                                                      component.asRenderer()
+                                                                                                                                               .getLocation(new LocationSupportImpl(parentComponentAndLocation.getSecond())))))
+                           .forEach(componentAndLocation ->
+                           {
+                               Location location = componentAndLocation.getSecond();
+                               RenderableUIComponent component = componentAndLocation.getFirst();
+                               component.asRenderer()
+                                        .manageEventHandler(new EventHandlerRegistrationSupportImpl(ReactUIServiceImpl.this.eventHandlerRegistry, location,
+                                                                                                    Target.from(location), this.createRenderingProcessor(),
+                                                                                                    component));
+                           });
+                return this;
             }
 
             private RenderingProcessor createRenderingProcessor()
@@ -690,7 +895,9 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
         NodeHierarchyRenderingProcessor nodeRenderingProcessor = this.nodeHierarchyStaticRenderer.newNodeRenderingProcessor();
         this.uiManager.get(contextPath)
                       .orElseThrow(() -> new IllegalArgumentException("No UI defined for context path: " + contextPath))
-                      .collectNodeRenderers(nodeRenderingProcessor);
+                      .collectNodeRenderers(nodeRenderingProcessor)
+                      .collectEventHandlers(this.eventHandlerRegistry);
+
         return nodeRenderingProcessor.render(this.resolveNodeHierarchy(contextPath), nodeRenderType);
     }
 
@@ -702,4 +909,23 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
         return this;
     }
 
+    protected abstract class AbstractMarkdownComponentFactory<U> implements MarkdownComponentFactory<U>
+    {
+        private ContentService contentService;
+
+        public AbstractMarkdownComponentFactory(ContentService contentService)
+        {
+            super();
+            this.contentService = contentService;
+        }
+
+        @Override
+        public U fromContentFile(String identifier)
+        {
+            return this.from(ReactUIServiceImpl.this.contentService.findContentMarkdownFile(identifier)
+                                                                   .map(ContentFile::asString)
+                                                                   .orElse(""));
+        }
+
+    }
 }

@@ -70,14 +70,17 @@ public class ButtonImpl extends AbstractUIComponent<Button> implements Button
             @Override
             public Node render(RenderingProcessor renderingProcessor, Location location)
             {
-                Target target = Target.from(location);
-                ButtonImpl.this.getEventHandlerRegistry()
-                               .register(target, ButtonImpl.this.eventHandler);
                 return new ButtonNode().setName(ButtonImpl.this.getTextResolver()
                                                                .apply(ButtonImpl.this.name, location))
                                        .setStyle(ButtonImpl.this.style.name()
                                                                       .toLowerCase())
-                                       .setOnClick(new ServerHandler(target));
+                                       .setOnClick(new ServerHandler(Target.from(location)));
+            }
+
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
+                eventHandlerRegistrationSupport.register(ButtonImpl.this.eventHandler);
             }
 
             @Override

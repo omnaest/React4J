@@ -15,8 +15,6 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.nodes;
 
-import java.util.List;
-
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
@@ -31,10 +29,13 @@ public class JumbotronNode extends AbstractNode implements Node
     private I18nTextValue title;
 
     @JsonProperty
-    private List<Node> left;
+    private I18nTextValue subTitle;
 
     @JsonProperty
-    private List<Node> right;
+    private Node content;
+
+    @JsonProperty
+    private boolean fullWidth;
 
     @Override
     public String getType()
@@ -53,25 +54,36 @@ public class JumbotronNode extends AbstractNode implements Node
         return this;
     }
 
-    public List<Node> getLeft()
+    public I18nTextValue getSubTitle()
     {
-        return this.left;
+        return this.subTitle;
     }
 
-    public JumbotronNode setLeft(List<Node> left)
+    public JumbotronNode setSubTitle(I18nTextValue subTitle)
     {
-        this.left = left;
+        this.subTitle = subTitle;
         return this;
     }
 
-    public List<Node> getRight()
+    public Node getContent()
     {
-        return this.right;
+        return this.content;
     }
 
-    public JumbotronNode setRight(List<Node> right)
+    public JumbotronNode setContent(Node content)
     {
-        this.right = right;
+        this.content = content;
+        return this;
+    }
+
+    public boolean isFullWidth()
+    {
+        return this.fullWidth;
+    }
+
+    public JumbotronNode setFullWidth(boolean fullWidth)
+    {
+        this.fullWidth = fullWidth;
         return this;
     }
 

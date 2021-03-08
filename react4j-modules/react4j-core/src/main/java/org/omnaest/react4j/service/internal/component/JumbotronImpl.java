@@ -15,11 +15,13 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.component;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.omnaest.react4j.domain.Card;
+import org.omnaest.react4j.domain.GridContainer;
 import org.omnaest.react4j.domain.Jumbotron;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
@@ -28,16 +30,19 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
-import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
-import org.omnaest.react4j.domain.support.UIComponentProvider;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.JumbotronNode;
+import org.omnaest.utils.template.TemplateUtils;
 
-public class JumbotronImpl extends AbstractUIComponentWithSubComponents<Jumbotron> implements Jumbotron
+public class JumbotronImpl extends AbstractUIComponentAndContentHolder<Jumbotron> implements Jumbotron
 {
-    private I18nText             title;
-    private List<UIComponent<?>> contentLeft  = new ArrayList<>();
-    private List<UIComponent<?>> contentRight = new ArrayList<>();
+    private I18nText       title;
+    private I18nText       subTitle;
+    private UIComponent<?> content;
+    private boolean        fullWidth = false;
 
     public JumbotronImpl(ComponentContext context)
     {
@@ -61,25 +66,40 @@ public class JumbotronImpl extends AbstractUIComponentWithSubComponents<Jumbotro
             {
                 return new JumbotronNode().setTitle(JumbotronImpl.this.getTextResolver()
                                                                       .apply(JumbotronImpl.this.title, location))
-                                          .setLeft(JumbotronImpl.this.contentLeft.stream()
-                                                                                 .map(element -> renderingProcessor.process(element, location))
-                                                                                 .collect(Collectors.toList()))
-                                          .setRight(JumbotronImpl.this.contentRight.stream()
-                                                                                   .map(element -> renderingProcessor.process(element, location))
-                                                                                   .collect(Collectors.toList()));
+                                          .setSubTitle(JumbotronImpl.this.getTextResolver()
+                                                                         .apply(JumbotronImpl.this.subTitle, location))
+                                          .setContent(renderingProcessor.process(JumbotronImpl.this.content, location))
+                                          .setFullWidth(JumbotronImpl.this.fullWidth);
             }
 
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.registerChildrenMapper(JumbotronNode.class, JumbotronNode::getLeft)
-                        .registerChildrenMapper(JumbotronNode.class, JumbotronNode::getRight);
+                registry.register(JumbotronNode.class, NodeRenderType.HTML, new NodeRenderer<JumbotronNode>()
+                {
+                    @Override
+                    public String render(JumbotronNode node, NodeRenderingProcessor nodeRenderingProcessor)
+                    {
+                        return TemplateUtils.builder()
+                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/jumbotron.html")
+                                            .add("title", nodeRenderingProcessor.render(node.getTitle()))
+                                            .add("subTitle", nodeRenderingProcessor.render(node.getSubTitle()))
+                                            .add("content", nodeRenderingProcessor.render(node.getContent()))
+                                            .build()
+                                            .get();
+                    }
+                });
+            }
+
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
             }
 
             @Override
             public Stream<UIComponent<?>> getSubComponents()
             {
-                return Stream.concat(JumbotronImpl.this.contentLeft.stream(), JumbotronImpl.this.contentRight.stream());
+                return Stream.of(JumbotronImpl.this.content);
             }
 
         };
@@ -93,43 +113,52 @@ public class JumbotronImpl extends AbstractUIComponentWithSubComponents<Jumbotro
     }
 
     @Override
-    public Jumbotron addContentLeft(UIComponent<?> component)
+    public Jumbotron withSubTitle(String subTitle)
     {
-        this.contentLeft.add(component);
-        component.registerParent(this);
+        this.subTitle = this.toI18nText(subTitle);
         return this;
     }
 
     @Override
-    public Jumbotron addContentLeft(UIComponentProvider<?> componentProvider)
+    public Jumbotron withFullWidth()
     {
-        return this.addContentLeft(componentProvider.get());
+        return this.withFullWidth(true);
     }
 
     @Override
-    public Jumbotron addContentLeft(UIComponentFactoryFunction factoryConsumer)
+    public Jumbotron withFullWidth(boolean fullWidth)
     {
-        return this.addContentLeft(factoryConsumer.apply(this.getUiComponentFactory()));
-    }
-
-    @Override
-    public Jumbotron addContentRight(UIComponent<?> component)
-    {
-        this.contentRight.add(component);
-        component.registerParent(this);
+        this.fullWidth = fullWidth;
         return this;
     }
 
     @Override
-    public Jumbotron addContentRight(UIComponentProvider<?> componentProvider)
+    public Jumbotron withContent(UIComponent<?> component)
     {
-        return this.addContentRight(componentProvider.get());
+        this.content = component;
+        return this;
     }
 
     @Override
-    public Jumbotron addContentRight(UIComponentFactoryFunction factoryConsumer)
+    public Jumbotron withGridContent(Consumer<GridContainer> gridConsumer)
     {
-        return this.addContentRight(factoryConsumer.apply(this.getUiComponentFactory()));
+        GridContainer grid = this.getUiComponentFactory()
+                                 .newGridContainer();
+        gridConsumer.accept(grid);
+        return this.withContent(grid);
+    }
+
+    @Override
+    public Jumbotron withCardsContent(Card... cards)
+    {
+        return this.withCardsContent(Arrays.asList(cards));
+    }
+
+    @Override
+    public Jumbotron withCardsContent(List<Card> cards)
+    {
+        return this.withGridContent(grid -> grid.addRow(row -> row.addCells(cards.stream(), (cell, card) -> cell.withColumnSpan(12 / cards.size())
+                                                                                                                .withContent(card))));
     }
 
 }

@@ -80,6 +80,11 @@ public class ImageImpl extends AbstractUIComponent<Image> implements Image
             }
 
             @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
+            }
+
+            @Override
             public Stream<UIComponent<?>> getSubComponents()
             {
                 return Stream.empty();

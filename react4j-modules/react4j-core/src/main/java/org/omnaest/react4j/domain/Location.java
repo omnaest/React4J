@@ -58,10 +58,25 @@ public interface Location extends Supplier<List<String>>
         return Location.of(this, id);
     }
 
+    public default Location getParent()
+    {
+        return Location.of(Optional.ofNullable(this.get())
+                                   .filter(list -> !list.isEmpty())
+                                   .map(list -> list.subList(0, list.size() - 1))
+                                   .orElse(Collections.emptyList()));
+    }
+
     public default boolean isParentOf(Location location)
     {
         return ListUtils.sublistsFromStart(location.get())
                         .anyMatch(sublist -> sublist.equals(location.get()));
+    }
+
+    public static Location of(Supplier<List<String>> idsSupplier)
+    {
+        return of(Optional.ofNullable(idsSupplier)
+                          .map(Supplier::get)
+                          .orElse(Collections.emptyList()));
     }
 
     public static Location of(List<String> ids)

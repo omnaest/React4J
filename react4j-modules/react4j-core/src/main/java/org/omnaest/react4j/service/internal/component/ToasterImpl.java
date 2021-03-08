@@ -62,7 +62,11 @@ public class ToasterImpl extends AbstractUIComponentAndContentHolder<Toaster> im
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
                 // TODO Auto-generated method stub
-                registry.registerChildMapper(ToasterNode.class, ToasterNode::getContent);
+            }
+
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
             }
 
             @Override

@@ -193,6 +193,11 @@ public class TableImpl extends AbstractUIComponentWithSubComponents<Table> imple
             }
 
             @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
+            }
+
+            @Override
             public Stream<UIComponent<?>> getSubComponents()
             {
                 return TableImpl.this.rows.stream()

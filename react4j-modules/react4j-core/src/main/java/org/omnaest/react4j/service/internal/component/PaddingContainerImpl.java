@@ -61,8 +61,11 @@ public class PaddingContainerImpl extends AbstractUIComponentAndContentHolder<Pa
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
-                registry.registerChildMapper(PaddingContainerNode.class, PaddingContainerNode::getContent);
+            }
+
+            @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
             }
 
             @Override

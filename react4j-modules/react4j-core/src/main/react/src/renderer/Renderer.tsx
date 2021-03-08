@@ -25,6 +25,7 @@ import { LineBreakNode, LineBreak } from "./components/LineBreak";
 import { Toaster, ToasterNode } from "./components/Toaster";
 import { Icon, IconNode } from "./components/Icon";
 import { PaddingContainer, PaddingContainerNode } from "./components/PaddingContainer";
+import { TextAlignmentContainer, TextAlignmentContainerNode } from "./components/TextAlignmentContainer";
 
 export interface Node
 {
@@ -40,10 +41,7 @@ export class Renderer
         {
             if (node.type === "JUMBOTRON")
             {
-                return <JumboTron
-                    node={node as JumbotronNode}
-                    render={node => this.render(node)}
-                />;
+                return <JumboTron node={node as JumbotronNode} />;
             }
             else if (node.type === UnorderedList.TYPE)
             {
@@ -143,6 +141,10 @@ export class Renderer
             else if (node.type === Text.TYPE)
             {
                 return <Text node={node as TextNode} />
+            }
+            else if (node.type === TextAlignmentContainer.TYPE)
+            {
+                return <TextAlignmentContainer node={node as TextAlignmentContainerNode} />
             }
             else if (node.type === Toaster.TYPE)
             {

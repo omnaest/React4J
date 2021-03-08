@@ -23,22 +23,23 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.omnaest.react4j.domain.TextAlignmentContainer.HorizontalAlignment;
 import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.domain.support.UIContentHolder;
 
-public interface ContainerGrid extends UIComponent<ContainerGrid>
+public interface GridContainer extends UIComponent<GridContainer>
 {
 
-    public ContainerGrid addRow(Consumer<Row> rowConsumer);
+    public GridContainer addRow(Consumer<Row> rowConsumer);
 
-    public ContainerGrid addRowContent(UIComponent<?> component);
+    public GridContainer addRowContent(UIComponent<?> component);
 
-    public ContainerGrid addRowContent(UIComponentFactoryFunction factoryConsumer);
+    public GridContainer addRowContent(UIComponentFactoryFunction factoryConsumer);
 
-    public ContainerGrid addRowContent(UIComponentProvider<?> componentProvider);
+    public GridContainer addRowContent(UIComponentProvider<?> componentProvider);
 
-    public <E> ContainerGrid addRowsContent(Stream<E> elements, BiFunction<UIComponentFactory, E, UIComponent<?>> factoryConsumer);
+    public <E> GridContainer addRowsContent(Stream<E> elements, BiFunction<UIComponentFactory, E, UIComponent<?>> factoryConsumer);
 
     public static interface Row extends UIContentHolder<Row>
     {
@@ -88,10 +89,12 @@ public interface ContainerGrid extends UIComponent<ContainerGrid>
     public static interface Cell extends UIContentHolder<Cell>
     {
         public Cell withColumnSpan(int numberOfColumns);
+
+        public Cell withHorizontalAlignment(HorizontalAlignment horizontalAlignment);
     }
 
-    public ContainerGrid withLinkLocator(String locator);
+    public GridContainer withLinkLocator(String locator);
 
-    public ContainerGrid withUnlimitedColumns();
+    public GridContainer withUnlimitedColumns();
 
 }

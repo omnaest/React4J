@@ -15,6 +15,9 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.service.internal;
 
+import java.util.Optional;
+import java.util.function.Function;
+
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.raw.Node;
@@ -31,23 +34,20 @@ public class RenderingProcessorImpl implements RenderingProcessor
     @Override
     public Node process(UIComponent<?> component, Location parentLocation)
     {
-        LocationSupport locationSupport = new LocationSupport()
+        return Optional.ofNullable(component)
+                       .map(this.createComponentRenderer(parentLocation))
+                       .orElse(null);
+    }
+
+    private Function<UIComponent<?>, Node> createComponentRenderer(Location parentLocation)
+    {
+        return component ->
         {
-            @Override
-            public Location getParentLocation()
-            {
-                return parentLocation;
-            }
+            LocationSupport locationSupport = new LocationSupportImpl(parentLocation);
 
-            @Override
-            public Location createLocation(String id)
-            {
-                return Location.of(this.getParentLocation(), id);
-            }
+            UIComponentRenderer renderer = ((RenderableUIComponent<?>) component).asRenderer();
+            Location location = renderer.getLocation(locationSupport);
+            return renderer.render(this, location);
         };
-
-        UIComponentRenderer renderer = ((RenderableUIComponent<?>) component).asRenderer();
-        Location location = renderer.getLocation(locationSupport);
-        return renderer.render(this, location);
     }
 }

@@ -89,6 +89,11 @@ public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implemen
             }
 
             @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
+            }
+
+            @Override
             public Stream<UIComponent<?>> getSubComponents()
             {
                 return UnsortedListImpl.this.elements.stream();

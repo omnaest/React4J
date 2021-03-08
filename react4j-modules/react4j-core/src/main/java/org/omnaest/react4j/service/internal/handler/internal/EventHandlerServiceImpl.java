@@ -21,7 +21,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.handler.EventHandlerService;
@@ -31,12 +34,16 @@ import org.omnaest.react4j.service.internal.handler.domain.EventBody;
 import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.ResponseBody;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
+import org.omnaest.react4j.service.internal.handler.domain.TargetNode;
+import org.omnaest.utils.StreamUtils;
+import org.omnaest.utils.element.bi.BiElement;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EventHandlerServiceImpl implements EventHandlerService, EventHandlerRegistry
 {
-    private Map<Target, List<DataEventHandler>> handlers = new ConcurrentHashMap<>();
+    private Map<Target, List<DataEventHandler>> handlers                = new ConcurrentHashMap<>();
+    private Map<Target, RerenderedNodeProvider> rerenderedNodeProviders = new ConcurrentHashMap<>();
 
     @Override
     public void register(Target target, DataEventHandler eventHandler)
@@ -61,17 +68,38 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
     @Override
     public Optional<ResponseBody> handleEvent(EventBody eventBody)
     {
-        return Optional.ofNullable(eventBody)
-                       .map(body -> body.getTarget())
-                       .map(target -> this.handlers.get(target))
-                       .filter(handlers -> !handlers.isEmpty())
-                       .flatMap(handlers -> handlers.stream()
-                                                    .map(handler -> handler.invoke(Optional.ofNullable(eventBody.getDataWithContext())
-                                                                                           .map(dwc -> Data.of(dwc.getContextId(), dwc.getData()))
-                                                                                           .orElse(Data.EMPTY)))
-                                                    .reduce((d1, d2) -> d1.mergeWith(d2)))
-                       .map(data -> new ResponseBody().setTarget(eventBody.getTarget())
-                                                      .setDataWithContext(new DataWithContext(data.getContextId(), data.toMap())));
+        Optional<Target> target = Optional.ofNullable(eventBody)
+                                          .map(EventBody::getTarget);
+        List<Target> currentAndAllParentalTargets = StreamUtils.recursiveFlattened(target.map(Stream::of)
+                                                                                         .orElse(Stream.empty()),
+                                                                                   parentTarget -> Stream.of(Target.from(Location.of(parentTarget)
+                                                                                                                                 .getParent())))
+                                                               .distinct()
+                                                               .collect(Collectors.toList());
+        Optional<TargetNode> rerenderedNode = currentAndAllParentalTargets.stream()
+                                                                          .filter(this.rerenderedNodeProviders::containsKey)
+                                                                          .findFirst()
+                                                                          .map(iTarget -> BiElement.of(iTarget, this.rerenderedNodeProviders.get(iTarget)))
+                                                                          .filter(BiElement::hasNoNullValue)
+                                                                          .map(targetAndNodeProvider -> new TargetNode(targetAndNodeProvider.getFirst(),
+                                                                                                                       targetAndNodeProvider.getSecond()
+                                                                                                                                            .get()));
+        return target.map(this.handlers::get)
+                     .filter(handlers -> !handlers.isEmpty())
+                     .flatMap(handlers -> handlers.stream()
+                                                  .map(handler -> handler.invoke(Optional.ofNullable(eventBody.getDataWithContext())
+                                                                                         .map(dwc -> Data.of(dwc.getContextId(), dwc.getData()))
+                                                                                         .orElse(Data.EMPTY)))
+                                                  .reduce((d1, d2) -> d1.mergeWith(d2)))
+                     .map(data -> new ResponseBody().setTarget(eventBody.getTarget())
+                                                    .setDataWithContext(new DataWithContext(data.getContextId(), data.toMap()))
+                                                    .setTargetNode(rerenderedNode.orElse(null)));
+    }
+
+    @Override
+    public void register(Target target, RerenderedNodeProvider rerenderedNodeProvider)
+    {
+        this.rerenderedNodeProviders.put(target, rerenderedNodeProvider);
     }
 
 }

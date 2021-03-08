@@ -24,12 +24,6 @@ public interface NodeRendererRegistry
 {
     public <N extends Node> NodeRendererRegistry register(Class<N> nodeType, NodeRenderType renderType, NodeRenderer<N> nodeRenderer);
 
-    @Deprecated
-    public <N extends Node> NodeRendererRegistry registerChildMapper(Class<N> nodeType, NodeToChildMapper<N> childMapper);
-
-    @Deprecated
-    public <N extends Node> NodeRendererRegistry registerChildrenMapper(Class<N> nodeType, NodeToChildrenMapper<N> childrenMapper);
-
     public static interface NodeToChildMapper<N extends Node> extends Function<N, Node>
     {
     }

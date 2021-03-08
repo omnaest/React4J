@@ -21,7 +21,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.omnaest.react4j.data.annotations.EnableReactUIInMemoryRepository;
 import org.omnaest.react4j.data.annotations.EnableReactUIRepository;
 
 /**
@@ -32,7 +31,7 @@ import org.omnaest.react4j.data.annotations.EnableReactUIRepository;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @EnableReactUI
-@EnableReactUIInMemoryRepository
+@EnableReactUIRepository
 @Inherited
 public @interface EnableReactUIWithRepository
 {

@@ -99,6 +99,11 @@ public class NavigationBarImpl extends AbstractUIComponent<NavigationBar> implem
             }
 
             @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
+            }
+
+            @Override
             public Stream<UIComponent<?>> getSubComponents()
             {
                 return Stream.empty();

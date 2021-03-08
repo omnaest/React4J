@@ -12,6 +12,7 @@ export interface ImageNode extends Node
 export interface Props
 {
     node: ImageNode;
+    className?: string;
 }
 
 export class Image extends React.Component<Props, {}>
@@ -22,6 +23,7 @@ export class Image extends React.Component<Props, {}>
     {
         return (
             <img
+                className={this.props.className}
                 alt={I18nRenderer.render(this.props.node.name)}
                 src={"/images/" + this.props.node.image}
                 width="100%"

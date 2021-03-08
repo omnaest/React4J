@@ -1,1 +1,1 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=org.omnaest.react4j.service.internal.configuration.ReactUIAutoConfiguration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=org.omnaest.react4j.service.internal.configuration.ReactUIAutoConfiguration,org.omnaest.react4j.service.internal.configuration.ContentProviderAutoConfiguration

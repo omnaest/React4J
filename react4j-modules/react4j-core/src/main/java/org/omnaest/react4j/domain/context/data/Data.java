@@ -27,6 +27,11 @@ public interface Data
 {
     public static final Data EMPTY = Data.of(null, Collections.emptyMap());
 
+    public static Data empty()
+    {
+        return EMPTY;
+    }
+
     public Map<String, Object> toMap();
 
     /**
@@ -68,8 +73,8 @@ public interface Data
 
     public Data setFieldValue(String field, Object value);
 
-    public <O> O getFieldValue(String field);
+    public Optional<Value> getFieldValue(String field);
 
-    public <O> O getFieldValue(Field field);
+    public Optional<Value> getFieldValue(Field field);
 
 }

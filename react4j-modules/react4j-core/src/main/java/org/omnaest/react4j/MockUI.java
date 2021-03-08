@@ -57,7 +57,7 @@ public class MockUI
                                                                            .withText("Some anker"))
                                                       .addComponent(factory.newButton()
                                                                            .withName("Some button")))
-                   .addNewComponent(f -> f.newContainerGrid()
+                   .addNewComponent(f -> f.newGridContainer()
                                           .addRow(row -> row.addCell(cell -> cell.withContent(f2 -> f2.newParagraph()
                                                                                                       .addText("Cell1")))
                                                             .addCell(cell -> cell.withContent(f2 -> f2.newParagraph()

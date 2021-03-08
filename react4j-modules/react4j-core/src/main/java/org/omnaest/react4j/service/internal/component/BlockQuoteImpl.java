@@ -87,6 +87,11 @@ public class BlockQuoteImpl extends AbstractUIComponent implements BlockQuote
             }
 
             @Override
+            public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+            {
+            }
+
+            @Override
             public Stream<UIComponent<?>> getSubComponents()
             {
                 return Stream.empty();
