@@ -27,12 +27,14 @@ import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.VerticalContentSwitcher;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.VerticalContentSwitcherNode;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 
@@ -43,6 +45,12 @@ public class VerticalContentSwitcherImpl extends AbstractUIComponent<VerticalCon
     public VerticalContentSwitcherImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public VerticalContentSwitcherImpl(ComponentContext context, List<VerticalContentImpl> elements)
+    {
+        super(context);
+        this.elements = elements;
     }
 
     @Override
@@ -58,7 +66,7 @@ public class VerticalContentSwitcherImpl extends AbstractUIComponent<VerticalCon
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 LocalizedTextResolverService textResolver = VerticalContentSwitcherImpl.this.getTextResolver();
                 return new VerticalContentSwitcherNode().setElements(VerticalContentSwitcherImpl.this.elements.stream()
@@ -87,10 +95,11 @@ public class VerticalContentSwitcherImpl extends AbstractUIComponent<VerticalCon
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return VerticalContentSwitcherImpl.this.elements.stream()
-                                                                .map(VerticalContentImpl::getComponent);
+                                                                .map(VerticalContentImpl::getComponent)
+                                                                .map(component -> ParentLocationAndComponent.of(parentLocation, component));
             }
 
         };
@@ -160,6 +169,13 @@ public class VerticalContentSwitcherImpl extends AbstractUIComponent<VerticalCon
             return this.title;
         }
 
+    }
+
+    @Override
+    public UIComponentProvider<VerticalContentSwitcher> asTemplateProvider()
+    {
+        return () -> new VerticalContentSwitcherImpl(this.context, this.elements.stream()
+                                                                                .collect(Collectors.toList()));
     }
 
 }

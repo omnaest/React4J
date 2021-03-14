@@ -15,17 +15,19 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Button;
 import org.omnaest.react4j.domain.Location;
-import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.ButtonNode;
@@ -40,6 +42,14 @@ public class ButtonImpl extends AbstractUIComponent<Button> implements Button
     public ButtonImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public ButtonImpl(ComponentContext context, I18nText name, Style style, EventHandler eventHandler)
+    {
+        super(context);
+        this.name = name;
+        this.style = style;
+        this.eventHandler = eventHandler;
     }
 
     @Override
@@ -68,7 +78,7 @@ public class ButtonImpl extends AbstractUIComponent<Button> implements Button
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new ButtonNode().setName(ButtonImpl.this.getTextResolver()
                                                                .apply(ButtonImpl.this.name, location))
@@ -91,7 +101,7 @@ public class ButtonImpl extends AbstractUIComponent<Button> implements Button
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return Stream.empty();
             }
@@ -104,5 +114,11 @@ public class ButtonImpl extends AbstractUIComponent<Button> implements Button
     {
         this.eventHandler = eventHandler;
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<Button> asTemplateProvider()
+    {
+        return () -> new ButtonImpl(this.context, this.name, this.style, this.eventHandler);
     }
 }

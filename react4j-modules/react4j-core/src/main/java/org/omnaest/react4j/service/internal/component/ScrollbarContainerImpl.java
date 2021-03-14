@@ -21,11 +21,13 @@ import java.util.stream.Stream;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.ScrollbarContainer;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.ScrollbarContainerNode;
 
 public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<ScrollbarContainer> implements ScrollbarContainer
@@ -37,6 +39,14 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
     public ScrollbarContainerImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public ScrollbarContainerImpl(ComponentContext context, UIComponent<?> content, VerticalBoxMode verticalBoxMode, HorizontalBoxMode horizontalBoxMode)
+    {
+        super(context);
+        this.content = content;
+        this.verticalBoxMode = verticalBoxMode;
+        this.horizontalBoxMode = horizontalBoxMode;
     }
 
     @Override
@@ -52,7 +62,7 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new ScrollbarContainerNode().setContent(Optional.ofNullable(ScrollbarContainerImpl.this.content)
                                                                        .map(content -> renderingProcessor.process(content, location))
@@ -76,9 +86,9 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
-                return Stream.of(ScrollbarContainerImpl.this.content);
+                return Stream.of(ParentLocationAndComponent.of(parentLocation, ScrollbarContainerImpl.this.content));
             }
 
         };
@@ -103,6 +113,12 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
     {
         this.horizontalBoxMode = horizontalBoxMode;
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<ScrollbarContainer> asTemplateProvider()
+    {
+        return () -> new ScrollbarContainerImpl(this.context, this.content, this.verticalBoxMode, this.horizontalBoxMode);
     }
 
 }

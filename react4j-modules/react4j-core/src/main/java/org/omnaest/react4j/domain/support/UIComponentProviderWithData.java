@@ -13,26 +13,27 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.react4j.service.internal.handler;
+package org.omnaest.react4j.domain.support;
 
-import java.util.Optional;
 import java.util.function.Function;
 
+import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.context.data.Data;
-import org.omnaest.react4j.domain.raw.Node;
-import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
-import org.omnaest.react4j.service.internal.handler.domain.Target;
 
-public interface EventHandlerRegistry
+/**
+ * @see UIComponent
+ * @see UIComponentProvider
+ * @author omnaest
+ */
+public interface UIComponentProviderWithData<UIC extends UIComponent<?>> extends Function<Data, UIC>
 {
-    public void registerEventHandler(Target target, EventHandler eventHandler);
-
-    public void registerDataEventHandler(Target target, DataEventHandler eventHandler);
-
-    public void register(Target target, RerenderedNodeProvider rerenderedNodeProvider);
-
-    public static interface RerenderedNodeProvider extends Function<Optional<Data>, Node>
+    public static <UIC extends UIComponent<?>> UIComponentProviderWithData<UIC> empty()
     {
+        return data -> null;
+    }
+
+    public static <UIC extends UIComponent<?>> UIComponentProviderWithData<UIC> of(UIC component)
+    {
+        return data -> component;
     }
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { Node, Renderer } from "../Renderer";
+import { Node, Renderer, RenderingSupport } from "../Renderer";
 import { I18nTextValue, I18nRenderer } from "./I18nText";
 import { HandlerFactory, Handler } from "../handler/Handler";
 import { DataContextManager } from "../data/DataContextManager";
@@ -28,11 +28,23 @@ export interface ButtonFormElement extends FormElement
 export interface Props
 {
     node: FormNode;
+    renderingSupport?: RenderingSupport;
 }
 
-export class Form extends React.Component<Props, {}>
+interface State
+{
+    updateCounter: number;
+}
+
+export class Form extends React.Component<Props, State>
 {
     public static TYPE: string = "FORM";
+
+    private handleInputChange(element: FormElement, value: string)
+    {
+        const updateCounter = DataContextManager.updateFieldByContext(element.contextId, element.field, value, this.props.renderingSupport?.uiContextAccessor);
+        this.setState({ updateCounter: updateCounter });
+    }
 
     private renderElement(element: FormElement): React.ReactNode
     {
@@ -46,7 +58,8 @@ export class Form extends React.Component<Props, {}>
                         className="form-control"
                         aria-describedby={element.field + "_description"}
                         placeholder={I18nRenderer.render(element.placeholder)}
-                        onChange={(event) => DataContextManager.updateField(element.contextId, element.field, event.target.value)}
+                        value={DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor)}
+                        onChange={(event) => this.handleInputChange(element, event.target.value)}
                     />
                 );
             } else if (element.type === "BUTTON")
@@ -58,7 +71,7 @@ export class Form extends React.Component<Props, {}>
                         type="button"
                         className="btn btn-primary"
                         aria-describedby={element.field + "_description"}
-                        onClick={HandlerFactory.onClick(buttonElement.onClick as Handler)}
+                        onClick={HandlerFactory.onClick(buttonElement.onClick as Handler, this.props.renderingSupport?.uiContextAccessor, this.props.renderingSupport?.nodeContextAccessor)}
                     >{I18nRenderer.render(buttonElement.text)}</button>
                 );
             }
@@ -71,15 +84,15 @@ export class Form extends React.Component<Props, {}>
             <form>
                 {
                     this.props.node.elements.map((element) =>
-                        (
-                            <div className="form-group">
-                                <label htmlFor={element.field}>{I18nRenderer.render(element.label)}</label>
-                                {this.renderElement(element)}
-                                <small id={element.field + "_description"}
-                                    className="form-text text-muted"
-                                >{I18nRenderer.render(element.description)}</small>
-                            </div>
-                        )
+                    (
+                        <div className="form-group" key={element.field}>
+                            <label htmlFor={element.field}>{I18nRenderer.render(element.label)}</label>
+                            {this.renderElement(element)}
+                            <small id={element.field + "_description"}
+                                className="form-text text-muted"
+                            >{I18nRenderer.render(element.description)}</small>
+                        </div>
+                    )
                     )
                 }
             </form>

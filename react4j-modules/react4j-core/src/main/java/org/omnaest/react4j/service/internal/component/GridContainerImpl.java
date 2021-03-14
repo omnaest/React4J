@@ -30,6 +30,7 @@ import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.TextAlignmentContainer.HorizontalAlignment;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
@@ -58,6 +59,14 @@ public class GridContainerImpl extends AbstractUIComponentWithSubComponents<Grid
     public GridContainerImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public GridContainerImpl(ComponentContext context, List<RowImpl> rows, String locator, boolean unlimitedColumns)
+    {
+        super(context);
+        this.rows = rows;
+        this.locator = locator;
+        this.unlimitedColumns = unlimitedColumns;
     }
 
     @Override
@@ -110,7 +119,7 @@ public class GridContainerImpl extends AbstractUIComponentWithSubComponents<Grid
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new GridContainerNode().setLocator(GridContainerImpl.this.locator)
                                               .setUnlimitedColumns(GridContainerImpl.this.unlimitedColumns)
@@ -128,10 +137,9 @@ public class GridContainerImpl extends AbstractUIComponentWithSubComponents<Grid
                                                                                           .map(MapperUtils.withIntCounter())
                                                                                           .map(cellAndIndex ->
                                                                                           {
-                                                                                              Location cellLocation = location.and("row"
-                                                                                                      + rowAndIndex.getSecond())
-                                                                                                                              .and("cell"
-                                                                                                                                      + cellAndIndex.getSecond());
+                                                                                              Location cellLocation = this.createCellLocation(location,
+                                                                                                                                              rowAndIndex,
+                                                                                                                                              cellAndIndex);
                                                                                               CellImpl cell = cellAndIndex.getFirst();
                                                                                               return new GridContainerNode.CellNode().setColspan(cell.getColumnSpan()
                                                                                                                                                      .orElse(12
@@ -146,6 +154,14 @@ public class GridContainerImpl extends AbstractUIComponentWithSubComponents<Grid
                                                                                                                                                          .orElse(null));
                                                                                           })
                                                                                           .collect(Collectors.toList()));
+            }
+
+            private Location createCellLocation(Location location, BiElement<RowImpl, Integer> rowAndIndex, BiElement<CellImpl, Integer> cellAndIndex)
+            {
+                return Optional.ofNullable(location)
+                               .map(iLocation -> iLocation.and("row" + rowAndIndex.getSecond())
+                                                          .and("cell" + cellAndIndex.getSecond()))
+                               .orElse(null);
             }
 
             @Override
@@ -181,12 +197,20 @@ public class GridContainerImpl extends AbstractUIComponentWithSubComponents<Grid
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return GridContainerImpl.this.rows.stream()
-                                                  .map(RowImpl::getCells)
-                                                  .flatMap(List::stream)
-                                                  .map(CellImpl::getContent);
+                                                  .map(MapperUtils.withIntCounter())
+                                                  .flatMap(rowAndIndex -> rowAndIndex.getFirst()
+                                                                                     .getCells()
+                                                                                     .stream()
+                                                                                     .map(MapperUtils.withIntCounter())
+                                                                                     .map(cellAndIndex -> cellAndIndex.applyToFirstArgument(cell -> cell.getContent())
+                                                                                                                      .applyToSecondArgument(cellIndex -> this.createCellLocation(parentLocation,
+                                                                                                                                                                                  rowAndIndex,
+                                                                                                                                                                                  cellAndIndex))
+                                                                                                                      .reverse()))
+                                                  .map(bi -> ParentLocationAndComponent.of(bi.getFirst(), bi.getSecond()));
             }
 
         };
@@ -338,6 +362,14 @@ public class GridContainerImpl extends AbstractUIComponentWithSubComponents<Grid
     {
         this.unlimitedColumns = true;
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<GridContainer> asTemplateProvider()
+    {
+        return () -> new GridContainerImpl(this.context, this.rows.stream()
+                                                                  .collect(Collectors.toList()),
+                                           this.locator, this.unlimitedColumns);
     }
 
 }

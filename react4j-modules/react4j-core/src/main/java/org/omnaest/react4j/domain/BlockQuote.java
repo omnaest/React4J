@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain;
 
-public interface BlockQuote extends UIComponent
+public interface BlockQuote extends UIComponent<BlockQuote>
 {
     public BlockQuote addText(String text);
 

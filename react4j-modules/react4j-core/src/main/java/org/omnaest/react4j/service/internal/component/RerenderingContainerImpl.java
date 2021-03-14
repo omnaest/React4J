@@ -21,20 +21,36 @@ import java.util.stream.Stream;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.RerenderingContainer;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
+import org.omnaest.react4j.domain.context.ui.UIContext;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
+import org.omnaest.react4j.domain.support.UIComponentProviderWithData;
+import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.RerenderingContainerNode;
+import org.omnaest.react4j.service.internal.nodes.context.UIContextNode;
 
 public class RerenderingContainerImpl extends AbstractUIComponentAndContentHolder<RerenderingContainer> implements RerenderingContainer
 {
-    private UIComponent<?> content;
+    private UIComponentProviderWithData<?> content;
+    private UIContext                      uiContext;
+    private boolean                        enableStaticNodeRerendering = false;
 
     public RerenderingContainerImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public RerenderingContainerImpl(ComponentContext context, UIComponentProviderWithData<?> content, UIContext uiContext, boolean enableStaticNodeRerendering)
+    {
+        super(context);
+        this.content = content;
+        this.uiContext = uiContext;
+        this.enableStaticNodeRerendering = enableStaticNodeRerendering;
     }
 
     @Override
@@ -49,11 +65,17 @@ public class RerenderingContainerImpl extends AbstractUIComponentAndContentHolde
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new RerenderingContainerNode().setContent(Optional.ofNullable(RerenderingContainerImpl.this.content)
+                                                                         .map(contentProvider -> contentProvider.apply(data.orElse(Data.empty())))
                                                                          .map(content -> renderingProcessor.process(content, location))
-                                                                         .orElse(null));
+                                                                         .orElse(null))
+                                                     .setUiContext(Optional.ofNullable(RerenderingContainerImpl.this.uiContext)
+                                                                           .map(uiContext -> new UIContextNode().setContextId(uiContext.getId(location)))
+                                                                           .orElse((UIContextNode) null))
+                                                     .setEnableNodeReload(RerenderingContainerImpl.this.enableStaticNodeRerendering)
+                                                     .setTarget(Target.from(location));
             }
 
             @Override
@@ -68,9 +90,9 @@ public class RerenderingContainerImpl extends AbstractUIComponentAndContentHolde
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
-                return Stream.of(RerenderingContainerImpl.this.content);
+                return Stream.of(ParentLocationAndComponent.of(parentLocation, RerenderingContainerImpl.this.content.apply(Data.empty())));
             }
 
         };
@@ -79,8 +101,60 @@ public class RerenderingContainerImpl extends AbstractUIComponentAndContentHolde
     @Override
     public RerenderingContainer withContent(UIComponent<?> component)
     {
-        this.content = component;
+        return this.withContent(() -> component);
+    }
+
+    @Override
+    public RerenderingContainer withContent(UIComponentProvider<?> componentProvider)
+    {
+        this.content = data -> componentProvider.get();
         return this;
+    }
+
+    @Override
+    public RerenderingContainer withDataDrivenContent(UIComponentProviderWithData<?> componentProvider)
+    {
+        this.content = data -> componentProvider.apply(data);
+        return this;
+    }
+
+    @Override
+    public RerenderingContainer withUIContext(UIContext uiContext)
+    {
+        this.uiContext = uiContext;
+        return this;
+    }
+
+    @Override
+    public RerenderingContainer disableStaticNodeRerendering()
+    {
+        return this.disableStaticNodeRerendering(true);
+    }
+
+    @Override
+    public RerenderingContainer disableStaticNodeRerendering(boolean disableNodeRerendering)
+    {
+        this.enableStaticNodeRerendering = !disableNodeRerendering;
+        return this;
+    }
+
+    @Override
+    public RerenderingContainer enableStaticNodeRerendering()
+    {
+        return this.enableStaticNodeRerendering(true);
+    }
+
+    @Override
+    public RerenderingContainer enableStaticNodeRerendering(boolean enableNodeRerendering)
+    {
+        this.enableStaticNodeRerendering = enableNodeRerendering;
+        return this;
+    }
+
+    @Override
+    public UIComponentProvider<RerenderingContainer> asTemplateProvider()
+    {
+        return () -> new RerenderingContainerImpl(this.context, this.content, this.uiContext, this.enableStaticNodeRerendering);
     }
 
 }

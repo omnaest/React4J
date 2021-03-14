@@ -21,6 +21,7 @@ import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.context.data.DefineableDataContext;
 import org.omnaest.react4j.domain.context.data.TypedDataContext;
 import org.omnaest.react4j.domain.context.ui.UIContext;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.utils.functional.TriConsumer;
 
 public interface UIComponent<UIC extends UIComponent<?>>
@@ -36,7 +37,7 @@ public interface UIComponent<UIC extends UIComponent<?>>
      */
     public UIC withDataContext(BiConsumer<UIC, DefineableDataContext> dataContextConsumer);
 
-    public UIC withUIContext(UIContextConsumer<UIC> uiContextConsumer);
+    public RerenderingContainer withUIContext(UIContextConsumer<UIC> uiContextConsumer);
 
     public RerenderingContainer withRerenderingUIContext(UIContextAndDataConsumer<UIC> rerenderingUiContextConsumer);
 
@@ -51,4 +52,6 @@ public interface UIComponent<UIC extends UIComponent<?>>
     public static interface UIContextAndDataConsumer<UIC extends UIComponent<?>> extends TriConsumer<UIC, UIContext, Data>
     {
     }
+
+    public UIComponentProvider<UIC> asTemplateProvider();
 }

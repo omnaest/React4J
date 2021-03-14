@@ -15,12 +15,13 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.AnkerButton;
 import org.omnaest.react4j.domain.Button.Style;
 import org.omnaest.react4j.domain.Location;
-import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -30,6 +31,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.AnkerButtonNode;
 import org.omnaest.utils.template.TemplateUtils;
 
@@ -44,6 +46,14 @@ public class AnkerButtonImpl extends AbstractUIComponent<AnkerButton> implements
         super(context);
     }
 
+    public AnkerButtonImpl(ComponentContext context, I18nText text, String link, Style style)
+    {
+        super(context);
+        this.text = text;
+        this.link = link;
+        this.style = style;
+    }
+
     @Override
     public UIComponentRenderer asRenderer()
     {
@@ -56,7 +66,7 @@ public class AnkerButtonImpl extends AbstractUIComponent<AnkerButton> implements
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new AnkerButtonNode().setText(AnkerButtonImpl.this.getTextResolver()
                                                                          .apply(AnkerButtonImpl.this.text, location))
@@ -84,7 +94,7 @@ public class AnkerButtonImpl extends AbstractUIComponent<AnkerButton> implements
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return Stream.empty();
             }
@@ -116,5 +126,11 @@ public class AnkerButtonImpl extends AbstractUIComponent<AnkerButton> implements
     {
         this.style = style;
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<AnkerButton> asTemplateProvider()
+    {
+        return () -> new AnkerButtonImpl(this.context, this.text, this.link, this.style);
     }
 }

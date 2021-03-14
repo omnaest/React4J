@@ -20,12 +20,13 @@ import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Icon;
 import org.omnaest.react4j.domain.Location;
-import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.IconNode;
 
 public class IconImpl extends AbstractUIComponent<Icon> implements Icon
@@ -35,6 +36,12 @@ public class IconImpl extends AbstractUIComponent<Icon> implements Icon
     public IconImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public IconImpl(ComponentContext context, StandardIcon value)
+    {
+        super(context);
+        this.value = value;
     }
 
     @Override
@@ -49,7 +56,7 @@ public class IconImpl extends AbstractUIComponent<Icon> implements Icon
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new IconNode().setIcon(Optional.ofNullable(IconImpl.this.value)
                                                       .map(StandardIcon::get)
@@ -68,7 +75,7 @@ public class IconImpl extends AbstractUIComponent<Icon> implements Icon
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return Stream.empty();
             }
@@ -81,6 +88,12 @@ public class IconImpl extends AbstractUIComponent<Icon> implements Icon
     {
         this.value = value;
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<Icon> asTemplateProvider()
+    {
+        return () -> new IconImpl(this.context, this.value);
     }
 
 }

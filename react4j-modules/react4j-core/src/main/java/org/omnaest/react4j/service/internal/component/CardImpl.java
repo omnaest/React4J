@@ -23,6 +23,7 @@ import org.omnaest.react4j.domain.Card;
 import org.omnaest.react4j.domain.Image;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -32,6 +33,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.CardNode;
 import org.omnaest.react4j.service.internal.nodes.ImageNode;
 import org.omnaest.utils.template.TemplateUtils;
@@ -51,6 +53,19 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
         super(context);
     }
 
+    public CardImpl(ComponentContext context, I18nText featuredTitle, I18nText title, I18nText subTitle, Optional<Image> image, String locator,
+                    UIComponent<?> content, boolean adjust)
+    {
+        super(context);
+        this.featuredTitle = featuredTitle;
+        this.title = title;
+        this.subTitle = subTitle;
+        this.image = image;
+        this.locator = locator;
+        this.content = content;
+        this.adjust = adjust;
+    }
+
     @Override
     public UIComponentRenderer asRenderer()
     {
@@ -63,7 +78,7 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new CardNode().setFeaturedTitle(Optional.ofNullable(CardImpl.this.featuredTitle)
                                                                .map(featuredTitle -> CardImpl.this.getTextResolver()
@@ -113,9 +128,9 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
-                return Stream.of(CardImpl.this.content);
+                return Stream.of(ParentLocationAndComponent.of(parentLocation, CardImpl.this.content));
             }
 
         };
@@ -179,6 +194,12 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
     {
         this.adjust = value;
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<Card> asTemplateProvider()
+    {
+        return () -> new CardImpl(this.context, this.featuredTitle, this.featuredTitle, this.subTitle, this.image, this.locator, this.content, this.adjust);
     }
 
 }

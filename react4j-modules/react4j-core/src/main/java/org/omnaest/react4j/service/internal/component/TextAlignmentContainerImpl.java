@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.TextAlignmentContainer;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
@@ -40,6 +41,17 @@ public class TextAlignmentContainerImpl extends AbstractUIComponentAndContentHol
     public TextAlignmentContainerImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public TextAlignmentContainerImpl(ComponentContext context, UIComponentProvider<?> content, boolean ellipsis, boolean nowrap,
+                                      HorizontalAlignment horizontalAlignment, VerticalAlignment verticalAlignment)
+    {
+        super(context);
+        this.content = content;
+        this.ellipsis = ellipsis;
+        this.nowrap = nowrap;
+        this.horizontalAlignment = horizontalAlignment;
+        this.verticalAlignment = verticalAlignment;
     }
 
     @Override
@@ -83,7 +95,7 @@ public class TextAlignmentContainerImpl extends AbstractUIComponentAndContentHol
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new TextAlignmentContainerNode().setEllipsis(TextAlignmentContainerImpl.this.ellipsis)
                                                        .setNowrap(TextAlignmentContainerImpl.this.nowrap)
@@ -109,9 +121,9 @@ public class TextAlignmentContainerImpl extends AbstractUIComponentAndContentHol
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
-                return Stream.of(TextAlignmentContainerImpl.this.content.get());
+                return Stream.of(ParentLocationAndComponent.of(parentLocation, TextAlignmentContainerImpl.this.content.get()));
             }
 
         };
@@ -128,6 +140,12 @@ public class TextAlignmentContainerImpl extends AbstractUIComponentAndContentHol
     {
         this.content = componentProvider;
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<TextAlignmentContainer> asTemplateProvider()
+    {
+        return () -> new TextAlignmentContainerImpl(this.context, this.content, this.ellipsis, this.nowrap, this.horizontalAlignment, this.verticalAlignment);
     }
 
 }

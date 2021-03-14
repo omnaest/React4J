@@ -17,18 +17,20 @@ package org.omnaest.react4j.service.internal.component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.ImageIndex;
 import org.omnaest.react4j.domain.Location;
-import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.ImageIndexNode;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 import org.omnaest.utils.element.tri.TriElement;
@@ -40,6 +42,12 @@ public class ImageIndexImpl extends AbstractUIComponent<ImageIndex> implements I
     public ImageIndexImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public ImageIndexImpl(ComponentContext context, List<TriElement<I18nText, String, String>> entries)
+    {
+        super(context);
+        this.entries = entries;
     }
 
     @Override
@@ -55,7 +63,7 @@ public class ImageIndexImpl extends AbstractUIComponent<ImageIndex> implements I
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 LocalizedTextResolverService textResolver = ImageIndexImpl.this.getTextResolver();
 
@@ -79,7 +87,7 @@ public class ImageIndexImpl extends AbstractUIComponent<ImageIndex> implements I
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return Stream.empty();
             }
@@ -92,6 +100,13 @@ public class ImageIndexImpl extends AbstractUIComponent<ImageIndex> implements I
     {
         this.entries.add(TriElement.of(this.toI18nText(title), id, image));
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<ImageIndex> asTemplateProvider()
+    {
+        return () -> new ImageIndexImpl(this.context, this.entries.stream()
+                                                                  .collect(Collectors.toList()));
     }
 
 }

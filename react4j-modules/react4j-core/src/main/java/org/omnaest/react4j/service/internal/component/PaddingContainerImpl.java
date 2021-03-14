@@ -15,16 +15,19 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.PaddingContainer;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.PaddingContainerNode;
 
 public class PaddingContainerImpl extends AbstractUIComponentAndContentHolder<PaddingContainer> implements PaddingContainer
@@ -36,6 +39,14 @@ public class PaddingContainerImpl extends AbstractUIComponentAndContentHolder<Pa
     public PaddingContainerImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public PaddingContainerImpl(ComponentContext context, boolean verticalPadding, boolean horizontalPadding, UIComponent<?> content)
+    {
+        super(context);
+        this.verticalPadding = verticalPadding;
+        this.horizontalPadding = horizontalPadding;
+        this.content = content;
     }
 
     @Override
@@ -51,7 +62,7 @@ public class PaddingContainerImpl extends AbstractUIComponentAndContentHolder<Pa
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new PaddingContainerNode().setHorizontal(PaddingContainerImpl.this.horizontalPadding)
                                                  .setVertical(PaddingContainerImpl.this.verticalPadding)
@@ -69,9 +80,9 @@ public class PaddingContainerImpl extends AbstractUIComponentAndContentHolder<Pa
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
-                return Stream.of(PaddingContainerImpl.this.content);
+                return Stream.of(ParentLocationAndComponent.of(parentLocation, PaddingContainerImpl.this.content));
             }
 
         };
@@ -108,6 +119,12 @@ public class PaddingContainerImpl extends AbstractUIComponentAndContentHolder<Pa
     {
         this.content = component;
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<PaddingContainer> asTemplateProvider()
+    {
+        return () -> new PaddingContainerImpl(this.context, this.verticalPadding, this.horizontalPadding, this.content);
     }
 
 }

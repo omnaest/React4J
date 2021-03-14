@@ -27,6 +27,7 @@ import org.omnaest.react4j.domain.Icon;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UnsortedList;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
@@ -35,6 +36,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.UnsortedListNode;
 import org.omnaest.utils.template.TemplateUtils;
 
@@ -46,6 +48,13 @@ public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implemen
     public UnsortedListImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public UnsortedListImpl(ComponentContext context, List<UIComponent<?>> elements, boolean enableBulletPoints)
+    {
+        super(context);
+        this.elements = elements;
+        this.enableBulletPoints = enableBulletPoints;
     }
 
     @Override
@@ -60,7 +69,7 @@ public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implemen
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new UnsortedListNode().setEnableBulletPoints(UnsortedListImpl.this.enableBulletPoints)
                                              .setElements(UnsortedListImpl.this.elements.stream()
@@ -94,9 +103,10 @@ public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implemen
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
-                return UnsortedListImpl.this.elements.stream();
+                return UnsortedListImpl.this.elements.stream()
+                                                     .map(component -> ParentLocationAndComponent.of(parentLocation, component));
             }
 
         };
@@ -149,6 +159,14 @@ public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implemen
                 .orElse(Collections.emptyList())
                 .forEach(this::addEntry);
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<UnsortedList> asTemplateProvider()
+    {
+        return () -> new UnsortedListImpl(this.context, this.elements.stream()
+                                                                     .collect(Collectors.toList()),
+                                          this.enableBulletPoints);
     }
 
 }

@@ -31,6 +31,7 @@ import org.omnaest.react4j.domain.Icon.StandardIcon;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Paragraph;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -40,6 +41,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.ParagraphNode;
 import org.omnaest.utils.ClassUtils;
 import org.omnaest.utils.ClassUtils.Resource;
@@ -54,6 +56,13 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
     public ParagraphImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public ParagraphImpl(ComponentContext context, List<UIComponent<?>> elements, boolean bold)
+    {
+        super(context);
+        this.elements = elements;
+        this.bold = bold;
     }
 
     @Override
@@ -191,7 +200,7 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new ParagraphNode().setId(ParagraphImpl.this.getId())
                                           .setBold(ParagraphImpl.this.bold)
@@ -226,11 +235,20 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
-                return ParagraphImpl.this.elements.stream();
+                return ParagraphImpl.this.elements.stream()
+                                                  .map(element -> ParentLocationAndComponent.of(parentLocation, element));
             }
 
         };
+    }
+
+    @Override
+    public UIComponentProvider<Paragraph> asTemplateProvider()
+    {
+        return () -> new ParagraphImpl(this.context, this.elements.stream()
+                                                                  .collect(Collectors.toList()),
+                                       this.bold);
     }
 }

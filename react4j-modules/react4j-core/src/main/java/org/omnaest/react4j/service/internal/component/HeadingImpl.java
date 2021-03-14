@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Heading;
 import org.omnaest.react4j.domain.Location;
-import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -28,6 +28,7 @@ import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.HeadingNode;
 
 public class HeadingImpl extends AbstractUIComponent<Heading> implements Heading
@@ -38,6 +39,13 @@ public class HeadingImpl extends AbstractUIComponent<Heading> implements Heading
     public HeadingImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public HeadingImpl(ComponentContext context, I18nText text, int level)
+    {
+        super(context);
+        this.text = text;
+        this.level = level;
     }
 
     @Override
@@ -53,7 +61,7 @@ public class HeadingImpl extends AbstractUIComponent<Heading> implements Heading
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new HeadingNode().setText(HeadingImpl.this.getTextResolver()
                                                                  .apply(HeadingImpl.this.text, location))
@@ -79,7 +87,7 @@ public class HeadingImpl extends AbstractUIComponent<Heading> implements Heading
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return Stream.empty();
             }
@@ -105,6 +113,12 @@ public class HeadingImpl extends AbstractUIComponent<Heading> implements Heading
     public Heading withLevel(Level level)
     {
         return this.withLevel(level.level());
+    }
+
+    @Override
+    public UIComponentProvider<Heading> asTemplateProvider()
+    {
+        return () -> new HeadingImpl(this.context, this.text, this.level);
     }
 
 }

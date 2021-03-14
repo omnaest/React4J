@@ -1,6 +1,6 @@
-import Axios from "axios";
-import { Backend, Target } from "../../backend/Backend";
+
 import { ElementMap } from "../../utils/Utils";
+
 
 export interface DataContext 
 {
@@ -13,9 +13,27 @@ export interface Data extends ElementMap<any>
 {
 }
 
+export interface UIContext 
+{
+    contextId: string;
+    data: UIContextData;
+    updateCounter: number;
+}
+
+export interface UIContextData
+{
+    [key: string]: string;
+}
+
+export interface UIContextAccessor
+{
+    getUIContextById(contextId: string): UIContext;
+
+    updateUIContext(uiContext: UIContext): void;
+}
+
 export class DataContextManager
 {
-
     private static contextIdToDataContext: ElementMap<DataContext> = {};
 
     public static getOrCreateDataContext(contextId: string): DataContext
@@ -42,6 +60,44 @@ export class DataContextManager
         dataContext.data[field] = value;
         dataContext.updateCounter++;
     }
+
+    public static updateFieldByContext(contextId: string, field: string, value: string, uiContextAccessor?: UIContextAccessor): number
+    {
+        if (contextId)
+        {
+            if (uiContextAccessor)
+            {
+                const uiContext = uiContextAccessor.getUIContextById(contextId);
+                if (uiContext.data[field] !== value)
+                {
+                    uiContext.data[field] = value;
+                    uiContext.updateCounter++;
+                    uiContextAccessor.updateUIContext(uiContext);
+                    return uiContext.updateCounter;
+                }
+            }
+            else
+            {
+                console.error("Not able to update field " + field + " as ui context is unavailable: " + contextId);
+            }
+        }
+
+        return 0;
+    }
+
+    public static getFieldValue(contextId: string, field: string, uiContextAccessor: UIContextAccessor | undefined): string 
+    {
+        if (uiContextAccessor && contextId && field)
+        {
+            const uiContext = uiContextAccessor.getUIContextById(contextId);
+            return uiContext?.data[field] || "";
+        }
+        else
+        {
+            return "";
+        }
+    }
+
 
     public static updateFieldContext(contextId: string, data: ElementMap<any>)
     {

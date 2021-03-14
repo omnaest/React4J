@@ -26,22 +26,44 @@ import { Toaster, ToasterNode } from "./components/Toaster";
 import { Icon, IconNode } from "./components/Icon";
 import { PaddingContainer, PaddingContainerNode } from "./components/PaddingContainer";
 import { TextAlignmentContainer, TextAlignmentContainerNode } from "./components/TextAlignmentContainer";
+import RerenderingContainer, { RerenderingContainerNode, UpdateUIContextAction } from "./components/RerenderingContainer";
+import { UIContext, UIContextAccessor } from "./data/DataContextManager";
 
 export interface Node
 {
+    target: Target;
+    uiContext?: UIContext;
     type: string;
+}
+
+export interface Target extends Array<string>
+{
+}
+
+export interface RenderingSupport
+{
+    uiContextAccessor: UIContextAccessor,
+    nodeContextAccessor: NodeContextAccessor
+}
+
+export interface NodeContextAccessor
+{
+    updateNode(node: Node): void;
 }
 
 export class Renderer
 {
-
-    public static render(node: Node): JSX.Element
+    public static render(node: Node, renderingSupport?: RenderingSupport): JSX.Element
     {
         if (node)
         {
             if (node.type === "JUMBOTRON")
             {
                 return <JumboTron node={node as JumbotronNode} />;
+            }
+            else if (node.type === RerenderingContainer.TYPE)
+            {
+                return <RerenderingContainer node={node as RerenderingContainerNode} />
             }
             else if (node.type === UnorderedList.TYPE)
             {
@@ -132,7 +154,7 @@ export class Renderer
             }
             else if (node.type === Form.TYPE)
             {
-                return <Form node={node as FormNode} />
+                return <Form node={node as FormNode} renderingSupport={renderingSupport} />
             }
             else if (node.type === ScrollbarContainer.TYPE)
             {

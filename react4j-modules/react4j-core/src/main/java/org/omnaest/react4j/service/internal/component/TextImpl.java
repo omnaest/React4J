@@ -17,12 +17,13 @@ package org.omnaest.react4j.service.internal.component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Text;
-import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -32,6 +33,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.TextNode;
 
 public class TextImpl extends AbstractUIComponent<Text> implements Text
@@ -41,6 +43,12 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
     public TextImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public TextImpl(ComponentContext context, List<I18nText> texts)
+    {
+        super(context);
+        this.texts = texts;
     }
 
     @Override
@@ -56,7 +64,7 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new TextNode().setTexts(TextImpl.this.texts.stream()
                                                                   .map(text -> TextImpl.this.getTextResolver()
@@ -88,7 +96,7 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return Stream.empty();
             }
@@ -108,6 +116,12 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
     {
         this.texts.add(text);
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<Text> asTemplateProvider()
+    {
+        return () -> new TextImpl(this.context, this.texts);
     }
 
 }

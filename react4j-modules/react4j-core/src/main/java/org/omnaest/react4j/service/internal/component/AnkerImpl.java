@@ -15,11 +15,12 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Anker;
 import org.omnaest.react4j.domain.Location;
-import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -29,6 +30,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.AnkerNode;
 import org.omnaest.utils.template.TemplateUtils;
 
@@ -40,6 +42,13 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
     public AnkerImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public AnkerImpl(ComponentContext context, I18nText text, String link)
+    {
+        super(context);
+        this.text = text;
+        this.link = link;
     }
 
     @Override
@@ -54,7 +63,7 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new AnkerNode().setText(AnkerImpl.this.getTextResolver()
                                                              .apply(AnkerImpl.this.text, location))
@@ -80,7 +89,7 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return Stream.empty();
             }
@@ -104,5 +113,11 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
     {
         this.link = link;
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<Anker> asTemplateProvider()
+    {
+        return () -> new AnkerImpl(this.context, this.text, this.link);
     }
 }

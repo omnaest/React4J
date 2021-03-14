@@ -15,17 +15,20 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Toaster;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.ToasterNode;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 
@@ -37,6 +40,13 @@ public class ToasterImpl extends AbstractUIComponentAndContentHolder<Toaster> im
     public ToasterImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public ToasterImpl(ComponentContext context, I18nText title, UIComponent<?> content)
+    {
+        super(context);
+        this.title = title;
+        this.content = content;
     }
 
     @Override
@@ -51,7 +61,7 @@ public class ToasterImpl extends AbstractUIComponentAndContentHolder<Toaster> im
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 LocalizedTextResolverService textResolver = ToasterImpl.this.getTextResolver();
                 return new ToasterNode().setContent(renderingProcessor.process(ToasterImpl.this.content, location))
@@ -70,9 +80,9 @@ public class ToasterImpl extends AbstractUIComponentAndContentHolder<Toaster> im
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
-                return Stream.of(ToasterImpl.this.content);
+                return Stream.of(ParentLocationAndComponent.of(parentLocation, ToasterImpl.this.content));
             }
 
         };
@@ -90,6 +100,12 @@ public class ToasterImpl extends AbstractUIComponentAndContentHolder<Toaster> im
     {
         this.content = component;
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<Toaster> asTemplateProvider()
+    {
+        return () -> new ToasterImpl(this.context, this.title, this.content);
     }
 
 }

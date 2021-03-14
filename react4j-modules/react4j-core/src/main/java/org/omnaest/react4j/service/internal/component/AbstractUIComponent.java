@@ -18,7 +18,6 @@ package org.omnaest.react4j.service.internal.component;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -28,7 +27,6 @@ import org.omnaest.react4j.domain.Locations;
 import org.omnaest.react4j.domain.RerenderingContainer;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
-import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.context.data.DefineableDataContext;
 import org.omnaest.react4j.domain.context.data.TypedDataContext;
 import org.omnaest.react4j.domain.context.ui.UIContext;
@@ -42,7 +40,6 @@ import org.omnaest.utils.element.cached.CachedElement;
 
 public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements RenderableUIComponent<UIC>
 {
-    private static AtomicInteger                   idCounter           = new AtomicInteger();
     private String                                 id                  = this.newComponentId(this.getClass());
     private List<UIComponent<?>>                   parents             = new ArrayList<>();
     protected ComponentContext                     context;
@@ -60,8 +57,7 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
     protected String newComponentId(Class<?> type)
     {
         return type.getSimpleName()
-                   .toLowerCase()
-                + idCounter.getAndIncrement();
+                   .toLowerCase();
     }
 
     @Override
@@ -143,12 +139,27 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
         return this.context.getContextFactory();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public UIC withUIContext(UIContextConsumer<UIC> uiContextConsumer)
+    public RerenderingContainer withUIContext(UIContextConsumer<UIC> uiContextConsumer)
     {
-        uiContextConsumer.accept((UIC) this, this.uiContextProvider.get());
-        return (UIC) this;
+        return this.withUIContext((component, context, data) -> uiContextConsumer.accept(component, context));
+    }
+
+    @SuppressWarnings("unchecked")
+    public RerenderingContainer withUIContext(UIContextAndDataConsumer<UIC> uiContextConsumer)
+    {
+        UIContext uiContext = this.uiContextProvider.get();
+        return this.getUiComponentFactory()
+                   .newRerenderingContainer()
+                   .withDataDrivenContent(data ->
+                   {
+                       UIC clone = this.asTemplateProvider()
+                                       .get();
+                       uiContextConsumer.accept(clone, uiContext, data);
+                       return clone;
+                   })
+                   .withUIContext(uiContext)
+                   .disableStaticNodeRerendering();
     }
 
     @Override
@@ -168,9 +179,8 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
     @Override
     public RerenderingContainer withRerenderingUIContext(UIContextAndDataConsumer<UIC> rerenderingUIContextConsumer)
     {
-        return this.getUiComponentFactory()
-                   .newRerenderingContainer()
-                   .withContent(this.withUIContext((first, second) -> rerenderingUIContextConsumer.accept(first, second, Data.empty())));
+        return this.withUIContext((first, second, data) -> rerenderingUIContextConsumer.accept(first, second, data))
+                   .enableStaticNodeRerendering();
     }
 
 }

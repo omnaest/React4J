@@ -15,8 +15,21 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain;
 
+import org.omnaest.react4j.domain.context.ui.UIContext;
+import org.omnaest.react4j.domain.support.UIComponentProviderWithData;
 import org.omnaest.react4j.domain.support.UIComponentWithContent;
 
 public interface RerenderingContainer extends UIComponentWithContent<RerenderingContainer>
 {
+    public RerenderingContainer withUIContext(UIContext uiContext);
+
+    public RerenderingContainer disableStaticNodeRerendering();
+
+    public RerenderingContainer disableStaticNodeRerendering(boolean disableNodeRerendering);
+
+    public RerenderingContainer enableStaticNodeRerendering(boolean enableNodeRerendering);
+
+    public RerenderingContainer enableStaticNodeRerendering();
+
+    public RerenderingContainer withDataDrivenContent(UIComponentProviderWithData<?> componentProvider);
 }

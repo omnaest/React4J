@@ -15,7 +15,11 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain.raw;
 
+import org.omnaest.react4j.service.internal.handler.domain.Target;
+
 public interface Node
 {
     public String getType();
+
+    public Target getTarget();
 }

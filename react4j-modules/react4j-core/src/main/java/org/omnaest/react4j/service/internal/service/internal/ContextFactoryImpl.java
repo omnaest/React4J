@@ -49,7 +49,7 @@ public class ContextFactoryImpl implements ContextFactory
     @Override
     public UIContext newUIContextInstance(Locations locations)
     {
-        return new UIContextImpl();
+        return new UIContextImpl(locations);
     }
 
 }

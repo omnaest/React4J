@@ -15,16 +15,18 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.LineBreak;
 import org.omnaest.react4j.domain.Location;
-import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.LineBreakNode;
 
 public class LineBreakImpl extends AbstractUIComponent<LineBreak> implements LineBreak
@@ -47,7 +49,7 @@ public class LineBreakImpl extends AbstractUIComponent<LineBreak> implements Lin
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new LineBreakNode();
             }
@@ -64,12 +66,18 @@ public class LineBreakImpl extends AbstractUIComponent<LineBreak> implements Lin
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return Stream.empty();
             }
 
         };
+    }
+
+    @Override
+    public UIComponentProvider<LineBreak> asTemplateProvider()
+    {
+        return () -> new LineBreakImpl(this.context);
     }
 
 }

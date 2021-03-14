@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.handler.domain;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -87,6 +88,17 @@ public class Target implements Supplier<List<String>>
             return false;
         }
         return true;
+    }
+
+    public boolean isEmpty()
+    {
+        return this.get()
+                   .isEmpty();
+    }
+
+    public static Target empty()
+    {
+        return Target.from(() -> new ArrayList<>());
     }
 
 }

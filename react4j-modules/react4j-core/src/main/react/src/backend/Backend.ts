@@ -1,5 +1,6 @@
-import Axios from "axios";
-import { DataContextManager } from "../renderer/data/DataContextManager";
+import Axios, { AxiosResponse } from "axios";
+import { DataContextManager, UIContextAccessor } from "../renderer/data/DataContextManager";
+import { Node, NodeContextAccessor } from "../renderer/Renderer";
 import { ElementMap } from "../utils/Utils";
 
 export class BackendUri
@@ -8,7 +9,7 @@ export class BackendUri
     public static URI_UI_HANDLER = BackendUri.URI_UI + "/event";
 }
 
-export class Target extends Array
+export class Target extends Array<string>
 {
 }
 
@@ -18,6 +19,19 @@ interface DataWithContext
     data: ElementMap<any>;
 }
 
+interface ResponseBody
+{
+    dataWithContext: DataWithContext;
+    target: Target;
+    targetNode: TargetNode;
+}
+
+interface TargetNode
+{
+    target: Target;
+    node: Node;
+}
+
 export class Backend
 {
     public static getUI()
@@ -25,20 +39,32 @@ export class Backend
         return Axios.get(BackendUri.URI_UI);
     }
 
-    public static sendEvent(target: Target, contextId: string)
+    public static sendEvent(target: Target, contextId: string, uiContextAccessor?: UIContextAccessor, nodeContextAccessor?: NodeContextAccessor)
     {
         return Axios.post(BackendUri.URI_UI_HANDLER, {
             target: target,
             dataWithContext: {
                 contextId: contextId,
-                data: DataContextManager.getOrCreateDataContext(contextId).data
+                data: uiContextAccessor?.getUIContextById(contextId).data
             }
-        }).then((response) =>
+        }).then((response: AxiosResponse<ResponseBody>) =>
         {
-            const dataWithContext = response.data as DataWithContext;
+            const responseBody = response.data;
+
+            const dataWithContext = responseBody.dataWithContext;
             if (dataWithContext)
             {
-                DataContextManager.updateFieldContext(dataWithContext.contextId, dataWithContext.data);
+                uiContextAccessor?.updateUIContext({
+                    contextId: dataWithContext.contextId,
+                    data: dataWithContext.data,
+                    updateCounter: 0
+                });
+            }
+
+            const targetNode = responseBody.targetNode;
+            if (targetNode)
+            {
+                nodeContextAccessor?.updateNode(targetNode.node);
             }
         });
     }

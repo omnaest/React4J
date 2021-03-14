@@ -46,7 +46,7 @@ public class ReactUIController
     private EventHandlerService eventHandlerService;
 
     //    @CrossOrigin("*")
-    @RequestMapping(method = RequestMethod.GET, path = "/ui/{contextPath}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.GET, path = "{contextPath}/ui", produces = MediaType.APPLICATION_JSON_VALUE)
     public NodeHierarchy getNodeHierarchy(@PathVariable("contextPath") String contextPath)
     {
         return this.resolverService.resolveNodeHierarchy(contextPath);

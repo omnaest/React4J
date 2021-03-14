@@ -26,4 +26,6 @@ import org.omnaest.react4j.domain.context.document.DocumentList;
 public interface UIContext extends Context, DocumentList
 {
 
+    public UIContext withId(String id);
+
 }

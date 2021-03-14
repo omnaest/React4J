@@ -1,5 +1,7 @@
 import Axios from "axios";
 import { Backend, Target } from "../../backend/Backend";
+import { UIContextAccessor } from "../data/DataContextManager";
+import { NodeContextAccessor } from "../Renderer";
 
 export interface Handler
 {
@@ -15,7 +17,7 @@ export interface ServerHandler extends Handler
 
 export class HandlerFactory
 {
-    public static onClick(handler: Handler)
+    public static onClick(handler: Handler, uiContextAccessor?: UIContextAccessor, nodeContextAccessor?: NodeContextAccessor)
     {
         if (handler && handler.type === "SERVER")
         {
@@ -23,7 +25,7 @@ export class HandlerFactory
             return (event: React.MouseEvent) =>
             {
                 event.preventDefault();
-                Backend.sendEvent(serverHandler.target, serverHandler.contextId);
+                Backend.sendEvent(serverHandler.target, serverHandler.contextId, uiContextAccessor, nodeContextAccessor);
             };
         }
         else

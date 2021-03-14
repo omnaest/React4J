@@ -20,6 +20,7 @@ import java.util.function.Function;
 
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.RenderableUIComponent;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -32,14 +33,14 @@ import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 public class RenderingProcessorImpl implements RenderingProcessor
 {
     @Override
-    public Node process(UIComponent<?> component, Location parentLocation)
+    public Node process(UIComponent<?> component, Location parentLocation, Optional<Data> data)
     {
         return Optional.ofNullable(component)
-                       .map(this.createComponentRenderer(parentLocation))
+                       .map(this.createComponentRenderer(parentLocation, data))
                        .orElse(null);
     }
 
-    private Function<UIComponent<?>, Node> createComponentRenderer(Location parentLocation)
+    private Function<UIComponent<?>, Node> createComponentRenderer(Location parentLocation, Optional<Data> data)
     {
         return component ->
         {
@@ -47,7 +48,13 @@ public class RenderingProcessorImpl implements RenderingProcessor
 
             UIComponentRenderer renderer = ((RenderableUIComponent<?>) component).asRenderer();
             Location location = renderer.getLocation(locationSupport);
-            return renderer.render(this, location);
+            return renderer.render(this, location, data);
         };
+    }
+
+    @Override
+    public Node process(UIComponent<?> component, Location parentLocation)
+    {
+        return this.process(component, parentLocation, Optional.empty());
     }
 }

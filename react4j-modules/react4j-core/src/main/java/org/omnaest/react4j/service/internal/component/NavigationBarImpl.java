@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.NavigationBar;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -35,6 +36,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.NavigationBarNode;
 import org.omnaest.utils.MapUtils;
 import org.omnaest.utils.template.TemplateUtils;
@@ -46,6 +48,12 @@ public class NavigationBarImpl extends AbstractUIComponent<NavigationBar> implem
     public NavigationBarImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public NavigationBarImpl(ComponentContext context, List<NavigationEntryImpl> entries)
+    {
+        super(context);
+        this.entries = entries;
     }
 
     @Override
@@ -60,7 +68,7 @@ public class NavigationBarImpl extends AbstractUIComponent<NavigationBar> implem
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new NavigationBarNode().setEntries(NavigationBarImpl.this.entries.stream()
                                                                                         .map(entry -> new NavigationBarNode.Entry().setActive(entry.isActive())
@@ -104,7 +112,7 @@ public class NavigationBarImpl extends AbstractUIComponent<NavigationBar> implem
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return Stream.empty();
             }
@@ -211,5 +219,12 @@ public class NavigationBarImpl extends AbstractUIComponent<NavigationBar> implem
                     + this.linkedId + ", active=" + this.active + ", disabled=" + this.disabled + "]";
         }
 
+    }
+
+    @Override
+    public UIComponentProvider<NavigationBar> asTemplateProvider()
+    {
+        return () -> new NavigationBarImpl(this.context, this.entries.stream()
+                                                                     .collect(Collectors.toList()));
     }
 }

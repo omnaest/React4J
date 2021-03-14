@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 import org.omnaest.react4j.domain.Composite;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
@@ -42,6 +43,12 @@ public class CompositeImpl extends AbstractUIComponentWithSubComponents<Composit
         super(context);
     }
 
+    public CompositeImpl(ComponentContext context, List<UIComponent<?>> components)
+    {
+        super(context);
+        this.components = components;
+    }
+
     @Override
     public UIComponentRenderer asRenderer()
     {
@@ -54,7 +61,7 @@ public class CompositeImpl extends AbstractUIComponentWithSubComponents<Composit
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new CompositeNode().setElements(CompositeImpl.this.components.stream()
                                                                                     .map(component -> renderingProcessor.process(component, location))
@@ -72,9 +79,10 @@ public class CompositeImpl extends AbstractUIComponentWithSubComponents<Composit
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
-                return CompositeImpl.this.components.stream();
+                return CompositeImpl.this.components.stream()
+                                                    .map(component -> ParentLocationAndComponent.of(parentLocation, component));
             }
 
         };
@@ -105,5 +113,11 @@ public class CompositeImpl extends AbstractUIComponentWithSubComponents<Composit
         Optional.ofNullable(components)
                 .ifPresent(consumer -> consumer.forEach(this::addComponent));
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<Composite> asTemplateProvider()
+    {
+        return () -> new CompositeImpl(this.context, this.components);
     }
 }

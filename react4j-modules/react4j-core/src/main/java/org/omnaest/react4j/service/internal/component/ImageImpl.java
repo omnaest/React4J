@@ -15,11 +15,12 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Image;
 import org.omnaest.react4j.domain.Location;
-import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -29,6 +30,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.ImageNode;
 import org.omnaest.utils.template.TemplateUtils;
 
@@ -40,6 +42,13 @@ public class ImageImpl extends AbstractUIComponent<Image> implements Image
     public ImageImpl(ComponentContext context)
     {
         super(context);
+    }
+
+    public ImageImpl(ComponentContext context, I18nText name, String image)
+    {
+        super(context);
+        this.name = name;
+        this.image = image;
     }
 
     @Override
@@ -54,7 +63,7 @@ public class ImageImpl extends AbstractUIComponent<Image> implements Image
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new ImageNode().setImage(ImageImpl.this.image)
                                       .setName(ImageImpl.this.getTextResolver()
@@ -85,7 +94,7 @@ public class ImageImpl extends AbstractUIComponent<Image> implements Image
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return Stream.empty();
             }
@@ -105,5 +114,11 @@ public class ImageImpl extends AbstractUIComponent<Image> implements Image
     {
         this.image = imageName;
         return this;
+    }
+
+    @Override
+    public UIComponentProvider<Image> asTemplateProvider()
+    {
+        return () -> new ImageImpl(this.context, this.name, this.image);
     }
 }

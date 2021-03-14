@@ -26,8 +26,8 @@ import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Form;
 import org.omnaest.react4j.domain.Location;
-import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.context.Context;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.context.data.DataContext;
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.document.Document.Field;
@@ -38,6 +38,7 @@ import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
@@ -56,6 +57,12 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         super(context);
     }
 
+    public FormImpl(ComponentContext context, List<FormElement<?>> elements)
+    {
+        super(context);
+        this.elements = elements;
+    }
+
     @Override
     public UIComponentRenderer asRenderer()
     {
@@ -69,7 +76,7 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new FormNode().setElements(FormImpl.this.elements.stream()
                                                                         .map(element -> element.render(location))
@@ -88,7 +95,7 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return Stream.empty();
             }
@@ -166,7 +173,7 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         {
             Context dataContext = this.getEffectiveContext();
             Target target = Target.from(location);
-            this.eventHandlerRegistry.register(target, this.eventHandler);
+            this.eventHandlerRegistry.registerDataEventHandler(target, this.eventHandler);
             node.setType("BUTTON")
                 .setText(this.textResolver.apply(this.text, location))
                 .setOnClick(new ServerHandler(target).setContextId(dataContext.getId(location)));
@@ -311,6 +318,13 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             return (FE) this;
         }
 
+    }
+
+    @Override
+    public UIComponentProvider<Form> asTemplateProvider()
+    {
+        return () -> new FormImpl(this.context, this.elements.stream()
+                                                             .collect(Collectors.toList()));
     }
 
 }

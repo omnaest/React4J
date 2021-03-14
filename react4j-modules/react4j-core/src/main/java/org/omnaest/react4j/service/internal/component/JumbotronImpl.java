@@ -17,6 +17,7 @@ package org.omnaest.react4j.service.internal.component;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -25,6 +26,7 @@ import org.omnaest.react4j.domain.GridContainer;
 import org.omnaest.react4j.domain.Jumbotron;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -34,6 +36,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
+import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.JumbotronNode;
 import org.omnaest.utils.template.TemplateUtils;
 
@@ -49,6 +52,15 @@ public class JumbotronImpl extends AbstractUIComponentAndContentHolder<Jumbotron
         super(context);
     }
 
+    public JumbotronImpl(ComponentContext context, I18nText title, I18nText subTitle, UIComponent<?> content, boolean fullWidth)
+    {
+        super(context);
+        this.title = title;
+        this.subTitle = subTitle;
+        this.content = content;
+        this.fullWidth = fullWidth;
+    }
+
     @Override
     public UIComponentRenderer asRenderer()
     {
@@ -62,7 +74,7 @@ public class JumbotronImpl extends AbstractUIComponentAndContentHolder<Jumbotron
             }
 
             @Override
-            public Node render(RenderingProcessor renderingProcessor, Location location)
+            public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new JumbotronNode().setTitle(JumbotronImpl.this.getTextResolver()
                                                                       .apply(JumbotronImpl.this.title, location))
@@ -97,9 +109,9 @@ public class JumbotronImpl extends AbstractUIComponentAndContentHolder<Jumbotron
             }
 
             @Override
-            public Stream<UIComponent<?>> getSubComponents()
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
-                return Stream.of(JumbotronImpl.this.content);
+                return Stream.of(ParentLocationAndComponent.of(parentLocation, JumbotronImpl.this.content));
             }
 
         };
@@ -159,6 +171,12 @@ public class JumbotronImpl extends AbstractUIComponentAndContentHolder<Jumbotron
     {
         return this.withGridContent(grid -> grid.addRow(row -> row.addCells(cards.stream(), (cell, card) -> cell.withColumnSpan(12 / cards.size())
                                                                                                                 .withContent(card))));
+    }
+
+    @Override
+    public UIComponentProvider<Jumbotron> asTemplateProvider()
+    {
+        return () -> new JumbotronImpl(this.context, this.title, this.subTitle, this.content, this.fullWidth);
     }
 
 }

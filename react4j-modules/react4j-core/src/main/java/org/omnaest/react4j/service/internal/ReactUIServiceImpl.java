@@ -67,6 +67,7 @@ import org.omnaest.react4j.domain.i18n.UILocale;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.RenderableUIComponent;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer.EventHandlerRegistrationSupport;
+import org.omnaest.react4j.domain.rendering.UIComponentRenderer.ParentLocationAndComponent;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
@@ -159,7 +160,7 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
         @Override
         public EventHandlerRegistrationSupport registerAsRerenderingNode()
         {
-            RerenderedNodeProvider rerenderedNodeProvider = () -> this.renderingProcessor.process(this.component, this.location.getParent());
+            RerenderedNodeProvider rerenderedNodeProvider = data -> this.renderingProcessor.process(this.component, this.location.getParent(), data);
             this.eventHandlerRegistry.register(this.target, rerenderedNodeProvider);
             return this;
         }
@@ -167,14 +168,14 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
         @Override
         public EventHandlerRegistrationSupport register(DataEventHandler eventHandler)
         {
-            this.eventHandlerRegistry.register(this.target, eventHandler);
+            this.eventHandlerRegistry.registerDataEventHandler(this.target, eventHandler);
             return this;
         }
 
         @Override
         public EventHandlerRegistrationSupport register(EventHandler eventHandler)
         {
-            this.eventHandlerRegistry.register(this.target, eventHandler);
+            this.eventHandlerRegistry.registerEventHandler(this.target, eventHandler);
             return this;
         }
     }
@@ -800,10 +801,10 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
             {
                 RenderingProcessor renderingProcessor = this.createRenderingProcessor();
                 List<Node> elements = this.components.stream()
-                                                     .map(component -> renderingProcessor.process(component, Location.empty()))
+                                                     .map(component -> renderingProcessor.process(component, Location.empty(), Optional.empty()))
                                                      .collect(Collectors.toList());
                 return new NodeHierarchy(new HomePageNode().setNavigation(Optional.ofNullable(this.navigationBar)
-                                                                                  .map(nb -> renderingProcessor.process(nb, Location.empty()))
+                                                                                  .map(nb -> renderingProcessor.process(nb, Location.empty(), Optional.empty()))
                                                                                   .orElse(null))
                                                            .setBody(new CompositeNode().setElements(elements)));
             }
@@ -817,7 +818,8 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                      .filter(filterMapper)
                                                      .map(filterMapper),
                                                component -> component.asRenderer()
-                                                                     .getSubComponents()
+                                                                     .getSubComponents(null)
+                                                                     .map(ParentLocationAndComponent::getComponent)
                                                                      .filter(filterMapper)
                                                                      .map(filterMapper))
                            .forEach(component -> component.asRenderer()
@@ -838,12 +840,13 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                                                                                                 .getLocation(new LocationSupportImpl(Location.empty())))),
                                                parentComponentAndLocation -> parentComponentAndLocation.getFirst()
                                                                                                        .asRenderer()
-                                                                                                       .getSubComponents()
-                                                                                                       .filter(filterMapper)
-                                                                                                       .map(filterMapper)
-                                                                                                       .map(component -> BiElement.of(component,
-                                                                                                                                      component.asRenderer()
-                                                                                                                                               .getLocation(new LocationSupportImpl(parentComponentAndLocation.getSecond())))))
+                                                                                                       .getSubComponents(parentComponentAndLocation.getSecond())
+                                                                                                       .filter(locationAndComponent -> filterMapper.test(locationAndComponent.getComponent()))
+                                                                                                       .map(locationAndComponent -> locationAndComponent.applyToComponent(filterMapper))
+                                                                                                       .map(locationAndComponent -> BiElement.of(locationAndComponent.getSecond(),
+                                                                                                                                                 locationAndComponent.getSecond()
+                                                                                                                                                                     .asRenderer()
+                                                                                                                                                                     .getLocation(new LocationSupportImpl(locationAndComponent.getFirst())))))
                            .forEach(componentAndLocation ->
                            {
                                Location location = componentAndLocation.getSecond();

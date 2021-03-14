@@ -39,12 +39,18 @@ public interface Location extends Supplier<List<String>>
 
     public static Location of(Location parent, String id)
     {
-        return new DefaultLocation(() -> Stream.concat(Optional.ofNullable(parent)
-                                                               .map(Location::get)
-                                                               .map(List::stream)
-                                                               .orElse(Stream.empty()),
-                                                       Stream.of(id))
-                                               .collect(Collectors.toList()));
+        return new DefaultLocation(() ->
+        {
+            return Stream.concat(Optional.ofNullable(parent)
+                                         .map(Location::get)
+                                         .filter(parentIds -> !parentIds.isEmpty())
+                                         .map(List::stream)
+                                         .orElse(Stream.empty()),
+                                 Optional.ofNullable(id)
+                                         .map(Stream::of)
+                                         .orElse(Stream.empty()))
+                         .collect(Collectors.toList());
+        });
     }
 
     public static Location of(String id)

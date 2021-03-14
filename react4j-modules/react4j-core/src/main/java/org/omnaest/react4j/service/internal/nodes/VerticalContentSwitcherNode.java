@@ -18,6 +18,7 @@ package org.omnaest.react4j.service.internal.nodes;
 import java.util.List;
 
 import org.omnaest.react4j.domain.raw.Node;
+import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -111,6 +112,12 @@ public class VerticalContentSwitcherNode extends AbstractNode implements Node
         public String getType()
         {
             return "";
+        }
+
+        @Override
+        public Target getTarget()
+        {
+            return Target.empty();
         }
 
     }

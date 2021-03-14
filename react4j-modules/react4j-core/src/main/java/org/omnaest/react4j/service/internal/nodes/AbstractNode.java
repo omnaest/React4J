@@ -16,9 +16,26 @@
 package org.omnaest.react4j.service.internal.nodes;
 
 import org.omnaest.react4j.domain.raw.Node;
+import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.utils.json.AbstractJSONSerializable;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public abstract class AbstractNode extends AbstractJSONSerializable implements Node
 {
+    @JsonProperty
+    private Target target;
+
+    @Override
+    public Target getTarget()
+    {
+        return this.target;
+    }
+
+    protected Node setTarget(Target target)
+    {
+        this.target = target;
+        return this;
+    }
 
 }
