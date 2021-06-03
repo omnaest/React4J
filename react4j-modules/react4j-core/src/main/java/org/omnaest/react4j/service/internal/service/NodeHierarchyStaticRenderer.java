@@ -31,6 +31,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.NodeHierarchy;
 import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
+import org.omnaest.react4j.service.internal.service.internal.translation.component.LocaleService;
 import org.omnaest.utils.ClassUtils;
 import org.omnaest.utils.ReflectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -103,6 +103,13 @@ public class HeadingImpl extends AbstractUIComponent<Heading> implements Heading
     }
 
     @Override
+    public Heading withNonTranslatedText(String text)
+    {
+        this.text = I18nText.of(this.getLocations(), text, this.getDefaultLocale(), true);
+        return this;
+    }
+
+    @Override
     public Heading withLevel(int level)
     {
         this.level = level;

@@ -22,7 +22,7 @@ public interface UILocale
     public Locale asLocale();
 
     /**
-     * Returns e.g. en_US
+     * Returns e.g. en-US
      * 
      * @return
      */

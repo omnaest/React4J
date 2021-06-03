@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.react4j.service.internal.service;
+package org.omnaest.react4j.service.internal.service.internal.translation.component;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -24,9 +24,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class LocaleService
 {
-    public Optional<String> getRequestLocaleKey()
+    public Optional<Locale> getRequestLocaleKey()
     {
-        return Optional.ofNullable(LocaleContextHolder.getLocale())
-                       .map(Locale::toLanguageTag);
+        return Optional.ofNullable(LocaleContextHolder.getLocale());
     }
 }

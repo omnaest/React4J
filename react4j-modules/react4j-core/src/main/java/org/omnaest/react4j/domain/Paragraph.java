@@ -30,6 +30,8 @@ public interface Paragraph extends UIComponent<Paragraph>
      */
     public Paragraph addText(String text);
 
+    public Paragraph addNonTranslatedText(String text);
+
     public Paragraph addText(I18nText i18nText);
 
     public Paragraph addText(StandardIcon icon, String text);

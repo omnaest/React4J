@@ -16,8 +16,10 @@
 package org.omnaest.react4j.domain.i18n;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Locations;
 
@@ -30,13 +32,15 @@ class I18nHashBased implements I18nText
     private String    text;
     private UILocale  locale;
     private Locations locations;
+    private boolean   isNonTranslatable;
 
-    public I18nHashBased(String text, Locations location, UILocale locale)
+    public I18nHashBased(String text, Locations locations, UILocale locale, boolean isNonTranslatable)
     {
         super();
         this.text = text;
-        this.locations = location;
+        this.locations = locations;
         this.locale = locale;
+        this.isNonTranslatable = isNonTranslatable;
     }
 
     @Override
@@ -48,7 +52,7 @@ class I18nHashBased implements I18nText
                                                                                                  .stream()
                                                                                                  .map(token -> token.replaceAll("[^a-zA-Z0-9]", "_"))
                                                                                                  .collect(Collectors.joining("."))
-                                     + "." + this.text.hashCode()));
+                                     + "." + Math.abs(this.text.hashCode())));
     }
 
     @Override
@@ -67,6 +71,26 @@ class I18nHashBased implements I18nText
     public String toString()
     {
         return "I18nHashBased [text=" + this.text + ", locale=" + this.locale + ", locations=" + this.locations + "]";
+    }
+
+    @Override
+    public String getTextKey(Location location)
+    {
+        return this.getKeys()
+                   .getOrDefault(location, "")
+                + "_" + Optional.ofNullable(this.getDefaultText())
+                                .map(text -> StringUtils.left(text, 30))
+                                .map(text -> StringUtils.lowerCase(text))
+                                .map(text -> text.replaceAll("[^a-z]+", "_"))
+                                .orElse("")
+                + "_" + Math.abs(this.getDefaultText()
+                                     .hashCode());
+    }
+
+    @Override
+    public boolean isNonTranslatable()
+    {
+        return this.isNonTranslatable;
     }
 
 }

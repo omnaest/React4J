@@ -24,12 +24,28 @@ public interface I18nText
 {
     public Map<Location, String> getKeys();
 
+    public boolean isNonTranslatable();
+
     public String getDefaultText();
 
     public UILocale getDefaultLocale();
 
+    /**
+     * Returns a key representation
+     * 
+     * @param location
+     * @return
+     */
+    public String getTextKey(Location location);
+
     public static I18nText of(Locations locations, String text, UILocale locale)
     {
-        return new I18nHashBased(text, locations, locale);
+        return new I18nHashBased(text, locations, locale, false);
     }
+
+    public static I18nText of(Locations locations, String text, UILocale locale, boolean isNonTranslatable)
+    {
+        return new I18nHashBased(text, locations, locale, isNonTranslatable);
+    }
+
 }

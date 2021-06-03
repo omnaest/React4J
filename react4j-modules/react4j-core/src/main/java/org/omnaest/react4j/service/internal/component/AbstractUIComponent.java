@@ -109,6 +109,11 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
         return I18nText.of(this.getLocations(), text, this.getDefaultLocale());
     }
 
+    protected I18nText toNonTranslatableI18nText(String text)
+    {
+        return I18nText.of(this.getLocations(), text, this.getDefaultLocale(), true);
+    }
+
     protected Function<String, I18nText> i18nTextMapper()
     {
         return text -> I18nText.of(this.getLocations(), text, this.getDefaultLocale());

@@ -16,6 +16,8 @@
 		<module>react4j-data-datagrid</module>
 		<module>react4j-app-starter-parent</module>
 		<module>react4j-data-inmemory</module>
+		<module>react4j-i18n</module>
+		<module>react4j-i18n-deepl</module>
 	</modules>
 
 	<parent>

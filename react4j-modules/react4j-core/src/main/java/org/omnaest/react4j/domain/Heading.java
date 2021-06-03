@@ -19,6 +19,8 @@ public interface Heading extends UIComponent<Heading>
 {
     public Heading withText(String text);
 
+    public Heading withNonTranslatedText(String text);
+
     public Heading withLevel(int level);
 
     public Heading withLevel(Level level);

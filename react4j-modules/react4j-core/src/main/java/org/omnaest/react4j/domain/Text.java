@@ -21,5 +21,7 @@ public interface Text extends UIComponent<Text>
 {
     public Text addText(String text);
 
+    public Text addNonTranslatedText(String text);
+
     public Text addText(I18nText text);
 }

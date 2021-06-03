@@ -112,6 +112,13 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
     }
 
     @Override
+    public Text addNonTranslatedText(String text)
+    {
+        this.addText(this.toNonTranslatableI18nText(text));
+        return this;
+    }
+
+    @Override
     public Text addText(I18nText text)
     {
         this.texts.add(text);

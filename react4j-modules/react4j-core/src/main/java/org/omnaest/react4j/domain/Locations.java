@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -33,6 +34,18 @@ public interface Locations extends Supplier<List<Location>>
     {
         return Optional.ofNullable(this.get())
                        .map(mapper);
+    }
+
+    public static Locations of(Location location)
+    {
+        return new Locations()
+        {
+            @Override
+            public List<Location> get()
+            {
+                return Arrays.asList(location);
+            }
+        };
     }
 
     public static Locations of(Locations parentLocations, String id)

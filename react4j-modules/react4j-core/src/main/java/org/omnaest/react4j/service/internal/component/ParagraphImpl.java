@@ -163,6 +163,12 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
     }
 
     @Override
+    public Paragraph addNonTranslatedText(String text)
+    {
+        return this.addText(this.toNonTranslatableI18nText(text));
+    }
+
+    @Override
     public Paragraph addText(StandardIcon icon, String text)
     {
         return this.addText(icon, this.toI18nText(text));
