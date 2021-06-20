@@ -19,5 +19,31 @@ public interface Anker extends UIComponent<Anker>
 {
     public Anker withText(String text);
 
+    /**
+     * Opens a link in a new blank page
+     * 
+     * @see #whichOpensOnSamePage()
+     * @param link
+     * @return
+     */
     public Anker withLink(String link);
+
+    /**
+     * Enables the target of the link to be on the same page. Default is a new blank page.
+     * 
+     * @return
+     */
+    public Anker whichOpensOnSamePage();
+
+    /**
+     * Creates a link to an in page anker like
+     * 
+     * <pre>
+     * &lta href="#element"/&gt
+     * </pre>
+     * 
+     * @param locator
+     * @return
+     */
+    public Anker withLocator(String locator);
 }

@@ -24,6 +24,7 @@ import org.omnaest.react4j.service.internal.handler.domain.EventBody;
 import org.omnaest.react4j.service.internal.handler.domain.ResponseBody;
 import org.omnaest.react4j.service.internal.nodes.NodeHierarchy;
 import org.omnaest.react4j.service.internal.nodes.service.RootNodeResolverService;
+import org.omnaest.react4j.service.internal.service.internal.translation.component.LocaleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,24 +46,29 @@ public class ReactUIController
     @Autowired
     private EventHandlerService eventHandlerService;
 
-    //    @CrossOrigin("*")
-    @RequestMapping(method = RequestMethod.GET, path = "{contextPath}/ui", produces = MediaType.APPLICATION_JSON_VALUE)
-    public NodeHierarchy getNodeHierarchy(@PathVariable("contextPath") String contextPath)
-    {
-        return this.resolverService.resolveNodeHierarchy(contextPath);
-    }
+    @Autowired
+    private LocaleService localeService;
 
-    //    @CrossOrigin("*")
-    @RequestMapping(method = RequestMethod.GET, path = "/ui", produces = MediaType.APPLICATION_JSON_VALUE)
-    public NodeHierarchy getNodeHierarchy()
+    //    @RequestMapping(method = RequestMethod.GET, path = { "{contextPath}/ui", "{languageTag}/{contextPath}/ui" }, produces = MediaType.APPLICATION_JSON_VALUE)
+    //    public NodeHierarchy getNodeHierarchy(@PathVariable(name = "languageTag", required = false) String languageTag,
+    //                                          @PathVariable("contextPath") String contextPath)
+    //    {
+    //        this.localeService.setRequestLocaleByLanguageTag(languageTag);
+    //        return this.resolverService.resolveNodeHierarchy(contextPath);
+    //    }
+
+    @RequestMapping(method = RequestMethod.GET, path = { "/ui", "{languageTag}/ui" }, produces = MediaType.APPLICATION_JSON_VALUE)
+    public NodeHierarchy getNodeHierarchy(@PathVariable(name = "languageTag", required = false) String languageTag)
     {
+        this.localeService.setRequestLocaleByLanguageTag(languageTag);
         return this.resolverService.resolveDefaultNodeHierarchy();
     }
 
-    //    @CrossOrigin("*")
-    @RequestMapping(method = RequestMethod.POST, path = "/ui/event", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public Optional<ResponseBody> acceptEvent(@RequestBody EventBody eventBody)
+    @RequestMapping(method = RequestMethod.POST, path = { "/ui/event",
+                                                          "{languageTag}/ui/event" }, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Optional<ResponseBody> acceptEvent(@RequestBody EventBody eventBody, @PathVariable(name = "languageTag", required = false) String languageTag)
     {
+        this.localeService.setRequestLocaleByLanguageTag(languageTag);
         return this.eventHandlerService.handleEvent(eventBody);
     }
 

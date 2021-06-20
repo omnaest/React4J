@@ -17,15 +17,55 @@ package org.omnaest.react4j.service.internal.service.internal.translation.compon
 
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
+/**
+ * the {@link LocaleService} manages the user request {@link Locale} context
+ * 
+ * @author omnaest
+ */
 @Service
 public class LocaleService
 {
-    public Optional<Locale> getRequestLocaleKey()
+    private static final Logger LOG = LoggerFactory.getLogger(LocaleService.class);
+
+    @Autowired
+    private TranslationPersistence translationPersistence;
+
+    public Optional<Locale> getRequestLocale()
     {
         return Optional.ofNullable(LocaleContextHolder.getLocale());
+    }
+
+    public void setRequestLocale(Locale locale)
+    {
+        LocaleContextHolder.setLocale(locale);
+    }
+
+    public void setRequestLocaleByLanguageTag(String languageTag)
+    {
+        if (StringUtils.isNotEmpty(languageTag))
+        {
+            try
+            {
+                this.setRequestLocale(Locale.forLanguageTag(languageTag));
+            }
+            catch (Exception e)
+            {
+                LOG.error("Unable to identify a locale for " + languageTag, e);
+            }
+        }
+    }
+
+    public Set<Locale> getAvailableLocales()
+    {
+        return this.translationPersistence.getAvailableLocales();
     }
 }

@@ -24,6 +24,9 @@ public class DeeplTranslationProvider implements TranslationProvider
     @Value("${react4j.deepl.api_key}")
     private String authorizationKey;
 
+    @Value("${react4j.deepl.license}")
+    private Optional<String> license;
+
     @Override
     public Optional<Translator> getTranslator(Locale sourceLocale, Locale targetLocale)
     {
@@ -42,7 +45,8 @@ public class DeeplTranslationProvider implements TranslationProvider
                 {
                     try
                     {
-                        License license = License.FREE;
+                        License license = DeeplTranslationProvider.this.license.map(License::valueOf)
+                                                                               .orElse(License.FREE);
                         TranslationResponse response = DeeplRestUtils.translate(license, DeeplTranslationProvider.this.authorizationKey, text, sourceLanguage,
                                                                                 targetLanguage);
 
@@ -52,7 +56,8 @@ public class DeeplTranslationProvider implements TranslationProvider
                                                           .flatMap(ListUtils::optionalFirst)
                                                           .map(Translation::getText);
 
-                        LOG.info("Resolved translation from Deepl: " + key + " " + text + " -> " + result.orElse(""));
+                        LOG.info("Resolved translation from Deepl: " + key + " " + sourceLanguage + "->" + targetLanguage + " " + text + " -> "
+                                + result.orElse(""));
 
                         this.resolveAndLogUsedDeeplCapacity(license);
 
@@ -60,7 +65,7 @@ public class DeeplTranslationProvider implements TranslationProvider
                     }
                     catch (Exception e)
                     {
-                        LOG.error("Exception during deepl API request", e);
+                        LOG.error("Exception during deepl API request for " + key + " " + sourceLanguage + "->" + targetLanguage + " " + text, e);
                         return Optional.empty();
                     }
                 }

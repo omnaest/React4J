@@ -31,6 +31,25 @@ public class AnkerNode extends AbstractNode implements Node
     @JsonProperty
     private String link;
 
+    @JsonProperty
+    private Page page;
+
+    public static enum Page
+    {
+        SELF, BLANK
+    }
+
+    public Page getPage()
+    {
+        return this.page;
+    }
+
+    public AnkerNode setPage(Page page)
+    {
+        this.page = page;
+        return this;
+    }
+
     @Override
     public String getType()
     {

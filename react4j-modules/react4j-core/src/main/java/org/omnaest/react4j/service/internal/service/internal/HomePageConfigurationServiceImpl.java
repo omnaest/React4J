@@ -20,12 +20,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.omnaest.react4j.domain.configuration.HomePageConfiguration;
 import org.omnaest.react4j.service.internal.service.HomePageConfigurationService;
+import org.omnaest.react4j.service.internal.service.internal.translation.component.SimpleTranslationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class HomePageConfigurationServiceImpl implements HomePageConfigurationService
 {
     private Map<String, String> configurations = new ConcurrentHashMap<>();
+
+    @Autowired
+    private SimpleTranslationService translationService;
 
     @Override
     public HomePageConfiguration setTitle(String title)
@@ -43,7 +48,8 @@ public class HomePageConfigurationServiceImpl implements HomePageConfigurationSe
     @Override
     public HomePageConfiguration setDescription(String description)
     {
-        this.configurations.put("$DESCRIPTION$", description);
+        this.configurations.put("$DESCRIPTION$", this.translationService.translate("homepage_description", description)
+                                                                        .orElse(description));
         return this;
     }
 

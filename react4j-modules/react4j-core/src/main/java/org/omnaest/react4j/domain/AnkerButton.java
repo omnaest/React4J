@@ -24,4 +24,23 @@ public interface AnkerButton extends UIComponent<AnkerButton>
     public AnkerButton withLink(String link);
 
     public AnkerButton withStyle(Style style);
+
+    /**
+     * Enables the target of the link to be on the same page. Default is a new blank page.
+     * 
+     * @return
+     */
+    public AnkerButton whichOpensOnSamePage();
+
+    /**
+     * Creates a link to an in page anker like
+     * 
+     * <pre>
+     * &lta href="#element"/&gt
+     * </pre>
+     * 
+     * @param locator
+     * @return
+     */
+    public AnkerButton withLocator(String locator);
 }

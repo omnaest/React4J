@@ -33,13 +33,15 @@ import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.AnkerButtonNode;
+import org.omnaest.react4j.service.internal.nodes.AnkerButtonNode.Page;
 import org.omnaest.utils.template.TemplateUtils;
 
 public class AnkerButtonImpl extends AbstractUIComponent<AnkerButton> implements AnkerButton
 {
     private I18nText text;
     private String   link;
-    private Style    style = Style.PRIMARY;
+    private Style    style      = Style.PRIMARY;
+    private boolean  isSamePage = false;
 
     public AnkerButtonImpl(ComponentContext context)
     {
@@ -72,7 +74,8 @@ public class AnkerButtonImpl extends AbstractUIComponent<AnkerButton> implements
                                                                          .apply(AnkerButtonImpl.this.text, location))
                                             .setLink(AnkerButtonImpl.this.link)
                                             .setStyle(AnkerButtonImpl.this.style.name()
-                                                                                .toLowerCase());
+                                                                                .toLowerCase())
+                                            .setPage(AnkerButtonImpl.this.isSamePage ? Page.SELF : Page.BLANK);
             }
 
             @Override
@@ -125,6 +128,20 @@ public class AnkerButtonImpl extends AbstractUIComponent<AnkerButton> implements
     public AnkerButton withStyle(Style style)
     {
         this.style = style;
+        return this;
+    }
+
+    @Override
+    public AnkerButton withLocator(String locator)
+    {
+        return this.withLink("#" + locator)
+                   .whichOpensOnSamePage();
+    }
+
+    @Override
+    public AnkerButton whichOpensOnSamePage()
+    {
+        this.isSamePage = true;
         return this;
     }
 

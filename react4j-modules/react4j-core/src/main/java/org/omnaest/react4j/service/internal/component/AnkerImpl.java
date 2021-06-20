@@ -32,12 +32,14 @@ import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.AnkerNode;
+import org.omnaest.react4j.service.internal.nodes.AnkerNode.Page;
 import org.omnaest.utils.template.TemplateUtils;
 
 public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
 {
     private I18nText text;
     private String   link;
+    private boolean  isSamePage = false;
 
     public AnkerImpl(ComponentContext context)
     {
@@ -67,7 +69,8 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
             {
                 return new AnkerNode().setText(AnkerImpl.this.getTextResolver()
                                                              .apply(AnkerImpl.this.text, location))
-                                      .setLink(AnkerImpl.this.link);
+                                      .setLink(AnkerImpl.this.link)
+                                      .setPage(AnkerImpl.this.isSamePage ? Page.SELF : Page.BLANK);
             }
 
             @Override
@@ -112,6 +115,20 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
     public Anker withLink(String link)
     {
         this.link = link;
+        return this;
+    }
+
+    @Override
+    public Anker withLocator(String locator)
+    {
+        return this.withLink("#" + locator)
+                   .whichOpensOnSamePage();
+    }
+
+    @Override
+    public Anker whichOpensOnSamePage()
+    {
+        this.isSamePage = true;
         return this;
     }
 

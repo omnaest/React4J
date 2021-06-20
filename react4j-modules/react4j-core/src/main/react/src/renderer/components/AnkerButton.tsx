@@ -7,6 +7,7 @@ export interface AnkerButtonNode extends Node
     text: I18nTextValue;
     link: string;
     style: string;
+    page: "SELF" | "BLANK";
 }
 
 export interface Props
@@ -23,7 +24,7 @@ export class AnkerButton extends React.Component<Props, {}>
         return (
             <a
                 href={this.props.node.link}
-                target="_blank"
+                target={this.props.node.page === "SELF" ? "_self" : "_blank"}
                 className={"btn btn-md" + (this.props.node.style ? " btn-" + this.props.node.style : "")}
                 role="button"
             >{I18nRenderer.render(this.props.node.text)}</a>

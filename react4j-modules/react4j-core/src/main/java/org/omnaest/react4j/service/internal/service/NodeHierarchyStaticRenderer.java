@@ -31,18 +31,14 @@ import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.NodeHierarchy;
 import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
-import org.omnaest.react4j.service.internal.service.internal.translation.component.LocaleService;
 import org.omnaest.utils.ClassUtils;
+import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.ReflectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class NodeHierarchyStaticRenderer
 {
-    @Autowired
-    private LocaleService localeService;
-
     public static interface NodeHierarchyRenderingProcessor extends NodeRendererRegistry
     {
         public String render(NodeHierarchy nodeHierarchy, NodeRenderType nodeRenderType);
@@ -88,8 +84,10 @@ public class NodeHierarchyStaticRenderer
 
         private String renderNode(Map<String, NodeRenderer<Node>> nodeTypeToNodeRenderer, Node node)
         {
-            String type = node.getType();
-            NodeRenderer<Node> nodeRenderer = nodeTypeToNodeRenderer.getOrDefault(type, new DefaultNodeRenderer());
+            NodeRenderer<Node> nodeRenderer = Optional.ofNullable(node)
+                                                      .map(Node::getType)
+                                                      .map(nodeTypeToNodeRenderer::get)
+                                                      .orElseGet(() -> new DefaultNodeRenderer());
             NodeRenderingProcessor nodeRenderingProcessor = new NodeRenderingProcessor()
             {
 
@@ -117,23 +115,26 @@ public class NodeHierarchyStaticRenderer
             @Override
             public String render(Node node, NodeRenderingProcessor nodeRenderingProcessor)
             {
-                return ReflectionUtils.of((Class<Node>) node.getClass())
-                                      .getFields()
-                                      .map(field -> field.getValueFrom(node))
-                                      .flatMap(value ->
-                                      {
-                                          if (value instanceof Collection)
-                                          {
-                                              return ((Collection<?>) value).stream();
-                                          }
-                                          else
-                                          {
-                                              return Stream.of(value);
-                                          }
-                                      })
-                                      .filter(value -> value instanceof Node)
-                                      .map(iNode -> nodeRenderingProcessor.render((Node) iNode))
-                                      .collect(Collectors.joining());
+                return Optional.ofNullable(node)
+                               .map(iNode -> ReflectionUtils.of((Class<Node>) iNode.getClass())
+                                                            .getFields()
+                                                            .map(field -> field.getValueFrom(iNode))
+                                                            .flatMap(value ->
+                                                            {
+                                                                if (value instanceof Collection)
+                                                                {
+                                                                    return ((Collection<?>) value).stream();
+                                                                }
+                                                                else
+                                                                {
+                                                                    return Stream.of(value);
+                                                                }
+                                                            })
+                                                            .filter(value -> value instanceof Node)
+                                                            .map(MapperUtils.identityCast(Node.class))
+                                                            .map(nodeRenderingProcessor::render)
+                                                            .collect(Collectors.joining()))
+                               .orElse("");
             }
 
         }

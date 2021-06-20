@@ -88,6 +88,12 @@ public interface GridContainer extends UIComponent<GridContainer>
 
     public static interface Cell extends UIContentHolder<Cell>
     {
+        /**
+         * Defines how many columns are spanned within the 12 columns grid system
+         * 
+         * @param numberOfColumns
+         * @return
+         */
         public Cell withColumnSpan(int numberOfColumns);
 
         public Cell withHorizontalAlignment(HorizontalAlignment horizontalAlignment);

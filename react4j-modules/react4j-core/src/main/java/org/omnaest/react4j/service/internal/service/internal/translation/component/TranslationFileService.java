@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.StringUtils;
 import org.omnaest.react4j.service.i18n.TranslationProvider;
@@ -169,6 +171,14 @@ public class TranslationFileService implements TranslationProvider, TranslationP
     public boolean isSlow()
     {
         return false;
+    }
+
+    @Override
+    public Set<Locale> getAvailableLocales()
+    {
+        return this.localeToKeyToTextStore.keySet()
+                                          .stream()
+                                          .collect(Collectors.toSet());
     }
 
 }

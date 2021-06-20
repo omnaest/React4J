@@ -6,6 +6,7 @@ export interface AnkerNode extends Node
 {
     text: I18nTextValue;
     link: string;
+    page: "SELF" | "BLANK";
 }
 
 export interface Props
@@ -22,7 +23,7 @@ export class Anker extends React.Component<Props, {}>
         return (
             <a
                 href={this.props.node.link}
-                target="_blank"
+                target={this.props.node.page === "SELF" ? "_self" : "_blank"}
             >{I18nRenderer.render(this.props.node.text)}</a>
         );
     }

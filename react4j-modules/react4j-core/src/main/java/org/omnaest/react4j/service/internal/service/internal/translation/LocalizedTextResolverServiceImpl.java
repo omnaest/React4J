@@ -71,7 +71,7 @@ public class LocalizedTextResolverServiceImpl implements LocalizedTextResolverSe
 
         if (StringUtils.isNotBlank(text) && sourceLocaleTag.isPresent())
         {
-            this.localeService.getRequestLocaleKey()
+            this.localeService.getRequestLocale()
                               .flatMap(targetLocale -> this.translationService.translate(i18nText.getDefaultLocale()
                                                                                                  .asLocale(),
                                                                                          i18nText.getTextKey(location), text, targetLocale)

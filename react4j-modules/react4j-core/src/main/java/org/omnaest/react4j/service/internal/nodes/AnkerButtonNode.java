@@ -34,6 +34,25 @@ public class AnkerButtonNode extends AbstractNode implements Node
     @JsonProperty
     private String style;
 
+    @JsonProperty
+    private Page page;
+
+    public static enum Page
+    {
+        SELF, BLANK
+    }
+
+    public Page getPage()
+    {
+        return this.page;
+    }
+
+    public AnkerButtonNode setPage(Page page)
+    {
+        this.page = page;
+        return this;
+    }
+
     @Override
     public String getType()
     {
