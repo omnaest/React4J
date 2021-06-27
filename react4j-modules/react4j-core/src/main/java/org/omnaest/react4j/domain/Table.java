@@ -42,6 +42,8 @@ public interface Table extends UIComponent<Table>
     public static interface Row
     {
         public Row addCell(Consumer<Cell> cellConsumer);
+
+        public <E> Row addCells(Stream<E> elements, BiConsumer<Cell, E> cellAndElementConsumer);
     }
 
     public static interface Cell extends UIContentHolder<Cell>

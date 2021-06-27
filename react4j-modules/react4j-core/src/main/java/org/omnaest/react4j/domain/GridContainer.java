@@ -33,6 +33,8 @@ public interface GridContainer extends UIComponent<GridContainer>
 
     public GridContainer addRow(Consumer<Row> rowConsumer);
 
+    public <E> GridContainer addRows(Stream<E> elements, BiConsumer<Row, E> rowConsumer);
+
     public GridContainer addRowContent(UIComponent<?> component);
 
     public GridContainer addRowContent(UIComponentFactoryFunction factoryConsumer);

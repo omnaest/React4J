@@ -79,6 +79,15 @@ public class GridContainerImpl extends AbstractUIComponentWithSubComponents<Grid
     }
 
     @Override
+    public <E> GridContainer addRows(Stream<E> elements, BiConsumer<Row, E> rowConsumer)
+    {
+        Optional.ofNullable(elements)
+                .orElse(Stream.empty())
+                .forEach(element -> this.addRow(row -> rowConsumer.accept(row, element)));
+        return this;
+    }
+
+    @Override
     public GridContainer addRowContent(UIComponent<?> component)
     {
         return this.addRow(row -> row.withContent(component));

@@ -252,6 +252,15 @@ public class TableImpl extends AbstractUIComponentWithSubComponents<Table> imple
             return this;
         }
 
+        @Override
+        public <E> Row addCells(Stream<E> elements, BiConsumer<Cell, E> cellAndElementConsumer)
+        {
+            Optional.ofNullable(elements)
+                    .orElse(Stream.empty())
+                    .forEach(element -> this.addCell(cell -> cellAndElementConsumer.accept(cell, element)));
+            return this;
+        }
+
         public List<CellImpl> getCells()
         {
             return this.cells;

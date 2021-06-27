@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.handler.internal;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -50,7 +51,8 @@ public class DataImpl implements Data
 
     public DataImpl(String contextId, Map<String, Object> map)
     {
-        this(null, contextId, map, new HashMap<>(map));
+        this(null, contextId, map, new HashMap<>(Optional.ofNullable(map)
+                                                         .orElse(Collections.emptyMap())));
     }
 
     public DataImpl(String id, String contextId, Map<String, Object> map, Map<String, Object> initial)

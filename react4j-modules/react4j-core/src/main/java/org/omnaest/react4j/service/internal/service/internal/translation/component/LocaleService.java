@@ -59,7 +59,7 @@ public class LocaleService
             }
             catch (Exception e)
             {
-                LOG.error("Unable to identify a locale for " + languageTag, e);
+                LOG.error("Unable to identify a locale for " + languageTag + " falling back to default locale", e);
             }
         }
     }
