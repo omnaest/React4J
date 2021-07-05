@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.service.internal.controller.sitemap.SiteMapGenerator;
 import org.omnaest.react4j.service.internal.controller.sitemap.SiteMapGenerator.AlternativeLocalizedUrlLocation;
+import org.omnaest.react4j.service.internal.controller.sitemap.SiteMapGenerator.CanonicalUrlLocation;
 import org.omnaest.react4j.service.internal.controller.sitemap.SiteMapGenerator.SiteUrlLocation;
 import org.omnaest.react4j.service.internal.controller.utils.RequestProvider;
 import org.omnaest.react4j.service.internal.nodes.service.RootNodeResolverService;
@@ -36,6 +37,7 @@ import org.omnaest.react4j.service.internal.service.HomePageConfigurationService
 import org.omnaest.react4j.service.internal.service.internal.translation.component.LocaleService;
 import org.omnaest.utils.ClassUtils;
 import org.omnaest.utils.ClassUtils.Resource;
+import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MatcherUtils;
 import org.omnaest.utils.counter.Counter;
 import org.omnaest.utils.duration.TimeDuration;
@@ -56,7 +58,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class IndexHtmlController
 {
-    private static final Logger            LOG = LoggerFactory.getLogger(IndexHtmlController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IndexHtmlController.class);
+
     @Autowired
     protected HomePageConfigurationService homePageConfigurationService;
 
@@ -93,7 +96,7 @@ public class IndexHtmlController
                                                                                                                                                        .orElse(Locale.US)
                                                                                                                                                        .toLanguageTag())
                                                                                                            .addExactMatchReplacement("<hreflang>",
-                                                                                                                                     this.generateHrefLangLinkTags())
+                                                                                                                                     this.generateHrefLangRelatedLinkTags())
                                                                                                            .findAndReplaceAllIn(content))
                                                                                .orElseThrow(() -> new IllegalStateException("Could not load index.html from classpath")))
                                                            .asDurationLimitedCachedElement(TimeDuration.of(5, TimeUnit.SECONDS));
@@ -103,13 +106,13 @@ public class IndexHtmlController
                                                          "{languageTag}/index.html" }, produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> getLanguageSpecific(@PathVariable(name = "languageTag", required = false) String languageTag)
     {
-        if (this.languageRedirectEnabled && StringUtils.isBlank(languageTag))
+        if (this.languageRedirectEnabled && StringUtils.isBlank(languageTag) && !this.localeService.isRequestLocaleEqualToDefaultLocale())
         {
             return this.createRedirectResponse();
         }
         else
         {
-            this.localeService.setRequestLocaleByLanguageTag(languageTag);
+            this.localeService.setExplicitRequestLocaleByLanguageTag(languageTag);
             this.pageHitCounter.increment()
                                .ifModulo(100, count -> LOG.info("Number of index.html page hits: " + count));
             return ResponseEntity.ok(this.indexHtml.get());
@@ -138,19 +141,47 @@ public class IndexHtmlController
                                                                              {
                                                                                  String url = this.generatePublicLocalizedUrl(currentLanguageTag, languageTag);
                                                                                  double priority = 1.0;
+                                                                                 List<CanonicalUrlLocation> canonicalLocations = Collections.emptyList();
                                                                                  return new SiteUrlLocation(url, lastModified, priority,
-                                                                                                            alternativeLocalizedLocations);
+                                                                                                            alternativeLocalizedLocations, canonicalLocations);
                                                                              })
                                                                              .collect(Collectors.toList());
 
         List<SiteUrlLocation> singleRootLocations = Arrays.asList(new SiteUrlLocation(this.generatePublicRootUrl(currentLanguageTag), lastModified, 1.0,
-                                                                                      Collections.emptyList()));
+                                                                                      Collections.emptyList(),
+                                                                                      Arrays.asList(new CanonicalUrlLocation(this.generatePublicLocalizedUrl(currentLanguageTag,
+                                                                                                                                                             this.localeService.getDefaultLocale()
+                                                                                                                                                                               .toLanguageTag())))));
 
-        List<SiteUrlLocation> locations = this.languageRedirectEnabled ? languageDependentLocations : singleRootLocations;
+        List<SiteUrlLocation> locations = this.languageRedirectEnabled ? ListUtils.mergedList(languageDependentLocations, singleRootLocations)
+                : singleRootLocations;
         return ResponseEntity.ok(this.siteMapGenerator.generateSiteMap(locations));
     }
 
-    private String generateHrefLangLinkTags()
+    private String generateHrefLangRelatedLinkTags()
+    {
+        return this.generateHrefLangPrimaryLinkTags() + " " + this.generateHrefLangCanonicalLinkTag();
+    }
+
+    private String generateHrefLangCanonicalLinkTag()
+    {
+        if (!this.localeService.isExplicitRequestLocaleGiven())
+        {
+            String defaultLanguageTag = this.localeService.getDefaultLocale()
+                                                          .toLanguageTag();
+            String currentLanguageTag = this.localeService.getRequestLocaleOrDefault()
+                                                          .toLanguageTag();
+            String languageSpecificUrl = this.generatePublicLocalizedUrl(currentLanguageTag, defaultLanguageTag);
+            String tag = "<link rel=\"canonical\" href=\"" + languageSpecificUrl + "\" />";
+            return tag;
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    private String generateHrefLangPrimaryLinkTags()
     {
         String currentLanguageTag = this.localeService.getRequestLocale()
                                                       .orElse(Locale.US)

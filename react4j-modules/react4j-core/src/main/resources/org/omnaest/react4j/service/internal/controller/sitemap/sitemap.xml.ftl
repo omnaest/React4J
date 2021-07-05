@@ -16,6 +16,12 @@
                 hreflang="${alternative.locale}" 
               />
             </#list>
+            <#list location.canonicalLocations as canonical>
+              <xhtml:link 
+                href="${canonical.url}" 
+                rel="canonical"            
+              />
+            </#list>
         </url>
     </#list>
 </urlset>

@@ -36,26 +36,60 @@ public class LocaleService
 {
     private static final Logger LOG = LoggerFactory.getLogger(LocaleService.class);
 
+    private ThreadLocal<Locale> explicitRequestLocale = new ThreadLocal<>();
+
     @Autowired
     private TranslationPersistence translationPersistence;
+
+    public Locale getDefaultLocale()
+    {
+        return Locale.US;
+    }
+
+    public Locale getRequestLocaleOrDefault()
+    {
+        return this.getRequestLocale()
+                   .orElse(this.getDefaultLocale());
+    }
 
     public Optional<Locale> getRequestLocale()
     {
         return Optional.ofNullable(LocaleContextHolder.getLocale());
     }
 
-    public void setRequestLocale(Locale locale)
+    /**
+     * Returns true if the {@link Locale} was set explicitly by a url language tag
+     * 
+     * @return
+     */
+    public boolean isExplicitRequestLocaleGiven()
     {
+        return this.explicitRequestLocale.get() != null;
+    }
+
+    /**
+     * Sets the {@link Locale} given by an url language tag segment
+     * 
+     * @param locale
+     */
+    public void setExplicitRequestLocale(Locale locale)
+    {
+        this.explicitRequestLocale.set(locale);
         LocaleContextHolder.setLocale(locale);
     }
 
-    public void setRequestLocaleByLanguageTag(String languageTag)
+    /**
+     * Sets the {@link Locale} given by an url language tag segment
+     * 
+     * @param languageTag
+     */
+    public void setExplicitRequestLocaleByLanguageTag(String languageTag)
     {
         if (StringUtils.isNotEmpty(languageTag))
         {
             try
             {
-                this.setRequestLocale(Locale.forLanguageTag(languageTag));
+                this.setExplicitRequestLocale(Locale.forLanguageTag(languageTag));
             }
             catch (Exception e)
             {
@@ -67,5 +101,11 @@ public class LocaleService
     public Set<Locale> getAvailableLocales()
     {
         return this.translationPersistence.getAvailableLocales();
+    }
+
+    public boolean isRequestLocaleEqualToDefaultLocale()
+    {
+        return this.getRequestLocaleOrDefault()
+                   .equals(this.getDefaultLocale());
     }
 }

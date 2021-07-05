@@ -60,7 +60,7 @@ public class ReactUIController
     @RequestMapping(method = RequestMethod.GET, path = { "/ui", "{languageTag}/ui" }, produces = MediaType.APPLICATION_JSON_VALUE)
     public NodeHierarchy getNodeHierarchy(@PathVariable(name = "languageTag", required = false) String languageTag)
     {
-        this.localeService.setRequestLocaleByLanguageTag(languageTag);
+        this.localeService.setExplicitRequestLocaleByLanguageTag(languageTag);
         return this.resolverService.resolveDefaultNodeHierarchy();
     }
 
@@ -68,7 +68,7 @@ public class ReactUIController
                                                           "{languageTag}/ui/event" }, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public Optional<ResponseBody> acceptEvent(@RequestBody EventBody eventBody, @PathVariable(name = "languageTag", required = false) String languageTag)
     {
-        this.localeService.setRequestLocaleByLanguageTag(languageTag);
+        this.localeService.setExplicitRequestLocaleByLanguageTag(languageTag);
         return this.eventHandlerService.handleEvent(eventBody);
     }
 

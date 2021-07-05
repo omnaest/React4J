@@ -50,7 +50,11 @@ public class SiteMapGenerator
                                                                                                                                                                       alternativeLocation.getLocale()
                                                                                                                                                                                          .toLanguageTag()))
                                                                                                 .collect(Collectors.toList());
-            return new NativeSiteUrlLocation(url, lastModified, priority, alternativeLocalizedLocations);
+            List<NativeCanonicalUrlLocation> canonicalLocations = location.getCanonicalLocations()
+                                                                          .stream()
+                                                                          .map(canonicalLocation -> new NativeCanonicalUrlLocation(canonicalLocation.getUrl()))
+                                                                          .collect(Collectors.toList());
+            return new NativeSiteUrlLocation(url, lastModified, priority, alternativeLocalizedLocations, canonicalLocations);
         };
     }
 
@@ -60,14 +64,17 @@ public class SiteMapGenerator
         private Date                                  lastModified;
         private double                                priority;
         private List<AlternativeLocalizedUrlLocation> alternativeLocalizedLocations;
+        private List<CanonicalUrlLocation>            canonicalLocations;
 
-        public SiteUrlLocation(String url, Date lastModified, double priority, List<AlternativeLocalizedUrlLocation> alternativeLocalizedLocations)
+        public SiteUrlLocation(String url, Date lastModified, double priority, List<AlternativeLocalizedUrlLocation> alternativeLocalizedLocations,
+                               List<CanonicalUrlLocation> canonicalLocations)
         {
             super();
             this.url = url;
             this.lastModified = lastModified;
             this.priority = priority;
             this.alternativeLocalizedLocations = alternativeLocalizedLocations;
+            this.canonicalLocations = canonicalLocations;
         }
 
         public String getUrl()
@@ -88,6 +95,28 @@ public class SiteMapGenerator
         public List<AlternativeLocalizedUrlLocation> getAlternativeLocalizedLocations()
         {
             return this.alternativeLocalizedLocations;
+        }
+
+        public List<CanonicalUrlLocation> getCanonicalLocations()
+        {
+            return this.canonicalLocations;
+        }
+
+    }
+
+    public static class CanonicalUrlLocation
+    {
+        private String url;
+
+        public CanonicalUrlLocation(String url)
+        {
+            super();
+            this.url = url;
+        }
+
+        public String getUrl()
+        {
+            return this.url;
         }
 
     }
@@ -122,15 +151,18 @@ public class SiteMapGenerator
         private String                                      lastModified;
         private String                                      priority;
         private List<NativeAlternativeLocalizedUrlLocation> alternativeLocalizedLocations;
+        private List<NativeCanonicalUrlLocation>            canonicalLocations;
 
         public NativeSiteUrlLocation(String url, String lastModified, String priority,
-                                     List<NativeAlternativeLocalizedUrlLocation> alternativeLocalizedLocations)
+                                     List<NativeAlternativeLocalizedUrlLocation> alternativeLocalizedLocations,
+                                     List<NativeCanonicalUrlLocation> canonicalLocations)
         {
             super();
             this.url = url;
             this.lastModified = lastModified;
             this.priority = priority;
             this.alternativeLocalizedLocations = alternativeLocalizedLocations;
+            this.canonicalLocations = canonicalLocations;
         }
 
         public String getUrl()
@@ -151,6 +183,28 @@ public class SiteMapGenerator
         public List<NativeAlternativeLocalizedUrlLocation> getAlternativeLocalizedLocations()
         {
             return this.alternativeLocalizedLocations;
+        }
+
+        public List<NativeCanonicalUrlLocation> getCanonicalLocations()
+        {
+            return this.canonicalLocations;
+        }
+
+    }
+
+    public static class NativeCanonicalUrlLocation
+    {
+        private String url;
+
+        public NativeCanonicalUrlLocation(String url)
+        {
+            super();
+            this.url = url;
+        }
+
+        public String getUrl()
+        {
+            return this.url;
         }
 
     }
