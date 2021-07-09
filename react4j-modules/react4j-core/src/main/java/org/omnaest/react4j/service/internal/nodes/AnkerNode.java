@@ -29,6 +29,9 @@ public class AnkerNode extends AbstractNode implements Node
     private I18nTextValue text;
 
     @JsonProperty
+    private I18nTextValue title;
+
+    @JsonProperty
     private String link;
 
     @JsonProperty
@@ -47,6 +50,17 @@ public class AnkerNode extends AbstractNode implements Node
     public AnkerNode setPage(Page page)
     {
         this.page = page;
+        return this;
+    }
+
+    public I18nTextValue getTitle()
+    {
+        return this.title;
+    }
+
+    public AnkerNode setTitle(I18nTextValue title)
+    {
+        this.title = title;
         return this;
     }
 

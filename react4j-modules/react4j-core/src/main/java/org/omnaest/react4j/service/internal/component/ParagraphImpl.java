@@ -17,9 +17,11 @@ package org.omnaest.react4j.service.internal.component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -181,6 +183,24 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
                           .newAnker();
         ankerConsumer.accept(anker);
         this.elements.add(anker);
+        return this;
+    }
+
+    @Override
+    public <E> Paragraph addLinks(Collection<E> sourceElements, BiConsumer<Anker, E> ankerAndSourceElementConsumer)
+    {
+        Optional.ofNullable(sourceElements)
+                .orElse(Collections.emptyList())
+                .forEach(sourceElement -> this.addLink(anker -> ankerAndSourceElementConsumer.accept(anker, sourceElement)));
+        return this;
+    }
+
+    @Override
+    public <E> Paragraph withElements(Collection<E> sourceElements, BiConsumer<Paragraph, E> paragraphAndSourceElementConsumer)
+    {
+        Optional.ofNullable(sourceElements)
+                .orElse(Collections.emptyList())
+                .forEach(sourceElement -> paragraphAndSourceElementConsumer.accept(this, sourceElement));
         return this;
     }
 

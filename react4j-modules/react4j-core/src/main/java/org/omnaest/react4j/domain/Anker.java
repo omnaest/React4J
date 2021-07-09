@@ -19,6 +19,8 @@ public interface Anker extends UIComponent<Anker>
 {
     public Anker withText(String text);
 
+    public Anker withNonTranslatedText(String text);
+
     /**
      * Opens a link in a new blank page
      * 
@@ -46,4 +48,19 @@ public interface Anker extends UIComponent<Anker>
      * @return
      */
     public Anker withLocator(String locator);
+
+    /**
+     * Title attribute of an {@link Anker} which creates the tooltip
+     * 
+     * @param title
+     * @return
+     */
+    public Anker withTitle(String title);
+
+    /**
+     * @see #withTitle(String)
+     * @param title
+     * @return
+     */
+    public Anker withNonTranslatedTitle(String title);
 }

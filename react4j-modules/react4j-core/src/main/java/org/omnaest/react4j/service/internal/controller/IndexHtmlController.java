@@ -15,13 +15,13 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.controller;
 
+import java.net.URL;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -31,8 +31,8 @@ import org.omnaest.react4j.service.internal.controller.sitemap.SiteMapGenerator;
 import org.omnaest.react4j.service.internal.controller.sitemap.SiteMapGenerator.AlternativeLocalizedUrlLocation;
 import org.omnaest.react4j.service.internal.controller.sitemap.SiteMapGenerator.CanonicalUrlLocation;
 import org.omnaest.react4j.service.internal.controller.sitemap.SiteMapGenerator.SiteUrlLocation;
-import org.omnaest.react4j.service.internal.controller.utils.RequestProvider;
 import org.omnaest.react4j.service.internal.nodes.service.RootNodeResolverService;
+import org.omnaest.react4j.service.internal.service.ContextService;
 import org.omnaest.react4j.service.internal.service.HomePageConfigurationService;
 import org.omnaest.react4j.service.internal.service.internal.translation.component.LocaleService;
 import org.omnaest.utils.ClassUtils;
@@ -70,16 +70,13 @@ public class IndexHtmlController
     private LocaleService localeService;
 
     @Autowired
-    private RequestProvider requestProvider;
+    private ContextService contextService;
 
     @Autowired
     private SiteMapGenerator siteMapGenerator;
 
     @Value("${react4j.language-redirect:false}")
     private boolean languageRedirectEnabled;
-
-    @Value("${react4j.public-url:#{null}}")
-    private Optional<String> publicUrl;
 
     private Counter pageHitCounter = Counter.fromZero();
 
@@ -123,13 +120,11 @@ public class IndexHtmlController
     public ResponseEntity<String> getSitemap()
     {
         Date lastModified = Date.from(Instant.now());
-        String currentLanguageTag = this.localeService.getRequestLocale()
-                                                      .orElse(Locale.US)
-                                                      .toLanguageTag();
+        Locale currentLocale = this.localeService.getRequestLocaleOrDefault();
 
         List<AlternativeLocalizedUrlLocation> alternativeLocalizedLocations = this.localeService.getAvailableLocales()
                                                                                                 .stream()
-                                                                                                .map(locale -> new AlternativeLocalizedUrlLocation(this.generatePublicLocalizedUrl(currentLanguageTag,
+                                                                                                .map(locale -> new AlternativeLocalizedUrlLocation(this.generatePublicLocalizedUrl(currentLocale,
                                                                                                                                                                                    locale.toLanguageTag()),
                                                                                                                                                    locale))
                                                                                                 .collect(Collectors.toList());
@@ -139,7 +134,7 @@ public class IndexHtmlController
                                                                              .map(Locale::toLanguageTag)
                                                                              .map(languageTag ->
                                                                              {
-                                                                                 String url = this.generatePublicLocalizedUrl(currentLanguageTag, languageTag);
+                                                                                 String url = this.generatePublicLocalizedUrl(currentLocale, languageTag);
                                                                                  double priority = 1.0;
                                                                                  List<CanonicalUrlLocation> canonicalLocations = Collections.emptyList();
                                                                                  return new SiteUrlLocation(url, lastModified, priority,
@@ -147,15 +142,21 @@ public class IndexHtmlController
                                                                              })
                                                                              .collect(Collectors.toList());
 
-        List<SiteUrlLocation> singleRootLocations = Arrays.asList(new SiteUrlLocation(this.generatePublicRootUrl(currentLanguageTag), lastModified, 1.0,
-                                                                                      Collections.emptyList(),
-                                                                                      Arrays.asList(new CanonicalUrlLocation(this.generatePublicLocalizedUrl(currentLanguageTag,
+        List<SiteUrlLocation> singleRootLocations = Arrays.asList(new SiteUrlLocation(this.generatePublicRootUrl(), lastModified, 1.0, Collections.emptyList(),
+                                                                                      Arrays.asList(new CanonicalUrlLocation(this.generatePublicLocalizedUrl(currentLocale,
                                                                                                                                                              this.localeService.getDefaultLocale()
                                                                                                                                                                                .toLanguageTag())))));
 
         List<SiteUrlLocation> locations = this.languageRedirectEnabled ? ListUtils.mergedList(languageDependentLocations, singleRootLocations)
                 : singleRootLocations;
         return ResponseEntity.ok(this.siteMapGenerator.generateSiteMap(locations));
+    }
+
+    private String generatePublicRootUrl()
+    {
+        return this.contextService.getPublicDomainUrl()
+                                  .map(URL::toExternalForm)
+                                  .orElse("");
     }
 
     private String generateHrefLangRelatedLinkTags()
@@ -169,11 +170,9 @@ public class IndexHtmlController
         {
             String defaultLanguageTag = this.localeService.getDefaultLocale()
                                                           .toLanguageTag();
-            String currentLanguageTag = this.localeService.getRequestLocaleOrDefault()
-                                                          .toLanguageTag();
-            String languageSpecificUrl = this.generatePublicLocalizedUrl(currentLanguageTag, defaultLanguageTag);
-            String tag = "<link rel=\"canonical\" href=\"" + languageSpecificUrl + "\" />";
-            return tag;
+            Locale currentLocale = this.localeService.getRequestLocaleOrDefault();
+            String languageSpecificUrl = this.generatePublicLocalizedUrl(currentLocale, defaultLanguageTag);
+            return "<link rel=\"canonical\" href=\"" + languageSpecificUrl + "\" />";
         }
         else
         {
@@ -183,30 +182,23 @@ public class IndexHtmlController
 
     private String generateHrefLangPrimaryLinkTags()
     {
-        String currentLanguageTag = this.localeService.getRequestLocale()
-                                                      .orElse(Locale.US)
-                                                      .toLanguageTag();
+        Locale currentLocale = this.localeService.getRequestLocaleOrDefault();
         return this.localeService.getAvailableLocales()
                                  .stream()
                                  .map(Locale::toLanguageTag)
                                  .map(languageTag ->
                                  {
-                                     String url = this.generatePublicLocalizedUrl(currentLanguageTag, languageTag);
+                                     String url = this.generatePublicLocalizedUrl(currentLocale, languageTag);
                                      return "<link rel=\"alternate\" href=\"" + url + "\" hreflang=\"" + languageTag + "\" />";
                                  })
                                  .collect(Collectors.joining("\n"));
     }
 
-    private String generatePublicLocalizedUrl(String currentLanguageTag, String languageTag)
+    private String generatePublicLocalizedUrl(Locale currentLocale, String languageTag)
     {
-        return this.generatePublicRootUrl(currentLanguageTag) + "/" + languageTag;
-    }
-
-    private String generatePublicRootUrl(String currentLanguageTag)
-    {
-        return this.publicUrl.orElseGet(() -> this.requestProvider.getRequestBaseUrl()
-                                                                  .map(requestUrl -> StringUtils.removeEndIgnoreCase(requestUrl, currentLanguageTag))
-                                                                  .orElse(""));
+        return this.contextService.getPublicDomainUrl(currentLocale)
+                                  .map(URL::toExternalForm)
+                                  .orElse("");
     }
 
     private ResponseEntity<String> createRedirectResponse()

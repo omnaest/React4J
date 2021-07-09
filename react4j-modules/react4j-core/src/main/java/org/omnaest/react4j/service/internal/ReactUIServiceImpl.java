@@ -124,6 +124,7 @@ import org.omnaest.react4j.service.internal.service.ReactUIContextManager.ReactU
 import org.omnaest.react4j.service.internal.service.internal.LocationSupportImpl;
 import org.omnaest.react4j.service.internal.service.internal.RenderingProcessorImpl;
 import org.omnaest.utils.ListUtils;
+import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.MatcherUtils;
 import org.omnaest.utils.MatcherUtils.Match;
 import org.omnaest.utils.PredicateUtils;
@@ -553,7 +554,7 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                                                                                            .map(Optional::get)
                                                                                                                            .map(this.createMarkdownParagraphMapper(referenceLinkCounter))
                                                                                                                            .filter(PredicateUtils.notNull())
-                                                                                                                           .map(v -> (UIComponent<?>) v),
+                                                                                                                           .map(MapperUtils.identity()),
                                                                                                           element -> Stream.of(element)
                                                                                                                            .map(Element::asHeading)
                                                                                                                            .filter(Optional::isPresent)
@@ -562,14 +563,28 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                                                                                                                .addHeading(heading.getText(),
                                                                                                                                                            heading.getStrength()))
                                                                                                                            .filter(PredicateUtils.notNull())
-                                                                                                                           .map(v -> (UIComponent<?>) v),
+                                                                                                                           .map(MapperUtils.identity()),
                                                                                                           element -> Stream.of(element)
                                                                                                                            .map(Element::asUnorderedList)
                                                                                                                            .filter(Optional::isPresent)
                                                                                                                            .map(Optional::get)
                                                                                                                            .map(this.createMarkdownUnorderedListMapper(referenceLinkCounter))
                                                                                                                            .filter(PredicateUtils.notNull())
-                                                                                                                           .map(v -> (UIComponent<?>) v));
+                                                                                                                           .map(MapperUtils.identity()),
+                                                                                                          element -> Stream.of(element)
+                                                                                                                           .map(Element::asTable)
+                                                                                                                           .filter(Optional::isPresent)
+                                                                                                                           .map(Optional::get)
+                                                                                                                           .map(this.createMarkdownTableMapper(referenceLinkCounter))
+                                                                                                                           .filter(PredicateUtils.notNull())
+                                                                                                                           .map(MapperUtils.identity()),
+                                                                                                          element -> Stream.of(element)
+                                                                                                                           .map(Element::asText)
+                                                                                                                           .filter(Optional::isPresent)
+                                                                                                                           .map(Optional::get)
+                                                                                                                           .map(this.createMarkdownTextMapper(referenceLinkCounter))
+                                                                                                                           .filter(PredicateUtils.notNull())
+                                                                                                                           .map(MapperUtils.identity()));
                         return elements.flatMap(mapper)
                                        .collect(Collectors.toList());
                     }
@@ -599,6 +614,39 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                                .filter(PredicateUtils.notNull())
                                                                .collect(Collectors.toList()));
                         };
+                    }
+
+                    private Function<MarkdownUtils.Table, Table> createMarkdownTableMapper(AtomicInteger referenceLinkCounter)
+                    {
+                        return markdownTable -> this.newTable()
+                                                    .addRow(uiRow ->
+                                                    {
+                                                        uiRow.addCells(markdownTable.getColumns()
+                                                                                    .stream(),
+                                                                       (uiCell, markdownTableCell) ->
+                                                                       {
+                                                                           uiCell.withContent(this.parseMarkdownElements(markdownTableCell.getElements()
+                                                                                                                                          .stream()));
+                                                                       });
+                                                    })
+                                                    .addRows(markdownTable.getRows()
+                                                                          .stream(),
+                                                             (uiRow, markdownTableRow) ->
+                                                             {
+                                                                 uiRow.addCells(markdownTableRow.getCells()
+                                                                                                .stream(),
+                                                                                (uiCell, markdownTableCell) ->
+                                                                                {
+                                                                                    uiCell.withContent(this.parseMarkdownElements(markdownTableCell.getElements()
+                                                                                                                                                   .stream()));
+                                                                                });
+                                                             });
+                    }
+
+                    private Function<MarkdownUtils.Text, Text> createMarkdownTextMapper(AtomicInteger referenceLinkCounter)
+                    {
+                        return markdownText -> this.newText()
+                                                   .addText(markdownText.getValue());
                     }
 
                     @Override

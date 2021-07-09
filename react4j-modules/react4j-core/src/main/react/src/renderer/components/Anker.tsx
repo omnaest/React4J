@@ -5,6 +5,7 @@ import { I18nTextValue, I18nRenderer } from "./I18nText";
 export interface AnkerNode extends Node
 {
     text: I18nTextValue;
+    title: I18nTextValue;
     link: string;
     page: "SELF" | "BLANK";
 }
@@ -24,6 +25,7 @@ export class Anker extends React.Component<Props, {}>
             <a
                 href={this.props.node.link}
                 target={this.props.node.page === "SELF" ? "_self" : "_blank"}
+                title={I18nRenderer.render(this.props.node.title)}
             >{I18nRenderer.render(this.props.node.text)}</a>
         );
     }

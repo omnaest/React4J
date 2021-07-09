@@ -38,6 +38,7 @@ import org.omnaest.utils.template.TemplateUtils;
 public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
 {
     private I18nText text;
+    private I18nText title;
     private String   link;
     private boolean  isSamePage = false;
 
@@ -69,6 +70,8 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
             {
                 return new AnkerNode().setText(AnkerImpl.this.getTextResolver()
                                                              .apply(AnkerImpl.this.text, location))
+                                      .setTitle(AnkerImpl.this.getTextResolver()
+                                                              .apply(AnkerImpl.this.title, location))
                                       .setLink(AnkerImpl.this.link)
                                       .setPage(AnkerImpl.this.isSamePage ? Page.SELF : Page.BLANK);
             }
@@ -108,6 +111,29 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
     public Anker withText(String text)
     {
         this.text = I18nText.of(this.getLocations(), text, this.getDefaultLocale());
+        return this;
+    }
+
+    @Override
+    public Anker withTitle(String title)
+    {
+        this.title = I18nText.of(this.getLocations(), title, this.getDefaultLocale());
+        return this;
+    }
+
+    @Override
+    public Anker withNonTranslatedTitle(String title)
+    {
+        boolean isNonTranslatable = true;
+        this.title = I18nText.of(this.getLocations(), title, this.getDefaultLocale(), isNonTranslatable);
+        return this;
+    }
+
+    @Override
+    public Anker withNonTranslatedText(String text)
+    {
+        boolean isNonTranslatable = true;
+        this.text = I18nText.of(this.getLocations(), text, this.getDefaultLocale(), isNonTranslatable);
         return this;
     }
 

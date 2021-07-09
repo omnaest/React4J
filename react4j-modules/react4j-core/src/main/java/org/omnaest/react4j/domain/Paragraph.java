@@ -16,6 +16,8 @@
 package org.omnaest.react4j.domain;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.omnaest.react4j.domain.Icon.StandardIcon;
@@ -48,6 +50,8 @@ public interface Paragraph extends UIComponent<Paragraph>
 
     public Paragraph addLink(Consumer<Anker> ankerConsumer);
 
+    public <E> Paragraph addLinks(Collection<E> sourceElements, BiConsumer<Anker, E> ankerAndSourceElementConsumer);
+
     public Paragraph addLinkButton(Consumer<AnkerButton> ankerButtonConsumer);
 
     /**
@@ -65,5 +69,7 @@ public interface Paragraph extends UIComponent<Paragraph>
     public Paragraph withBoldStyle();
 
     public Paragraph addImage(String name, String imageName);
+
+    public <E> Paragraph withElements(Collection<E> sourceElements, BiConsumer<Paragraph, E> paragraphAndSourceElementConsumer);
 
 }
