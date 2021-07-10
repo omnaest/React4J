@@ -120,21 +120,18 @@ public class IndexHtmlController
     public ResponseEntity<String> getSitemap()
     {
         Date lastModified = Date.from(Instant.now());
-        Locale currentLocale = this.localeService.getRequestLocaleOrDefault();
 
         List<AlternativeLocalizedUrlLocation> alternativeLocalizedLocations = this.localeService.getAvailableLocales()
                                                                                                 .stream()
-                                                                                                .map(locale -> new AlternativeLocalizedUrlLocation(this.generatePublicLocalizedUrl(currentLocale,
-                                                                                                                                                                                   locale.toLanguageTag()),
+                                                                                                .map(locale -> new AlternativeLocalizedUrlLocation(this.generatePublicLocalizedUrl(locale),
                                                                                                                                                    locale))
                                                                                                 .collect(Collectors.toList());
 
         List<SiteUrlLocation> languageDependentLocations = this.localeService.getAvailableLocales()
                                                                              .stream()
-                                                                             .map(Locale::toLanguageTag)
-                                                                             .map(languageTag ->
+                                                                             .map(locale ->
                                                                              {
-                                                                                 String url = this.generatePublicLocalizedUrl(currentLocale, languageTag);
+                                                                                 String url = this.generatePublicLocalizedUrl(locale);
                                                                                  double priority = 1.0;
                                                                                  List<CanonicalUrlLocation> canonicalLocations = Collections.emptyList();
                                                                                  return new SiteUrlLocation(url, lastModified, priority,
@@ -143,9 +140,7 @@ public class IndexHtmlController
                                                                              .collect(Collectors.toList());
 
         List<SiteUrlLocation> singleRootLocations = Arrays.asList(new SiteUrlLocation(this.generatePublicRootUrl(), lastModified, 1.0, Collections.emptyList(),
-                                                                                      Arrays.asList(new CanonicalUrlLocation(this.generatePublicLocalizedUrl(currentLocale,
-                                                                                                                                                             this.localeService.getDefaultLocale()
-                                                                                                                                                                               .toLanguageTag())))));
+                                                                                      Arrays.asList(new CanonicalUrlLocation(this.generatePublicLocalizedUrl(this.localeService.getDefaultLocale())))));
 
         List<SiteUrlLocation> locations = this.languageRedirectEnabled ? ListUtils.mergedList(languageDependentLocations, singleRootLocations)
                 : singleRootLocations;
@@ -168,10 +163,8 @@ public class IndexHtmlController
     {
         if (!this.localeService.isExplicitRequestLocaleGiven())
         {
-            String defaultLanguageTag = this.localeService.getDefaultLocale()
-                                                          .toLanguageTag();
-            Locale currentLocale = this.localeService.getRequestLocaleOrDefault();
-            String languageSpecificUrl = this.generatePublicLocalizedUrl(currentLocale, defaultLanguageTag);
+            Locale defaultLocale = this.localeService.getDefaultLocale();
+            String languageSpecificUrl = this.generatePublicLocalizedUrl(defaultLocale);
             return "<link rel=\"canonical\" href=\"" + languageSpecificUrl + "\" />";
         }
         else
@@ -182,21 +175,19 @@ public class IndexHtmlController
 
     private String generateHrefLangPrimaryLinkTags()
     {
-        Locale currentLocale = this.localeService.getRequestLocaleOrDefault();
         return this.localeService.getAvailableLocales()
                                  .stream()
-                                 .map(Locale::toLanguageTag)
-                                 .map(languageTag ->
+                                 .map(locale ->
                                  {
-                                     String url = this.generatePublicLocalizedUrl(currentLocale, languageTag);
-                                     return "<link rel=\"alternate\" href=\"" + url + "\" hreflang=\"" + languageTag + "\" />";
+                                     String url = this.generatePublicLocalizedUrl(locale);
+                                     return "<link rel=\"alternate\" href=\"" + url + "\" hreflang=\"" + locale.toLanguageTag() + "\" />";
                                  })
                                  .collect(Collectors.joining("\n"));
     }
 
-    private String generatePublicLocalizedUrl(Locale currentLocale, String languageTag)
+    private String generatePublicLocalizedUrl(Locale locale)
     {
-        return this.contextService.getPublicDomainUrl(currentLocale)
+        return this.contextService.getPublicDomainUrl(locale)
                                   .map(URL::toExternalForm)
                                   .orElse("");
     }
