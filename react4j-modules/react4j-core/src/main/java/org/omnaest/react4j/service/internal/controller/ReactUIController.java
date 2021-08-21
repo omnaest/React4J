@@ -22,8 +22,11 @@ import javax.annotation.PostConstruct;
 import org.omnaest.react4j.service.internal.handler.EventHandlerService;
 import org.omnaest.react4j.service.internal.handler.domain.EventBody;
 import org.omnaest.react4j.service.internal.handler.domain.ResponseBody;
+import org.omnaest.react4j.service.internal.handler.domain.Target;
+import org.omnaest.react4j.service.internal.handler.domain.TargetNode;
 import org.omnaest.react4j.service.internal.nodes.NodeHierarchy;
 import org.omnaest.react4j.service.internal.nodes.service.RootNodeResolverService;
+import org.omnaest.react4j.service.internal.rerenderer.RerenderingService;
 import org.omnaest.react4j.service.internal.service.internal.translation.component.LocaleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +38,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @RestController
 public class ReactUIController
 {
@@ -45,6 +50,9 @@ public class ReactUIController
 
     @Autowired
     private EventHandlerService eventHandlerService;
+
+    @Autowired
+    private RerenderingService rerenderingService;
 
     @Autowired
     private LocaleService localeService;
@@ -61,7 +69,34 @@ public class ReactUIController
     public NodeHierarchy getNodeHierarchy(@PathVariable(name = "languageTag", required = false) String languageTag)
     {
         this.localeService.setExplicitRequestLocaleByLanguageTag(languageTag);
-        return this.resolverService.resolveDefaultNodeHierarchy();
+        return this.eventHandlerService.executeTransactionalAndPublishStagingHandlers(this.resolverService::resolveDefaultNodeHierarchy);
+    }
+
+    @RequestMapping(method = RequestMethod.POST, path = { "/ui", "{languageTag}/ui" }, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Optional<TargetNode> getSubNodeHierarchy(@RequestBody SubNodeRerenderingContext context,
+                                                    @PathVariable(name = "languageTag", required = false) String languageTag)
+    {
+        this.localeService.setExplicitRequestLocaleByLanguageTag(languageTag);
+        return this.eventHandlerService.executeTransactionalAndPublishStagingHandlers(() -> this.rerenderingService.rerenderTargetNode(context.getTarget(),
+                                                                                                                                       Optional.empty()));
+    }
+
+    public static class SubNodeRerenderingContext
+    {
+        @JsonProperty
+        private Target target;
+
+        public Target getTarget()
+        {
+            return this.target;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "SubNodeRerenderingContext [target=" + this.target + "]";
+        }
+
     }
 
     @RequestMapping(method = RequestMethod.POST, path = { "/ui/event",

@@ -28,6 +28,8 @@ import { PaddingContainer, PaddingContainerNode } from "./components/PaddingCont
 import { TextAlignmentContainer, TextAlignmentContainerNode } from "./components/TextAlignmentContainer";
 import RerenderingContainer, { RerenderingContainerNode, UpdateUIContextAction } from "./components/RerenderingContainer";
 import { UIContext, UIContextAccessor } from "./data/DataContextManager";
+import { ProgressBar, ProgressBarNode } from "./components/ProgressBar";
+import { IntervalRerenderingContainer, IntervalRerenderingContainerNode } from "./components/IntervalRerenderingContainer";
 
 export interface Node
 {
@@ -64,6 +66,10 @@ export class Renderer
             else if (node.type === RerenderingContainer.TYPE)
             {
                 return <RerenderingContainer node={node as RerenderingContainerNode} />
+            }
+            else if (node.type === IntervalRerenderingContainer.TYPE)
+            {
+                return <IntervalRerenderingContainer node={node as IntervalRerenderingContainerNode} />
             }
             else if (node.type === UnorderedList.TYPE)
             {
@@ -171,6 +177,10 @@ export class Renderer
             else if (node.type === Toaster.TYPE)
             {
                 return <Toaster node={node as ToasterNode} />
+            }
+            else if (node.type === ProgressBar.TYPE)
+            {
+                return <ProgressBar node={node as ProgressBarNode} />
             }
             else 
             {

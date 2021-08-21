@@ -40,6 +40,14 @@ export class Backend
         return Axios.get(BackendUri.URI_UI);
     }
 
+    public static getUISubNode(target: Target): Promise<Node>
+    {
+        return Axios.post(BackendUri.URI_UI, {
+            target: target
+        }).then((response: AxiosResponse<TargetNode>) => response?.data?.node);
+    }
+
+
     public static sendEvent(target: Target, contextId: string, uiContextAccessor?: UIContextAccessor, nodeContextAccessor?: NodeContextAccessor)
     {
         return Axios.post(BackendUri.URI_UI_HANDLER, {

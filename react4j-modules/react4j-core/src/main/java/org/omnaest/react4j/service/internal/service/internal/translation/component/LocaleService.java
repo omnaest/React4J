@@ -46,6 +46,11 @@ public class LocaleService
         return Locale.US;
     }
 
+    public Locale getSourceTextLocale()
+    {
+        return Locale.US;
+    }
+
     public Locale getRequestLocaleOrDefault()
     {
         return this.getRequestLocale()

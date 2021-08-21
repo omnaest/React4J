@@ -27,6 +27,18 @@ public class EventBody extends AbstractJSONSerializable
     @JsonProperty
     protected DataWithContext dataWithContext;
 
+    protected EventBody()
+    {
+        super();
+    }
+
+    public EventBody(Target target, DataWithContext dataWithContext)
+    {
+        super();
+        this.target = target;
+        this.dataWithContext = dataWithContext;
+    }
+
     public Target getTarget()
     {
         return this.target;

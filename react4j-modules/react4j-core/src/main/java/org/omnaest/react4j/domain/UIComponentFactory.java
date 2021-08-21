@@ -140,4 +140,8 @@ public interface UIComponentFactory
 
     public RerenderingContainer newRerenderingContainer();
 
+    public IntervalRerenderingContainer newIntervalRerenderingContainer();
+
+    public ProgressBar newProgressBar();
+
 }

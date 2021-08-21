@@ -73,6 +73,6 @@ public class ReactUIContextManager
     public Optional<ReactUIInternal> get(String contextPath)
     {
         return Optional.ofNullable(this.contextPathToReactUIFactory.get(contextPath))
-                       .map(provider -> provider.get());
+                       .map(ReactUIInternalProvider::get);
     }
 }

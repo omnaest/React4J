@@ -92,7 +92,7 @@ public class IndexHtmlController
                                                                                                                                      this.localeService.getRequestLocale()
                                                                                                                                                        .orElse(Locale.US)
                                                                                                                                                        .toLanguageTag())
-                                                                                                           .addExactMatchReplacement("<hreflang>",
+                                                                                                           .addExactMatchReplacement("<hreflang/>",
                                                                                                                                      this.generateHrefLangRelatedLinkTags())
                                                                                                            .findAndReplaceAllIn(content))
                                                                                .orElseThrow(() -> new IllegalStateException("Could not load index.html from classpath")))

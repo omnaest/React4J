@@ -20,11 +20,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.handler.EventHandlerService;
@@ -35,23 +33,33 @@ import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.ResponseBody;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.handler.domain.TargetNode;
-import org.omnaest.utils.StreamUtils;
-import org.omnaest.utils.element.bi.BiElement;
+import org.omnaest.react4j.service.internal.rerenderer.RerenderingService;
+import org.omnaest.utils.element.transactional.TransactionalElement;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EventHandlerServiceImpl implements EventHandlerService, EventHandlerRegistry
 {
-    private Map<Target, List<DataEventHandler>> handlers                = new ConcurrentHashMap<>();
-    private Map<Target, RerenderedNodeProvider> rerenderedNodeProviders = new ConcurrentHashMap<>();
+    private TransactionalElement<Map<Target, List<DataEventHandler>>> handlers = this.createTransactionalHandlerMap();
+
+    @Autowired
+    protected RerenderingService rerenderingService;
+
+    private TransactionalElement<Map<Target, List<DataEventHandler>>> createTransactionalHandlerMap()
+    {
+        return TransactionalElement.<Map<Target, List<DataEventHandler>>>of(() -> new ConcurrentHashMap<>())
+                                   .asThreadLocalStaged();
+    }
 
     @Override
     public void registerDataEventHandler(Target target, DataEventHandler eventHandler)
     {
         if (target != null && eventHandler != null)
         {
-            this.handlers.computeIfAbsent(target, t -> Collections.synchronizedList(new ArrayList<>()))
-                         .add(eventHandler);
+            List<DataEventHandler> handlers = this.handlers.getStaging()
+                                                           .computeIfAbsent(target, t -> Collections.synchronizedList(new ArrayList<>()));
+            handlers.add(eventHandler);
         }
     }
 
@@ -70,24 +78,13 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
     {
         Optional<Target> target = Optional.ofNullable(eventBody)
                                           .map(EventBody::getTarget);
-        List<Target> currentAndAllParentalTargets = StreamUtils.recursiveFlattened(target.map(Stream::of)
-                                                                                         .orElse(Stream.empty()),
-                                                                                   childTarget -> Stream.of(Target.from(Location.of(childTarget)
-                                                                                                                                .getParent()))
-                                                                                                        .filter(parentTarget -> !parentTarget.isEmpty()))
-                                                               .distinct()
-                                                               .collect(Collectors.toList());
         Optional<Data> data = Optional.ofNullable(eventBody.getDataWithContext())
                                       .map(dwc -> Data.of(dwc.getContextId(), dwc.getData()));
-        Optional<TargetNode> rerenderedNode = currentAndAllParentalTargets.stream()
-                                                                          .filter(this.rerenderedNodeProviders::containsKey)
-                                                                          .findFirst()
-                                                                          .map(iTarget -> BiElement.of(iTarget, this.rerenderedNodeProviders.get(iTarget)))
-                                                                          .filter(BiElement::hasNoNullValue)
-                                                                          .map(targetAndNodeProvider -> new TargetNode(targetAndNodeProvider.getFirst(),
-                                                                                                                       targetAndNodeProvider.getSecond()
-                                                                                                                                            .apply(data)));
-        return target.map(this.handlers::get)
+        Optional<TargetNode> rerenderedNode = this.executeTransactionalAndPublishStagingHandlers(() -> target.flatMap(targetNode -> this.rerenderingService.rerenderTargetNode(targetNode,
+                                                                                                                                                                               data)));
+
+        return target.map(Optional.ofNullable(this.handlers.getActive())
+                                  .orElse(Collections.emptyMap())::get)
                      .filter(handlers -> !handlers.isEmpty())
                      .flatMap(handlers -> handlers.stream()
                                                   .map(handler -> handler.invoke(data.orElse(Data.EMPTY)))
@@ -98,9 +95,25 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
     }
 
     @Override
-    public void register(Target target, RerenderedNodeProvider rerenderedNodeProvider)
+    public <R> R executeTransactionalAndPublishStagingHandlers(Callable<R> operation)
     {
-        this.rerenderedNodeProviders.put(target, rerenderedNodeProvider);
+        try
+        {
+            R result = operation.call();
+            this.handlers.withFinalMergeFunction((staging, active) ->
+            {
+                Optional.ofNullable(active)
+                        .orElse(Collections.emptyMap())
+                        .forEach(staging::putIfAbsent);
+                return staging;
+            })
+                         .commit();
+            return result;
+        }
+        catch (Exception e)
+        {
+            throw new IllegalStateException(e);
+        }
     }
 
 }

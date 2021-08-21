@@ -15,9 +15,11 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain.support;
 
-import org.omnaest.react4j.domain.UIComponentFactory;
+import java.util.function.Function;
 
-public interface UIComponentFactoryFunction extends UIComponentGenericFactoryFunction<UIComponentFactory>
+import org.omnaest.react4j.domain.UIComponent;
+
+public interface UIComponentGenericFactoryFunction<F> extends Function<F, UIComponent<?>>
 {
 
 }

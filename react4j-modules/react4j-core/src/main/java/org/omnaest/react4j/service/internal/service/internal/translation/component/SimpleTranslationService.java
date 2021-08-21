@@ -1,6 +1,5 @@
 package org.omnaest.react4j.service.internal.service.internal.translation.component;
 
-import java.util.Locale;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +21,7 @@ public class SimpleTranslationService
 
     public Optional<String> translate(String key, String text)
     {
-        return this.translationService.translate(Locale.US, key, text, this.localeService.getRequestLocale()
-                                                                                         .orElse(Locale.US));
-
+        return this.translationService.translate(this.localeService.getSourceTextLocale(), key, text, this.localeService.getRequestLocaleOrDefault());
     }
 
 }

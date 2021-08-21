@@ -42,6 +42,7 @@ import org.omnaest.react4j.domain.Icon;
 import org.omnaest.react4j.domain.Icon.StandardIcon;
 import org.omnaest.react4j.domain.Image;
 import org.omnaest.react4j.domain.ImageIndex;
+import org.omnaest.react4j.domain.IntervalRerenderingContainer;
 import org.omnaest.react4j.domain.Jumbotron;
 import org.omnaest.react4j.domain.LineBreak;
 import org.omnaest.react4j.domain.Location;
@@ -50,6 +51,7 @@ import org.omnaest.react4j.domain.NavigationBar.NavigationBarConsumer;
 import org.omnaest.react4j.domain.NavigationBar.NavigationBarProvider;
 import org.omnaest.react4j.domain.PaddingContainer;
 import org.omnaest.react4j.domain.Paragraph;
+import org.omnaest.react4j.domain.ProgressBar;
 import org.omnaest.react4j.domain.ReactUI;
 import org.omnaest.react4j.domain.RerenderingContainer;
 import org.omnaest.react4j.domain.ScrollbarContainer;
@@ -87,11 +89,13 @@ import org.omnaest.react4j.service.internal.component.HeadingImpl;
 import org.omnaest.react4j.service.internal.component.IconImpl;
 import org.omnaest.react4j.service.internal.component.ImageImpl;
 import org.omnaest.react4j.service.internal.component.ImageIndexImpl;
+import org.omnaest.react4j.service.internal.component.IntervalRerenderingContainerImpl;
 import org.omnaest.react4j.service.internal.component.JumbotronImpl;
 import org.omnaest.react4j.service.internal.component.LineBreakImpl;
 import org.omnaest.react4j.service.internal.component.NavigationBarImpl;
 import org.omnaest.react4j.service.internal.component.PaddingContainerImpl;
 import org.omnaest.react4j.service.internal.component.ParagraphImpl;
+import org.omnaest.react4j.service.internal.component.ProgressBarImpl;
 import org.omnaest.react4j.service.internal.component.RerenderingContainerImpl;
 import org.omnaest.react4j.service.internal.component.ScrollbarContainerImpl;
 import org.omnaest.react4j.service.internal.component.TableImpl;
@@ -103,7 +107,6 @@ import org.omnaest.react4j.service.internal.component.VerticalContentSwitcherImp
 import org.omnaest.react4j.service.internal.configuration.ProfileFlagConfiguration.UICacheEnabledFlag;
 import org.omnaest.react4j.service.internal.domain.ReactUIInternal;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
-import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry.RerenderedNodeProvider;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
@@ -111,6 +114,8 @@ import org.omnaest.react4j.service.internal.nodes.CompositeNode;
 import org.omnaest.react4j.service.internal.nodes.HomePageNode;
 import org.omnaest.react4j.service.internal.nodes.NodeHierarchy;
 import org.omnaest.react4j.service.internal.nodes.service.RootNodeResolverService;
+import org.omnaest.react4j.service.internal.rerenderer.RerenderingNodeProviderRegistry;
+import org.omnaest.react4j.service.internal.rerenderer.RerenderingNodeProviderRegistry.RerenderedNodeProvider;
 import org.omnaest.react4j.service.internal.service.ContentService;
 import org.omnaest.react4j.service.internal.service.ContentService.ContentFile;
 import org.omnaest.react4j.service.internal.service.ContentService.ContentImage;
@@ -142,16 +147,18 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
 {
     private static class EventHandlerRegistrationSupportImpl implements EventHandlerRegistrationSupport
     {
-        private final EventHandlerRegistry     eventHandlerRegistry;
-        private final Location                 location;
-        private final Target                   target;
-        private final RenderingProcessor       renderingProcessor;
-        private final RenderableUIComponent<?> component;
+        private final EventHandlerRegistry            eventHandlerRegistry;
+        private final RerenderingNodeProviderRegistry rerenderingNodeProviderRegistry;
+        private final Location                        location;
+        private final Target                          target;
+        private final RenderingProcessor              renderingProcessor;
+        private final RenderableUIComponent<?>        component;
 
-        private EventHandlerRegistrationSupportImpl(EventHandlerRegistry eventHandlerRegistry, Location location, Target target,
-                                                    RenderingProcessor renderingProcessor, RenderableUIComponent<?> component)
+        private EventHandlerRegistrationSupportImpl(EventHandlerRegistry eventHandlerRegistry, RerenderingNodeProviderRegistry rerenderingNodeProviderRegistry,
+                                                    Location location, Target target, RenderingProcessor renderingProcessor, RenderableUIComponent<?> component)
         {
             this.eventHandlerRegistry = eventHandlerRegistry;
+            this.rerenderingNodeProviderRegistry = rerenderingNodeProviderRegistry;
             this.location = location;
             this.target = target;
             this.renderingProcessor = renderingProcessor;
@@ -162,7 +169,7 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
         public EventHandlerRegistrationSupport registerAsRerenderingNode()
         {
             RerenderedNodeProvider rerenderedNodeProvider = data -> this.renderingProcessor.process(this.component, this.location.getParent(), data);
-            this.eventHandlerRegistry.register(this.target, rerenderedNodeProvider);
+            this.rerenderingNodeProviderRegistry.register(this.target, rerenderedNodeProvider);
             return this;
         }
 
@@ -186,6 +193,9 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
 
     @Autowired
     protected EventHandlerRegistry eventHandlerRegistry;
+
+    @Autowired
+    protected RerenderingNodeProviderRegistry rerenderingNodeProviderRegistry;
 
     @Autowired
     protected ContextFactory dataContextFactory;
@@ -841,6 +851,17 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                         return new RerenderingContainerImpl(this.context);
                     }
 
+                    @Override
+                    public IntervalRerenderingContainer newIntervalRerenderingContainer()
+                    {
+                        return new IntervalRerenderingContainerImpl(this.context);
+                    }
+
+                    @Override
+                    public ProgressBar newProgressBar()
+                    {
+                        return new ProgressBarImpl(this.context);
+                    }
                 };
             }
 
@@ -900,9 +921,10 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                Location location = componentAndLocation.getSecond();
                                RenderableUIComponent component = componentAndLocation.getFirst();
                                component.asRenderer()
-                                        .manageEventHandler(new EventHandlerRegistrationSupportImpl(ReactUIServiceImpl.this.eventHandlerRegistry, location,
-                                                                                                    Target.from(location), this.createRenderingProcessor(),
-                                                                                                    component));
+                                        .manageEventHandler(new EventHandlerRegistrationSupportImpl(ReactUIServiceImpl.this.eventHandlerRegistry,
+                                                                                                    ReactUIServiceImpl.this.rerenderingNodeProviderRegistry,
+                                                                                                    location, Target.from(location),
+                                                                                                    this.createRenderingProcessor(), component));
                            });
                 return this;
             }
@@ -925,7 +947,7 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
     public NodeHierarchy resolveNodeHierarchy(String contextPath)
     {
         return this.uiManager.get(contextPath)
-                             .map(ui -> ui.asNodeHierarchy())
+                             .map(ReactUIInternal::asNodeHierarchy)
                              .orElseThrow(() -> new IllegalArgumentException("No UI defined for context path: " + contextPath));
     }
 

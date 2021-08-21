@@ -73,8 +73,9 @@ public class DataImpl implements Data
     @Override
     public Optional<Value> getFieldValue(String field)
     {
-        return Optional.ofNullable((String) this.map.get(field))
-                       .map(v -> new ValueImpl(v));
+        return Optional.ofNullable(this.map)
+                       .map(map -> (String) map.get(field))
+                       .map(ValueImpl::new);
     }
 
     @Override

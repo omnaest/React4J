@@ -15,11 +15,6 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.handler;
 
-import java.util.Optional;
-import java.util.function.Function;
-
-import org.omnaest.react4j.domain.context.data.Data;
-import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
@@ -30,9 +25,4 @@ public interface EventHandlerRegistry
 
     public void registerDataEventHandler(Target target, DataEventHandler eventHandler);
 
-    public void register(Target target, RerenderedNodeProvider rerenderedNodeProvider);
-
-    public static interface RerenderedNodeProvider extends Function<Optional<Data>, Node>
-    {
-    }
 }
