@@ -38,6 +38,7 @@ import org.omnaest.react4j.domain.Composite;
 import org.omnaest.react4j.domain.Form;
 import org.omnaest.react4j.domain.GridContainer;
 import org.omnaest.react4j.domain.Heading;
+import org.omnaest.react4j.domain.IFrame;
 import org.omnaest.react4j.domain.Icon;
 import org.omnaest.react4j.domain.Icon.StandardIcon;
 import org.omnaest.react4j.domain.Image;
@@ -52,9 +53,12 @@ import org.omnaest.react4j.domain.NavigationBar.NavigationBarProvider;
 import org.omnaest.react4j.domain.PaddingContainer;
 import org.omnaest.react4j.domain.Paragraph;
 import org.omnaest.react4j.domain.ProgressBar;
+import org.omnaest.react4j.domain.RatioContainer;
+import org.omnaest.react4j.domain.RatioContainer.Ratio;
 import org.omnaest.react4j.domain.ReactUI;
 import org.omnaest.react4j.domain.RerenderingContainer;
 import org.omnaest.react4j.domain.ScrollbarContainer;
+import org.omnaest.react4j.domain.SizedContainer;
 import org.omnaest.react4j.domain.Table;
 import org.omnaest.react4j.domain.Text;
 import org.omnaest.react4j.domain.TextAlignmentContainer;
@@ -86,6 +90,7 @@ import org.omnaest.react4j.service.internal.component.CompositeImpl;
 import org.omnaest.react4j.service.internal.component.FormImpl;
 import org.omnaest.react4j.service.internal.component.GridContainerImpl;
 import org.omnaest.react4j.service.internal.component.HeadingImpl;
+import org.omnaest.react4j.service.internal.component.IFrameImpl;
 import org.omnaest.react4j.service.internal.component.IconImpl;
 import org.omnaest.react4j.service.internal.component.ImageImpl;
 import org.omnaest.react4j.service.internal.component.ImageIndexImpl;
@@ -96,8 +101,10 @@ import org.omnaest.react4j.service.internal.component.NavigationBarImpl;
 import org.omnaest.react4j.service.internal.component.PaddingContainerImpl;
 import org.omnaest.react4j.service.internal.component.ParagraphImpl;
 import org.omnaest.react4j.service.internal.component.ProgressBarImpl;
+import org.omnaest.react4j.service.internal.component.RatioContainerImpl;
 import org.omnaest.react4j.service.internal.component.RerenderingContainerImpl;
 import org.omnaest.react4j.service.internal.component.ScrollbarContainerImpl;
+import org.omnaest.react4j.service.internal.component.SizedContainerImpl;
 import org.omnaest.react4j.service.internal.component.TableImpl;
 import org.omnaest.react4j.service.internal.component.TextAlignmentContainerImpl;
 import org.omnaest.react4j.service.internal.component.TextImpl;
@@ -128,6 +135,7 @@ import org.omnaest.react4j.service.internal.service.ReactUIContextManager;
 import org.omnaest.react4j.service.internal.service.ReactUIContextManager.ReactUIInternalProvider;
 import org.omnaest.react4j.service.internal.service.internal.LocationSupportImpl;
 import org.omnaest.react4j.service.internal.service.internal.RenderingProcessorImpl;
+import org.omnaest.utils.EnumUtils;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.MatcherUtils;
@@ -303,7 +311,7 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
             }
 
             @Override
-            public ReactUI addComponents(List<UIComponent<?>> components)
+            public ReactUI addComponents(List<? extends UIComponent<?>> components)
             {
                 this.components.addAll(components);
                 return this;
@@ -505,30 +513,30 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
 
                                                                 //
                                                                 BiElement<Optional<Element>, Stream<Element>> titleAndText = StreamUtils.splitOne(group);
-                                                                String title = titleAndText.getFirst()
-                                                                                           .map(Element::asHeading)
-                                                                                           .filter(Optional::isPresent)
-                                                                                           .map(Optional::get)
-                                                                                           .map(MarkdownUtils.Heading::getText)
-                                                                                           .orElse("");
+                                                                Optional<String> title = titleAndText.getFirst()
+                                                                                                     .map(Element::asHeading)
+                                                                                                     .filter(Optional::isPresent)
+                                                                                                     .map(Optional::get)
+                                                                                                     .map(MarkdownUtils.Heading::getText)
+                                                                                                     .filter(StringUtils::isNotBlank);
 
                                                                 //
-                                                                String imageName = title.replaceAll("[^a-zA-Z0-9]+", "_")
-                                                                                        .toLowerCase();
-                                                                Optional<ContentImage> firstImageNameMatch = ReactUIServiceImpl.this.contentService.findImages(imageName
+                                                                Optional<String> imageName = title.map(iTitle -> iTitle.replaceAll("[^a-zA-Z0-9]+", "_"))
+                                                                                                  .map(String::toLowerCase);
+                                                                Optional<ContentImage> firstImageNameMatch = imageName.flatMap(name -> ReactUIServiceImpl.this.contentService.findImages(name
                                                                         + "\\.(jpg)|(png)|(svg)")
-                                                                                                                                                   .findFirst();
+                                                                                                                                                                             .findFirst());
                                                                 if (firstImageNameMatch.isPresent())
                                                                 {
                                                                     card.withImage(image -> image.withImage(firstImageNameMatch.get()
                                                                                                                                .getImagePath())
-                                                                                                 .withName(title));
+                                                                                                 .withName(title.orElse(null)));
                                                                 }
 
                                                                 //
                                                                 Predicate<Element> firstImageFilter = this.createFirstImageAsCardImageFilter(card);
-                                                                return Stream.of(card.withTitle(title)
-                                                                                     .withLinkLocator(RegExUtils.replaceAll(StringUtils.lowerCase(title),
+                                                                return Stream.of(card.withTitle(title.orElse(null))
+                                                                                     .withLinkLocator(RegExUtils.replaceAll(StringUtils.lowerCase(title.orElse(null)),
                                                                                                                             "[^a-zA-Z]+", "_"))
                                                                                      .withContent(this.newComposite()
                                                                                                       .addComponents(this.parseMarkdownElements(titleAndText.getSecond()
@@ -767,6 +775,7 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                             }
                                                         });
                                                  element.asHeading()
+                                                        .filter(heading -> StringUtils.isNotBlank(heading.getText()))
                                                         .ifPresent(heading -> paragraph.addHeading(heading.getText(), heading.getStrength()));
                                                  element.asImage()
                                                         .ifPresent(image -> paragraph.addImage(image.getLabel(), image.getLink()));
@@ -779,6 +788,14 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                                                                       .ofRegEx("^BUTTON(\\:([a-zA-Z]+))?\\:(.*)")
                                                                                                       .findInAnd(link.getLabel())
                                                                                                       .getFirst();
+                                                            Optional<Match> iframeMatch = MatcherUtils.matcher()
+                                                                                                      .ofRegEx("^IFRAME\\:(.*)")
+                                                                                                      .findInAnd(link.getLabel())
+                                                                                                      .getFirst();
+                                                            Optional<Match> iframeVideoMatch = MatcherUtils.matcher()
+                                                                                                           .ofRegEx("^IFRAME\\:VIDEO(\\_[x0-9]+)?\\:(.*)")
+                                                                                                           .findInAnd(link.getLabel())
+                                                                                                           .getFirst();
                                                             Optional<Match> referenceLinkMatch = MatcherUtils.matcher()
                                                                                                              .ofRegEx("\\[\\?\\]")
                                                                                                              .findInAnd(link.getLabel())
@@ -798,6 +815,34 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                                                                          .withStyle(Style.of(style)
                                                                                          .orElse(Style.PRIMARY));
                                                                 });
+                                                            }
+                                                            else if (iframeVideoMatch.isPresent())
+                                                            {
+                                                                String ratio = iframeVideoMatch.get()
+                                                                                               .getSubGroup(1)
+                                                                                               .orElse("");
+                                                                String title = iframeVideoMatch.get()
+                                                                                               .getSubGroup(2)
+                                                                                               .orElse("");
+                                                                paragraph.addComponent(this.newSizedContainer()
+                                                                                           .withFullWidth()
+                                                                                           .withHeightInViewPortRatio(0.8)
+                                                                                           .withContent(this.newRatioContainer()
+                                                                                                            .withRatio(EnumUtils.toEnumValue(ratio, Ratio.class)
+                                                                                                                                .orElse(Ratio._16x9))
+                                                                                                            .withContent(this.newIFrame()
+                                                                                                                             .withSourceLink(link.getLink())
+                                                                                                                             .withTitle(title)
+                                                                                                                             .allowFullScreen())));
+                                                            }
+                                                            else if (iframeMatch.isPresent())
+                                                            {
+                                                                String title = iframeMatch.get()
+                                                                                          .getSubGroup(1)
+                                                                                          .orElse("");
+                                                                paragraph.addComponent(this.newIFrame()
+                                                                                           .withTitle(title)
+                                                                                           .withSourceLink(link.getLink()));
                                                             }
                                                             else if (referenceLinkMatch.isPresent())
                                                             {
@@ -862,6 +907,25 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                     {
                         return new ProgressBarImpl(this.context);
                     }
+
+                    @Override
+                    public IFrame newIFrame()
+                    {
+                        return new IFrameImpl(this.context);
+                    }
+
+                    @Override
+                    public RatioContainer newRatioContainer()
+                    {
+                        return new RatioContainerImpl(this.context);
+                    }
+
+                    @Override
+                    public SizedContainer newSizedContainer()
+                    {
+                        return new SizedContainerImpl(this.context);
+                    }
+
                 };
             }
 

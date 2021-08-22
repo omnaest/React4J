@@ -15,19 +15,14 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain;
 
-import java.util.List;
+import org.omnaest.react4j.domain.support.UIComponentWithContent;
 
-import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
-import org.omnaest.react4j.domain.support.UIComponentProvider;
-
-public interface CompositeBase<R>
+public interface RatioContainer extends UIComponentWithContent<RatioContainer>
 {
-    public R addNewComponent(UIComponentFactoryFunction factoryConsumer);
+    public RatioContainer withRatio(Ratio ratio);
 
-    public R addComponent(UIComponent<?> component);
-
-    public R addComponents(List<? extends UIComponent<?>> components);
-
-    public R addComponent(UIComponentProvider<?> componentProvider);
-
+    public static enum Ratio
+    {
+        _16x9, _4x3, _1x1, _21x9
+    }
 }

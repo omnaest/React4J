@@ -144,4 +144,9 @@ public interface UIComponentFactory
 
     public ProgressBar newProgressBar();
 
+    public RatioContainer newRatioContainer();
+
+    public IFrame newIFrame();
+
+    public SizedContainer newSizedContainer();
 }

@@ -17,6 +17,7 @@ import org.omnaest.react4j.service.internal.service.ContentUploadService;
 import org.omnaest.react4j.service.internal.service.internal.content.configuration.ContentConfigurationService;
 import org.omnaest.utils.MatcherUtils;
 import org.omnaest.utils.MatcherUtils.MatchFinder;
+import org.omnaest.utils.PredicateUtils;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.exception.RuntimeIOException;
 import org.slf4j.Logger;
@@ -119,7 +120,8 @@ public class ContentServiceImpl implements ContentService, ContentUploadService
                                                                     .stream())
                                    .map(match -> match.getMatchRegion())
                                    .map(imageName -> this.findImage(imageName)
-                                                         .get());
+                                                         .orElse(null))
+                                   .filter(PredicateUtils.notNull());
     }
 
     @Override

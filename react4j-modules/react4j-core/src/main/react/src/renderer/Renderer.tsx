@@ -30,6 +30,9 @@ import RerenderingContainer, { RerenderingContainerNode, UpdateUIContextAction }
 import { UIContext, UIContextAccessor } from "./data/DataContextManager";
 import { ProgressBar, ProgressBarNode } from "./components/ProgressBar";
 import { IntervalRerenderingContainer, IntervalRerenderingContainerNode } from "./components/IntervalRerenderingContainer";
+import { RatioContainer, RatioContainerNode } from "./components/RatioContainer";
+import { IFrameContainer, IFrameContainerNode } from "./components/IFrameContainer";
+import { SizedContainer, SizedContainerNode } from "./components/SizedContainer";
 
 export interface Node
 {
@@ -181,6 +184,18 @@ export class Renderer
             else if (node.type === ProgressBar.TYPE)
             {
                 return <ProgressBar node={node as ProgressBarNode} />
+            }
+            else if (node.type === RatioContainer.TYPE)
+            {
+                return <RatioContainer node={node as RatioContainerNode} />
+            }
+            else if (node.type === IFrameContainer.TYPE)
+            {
+                return <IFrameContainer node={node as IFrameContainerNode} />
+            }
+            else if (node.type === SizedContainer.TYPE)
+            {
+                return <SizedContainer node={node as SizedContainerNode} />
             }
             else 
             {

@@ -215,6 +215,13 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
     }
 
     @Override
+    public Paragraph addComponent(UIComponent<?> component)
+    {
+        this.elements.add(component);
+        return this;
+    }
+
+    @Override
     public UIComponentRenderer asRenderer()
     {
         return new UIComponentRenderer()

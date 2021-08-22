@@ -72,4 +72,6 @@ public interface Paragraph extends UIComponent<Paragraph>
 
     public <E> Paragraph withElements(Collection<E> sourceElements, BiConsumer<Paragraph, E> paragraphAndSourceElementConsumer);
 
+    public Paragraph addComponent(UIComponent<?> component);
+
 }

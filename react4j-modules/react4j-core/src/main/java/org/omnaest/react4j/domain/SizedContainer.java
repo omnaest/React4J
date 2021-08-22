@@ -15,19 +15,23 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain;
 
-import java.util.List;
+import org.omnaest.react4j.domain.support.UIComponentWithContent;
 
-import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
-import org.omnaest.react4j.domain.support.UIComponentProvider;
-
-public interface CompositeBase<R>
+public interface SizedContainer extends UIComponentWithContent<SizedContainer>
 {
-    public R addNewComponent(UIComponentFactoryFunction factoryConsumer);
+    public SizedContainer withFullWidth();
 
-    public R addComponent(UIComponent<?> component);
+    public SizedContainer withFullHeight();
 
-    public R addComponents(List<? extends UIComponent<?>> components);
+    public SizedContainer withWidthRatio(double ratio);
 
-    public R addComponent(UIComponentProvider<?> componentProvider);
+    public SizedContainer withHeightRatio(double ratio);
 
+    public SizedContainer withWidthInPixel(int pixels);
+
+    public SizedContainer withHeightInPixel(int pixels);
+
+    SizedContainer withHeightInViewPortRatio(double ratio);
+
+    SizedContainer withWidthInViewPortRatio(double ratio);
 }

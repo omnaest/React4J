@@ -108,7 +108,7 @@ public class CompositeImpl extends AbstractUIComponentWithSubComponents<Composit
     }
 
     @Override
-    public Composite addComponents(List<UIComponent<?>> components)
+    public Composite addComponents(List<? extends UIComponent<?>> components)
     {
         Optional.ofNullable(components)
                 .ifPresent(consumer -> consumer.forEach(this::addComponent));

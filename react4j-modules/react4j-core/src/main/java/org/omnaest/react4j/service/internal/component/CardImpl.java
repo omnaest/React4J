@@ -139,13 +139,16 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
     @Override
     public Card withTitle(String title)
     {
-        if (this.image.isPresent())
+        if (title != null)
         {
-            this.title = this.toI18nText(title);
-        }
-        else
-        {
-            this.featuredTitle = this.toI18nText(title);
+            if (this.image.isPresent())
+            {
+                this.title = this.toI18nText(title);
+            }
+            else
+            {
+                this.featuredTitle = this.toI18nText(title);
+            }
         }
         return this;
     }
