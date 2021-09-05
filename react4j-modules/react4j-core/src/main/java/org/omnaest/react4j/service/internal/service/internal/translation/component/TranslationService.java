@@ -89,7 +89,7 @@ public class TranslationService
             {
                 translationExecutorService.submit(() ->
                 {
-                    LOG.info("Starting translation for " + key + " from " + sourceLocale + " to " + targetLocale + " " + effectiveText);
+                    LOG.debug("Starting translation for " + key + " from " + sourceLocale + " to " + targetLocale + " " + effectiveText);
                     this.translationProviders.stream()
                                              .map(provider -> provider.getTranslator(sourceLocale, targetLocale))
                                              .filter(Optional::isPresent)
