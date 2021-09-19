@@ -15,46 +15,106 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.service.internal;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.RenderableUIComponent;
+import org.omnaest.react4j.domain.rendering.RenderableUIComponent.UIComponentWrapper;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.utils.MapperUtils;
+import org.omnaest.utils.SetUtils;
+import org.omnaest.utils.stream.FilterMapper;
 
 /**
  * @author omnaest
  */
 public class RenderingProcessorImpl implements RenderingProcessor
 {
+    private UIComponentFactory componentFactory;
+
+    public RenderingProcessorImpl(UIComponentFactory componentFactory)
+    {
+        this.componentFactory = componentFactory;
+    }
+
     @Override
     public Node process(UIComponent<?> component, Location parentLocation, Optional<Data> data)
     {
+        Set<UIComponent<?>> ignoredComponents = Collections.emptySet();
+        return this.process(component, parentLocation, data, ignoredComponents);
+    }
+
+    public Node process(UIComponent<?> component, Location parentLocation, Optional<Data> data, Set<UIComponent<?>> ignoredComponents)
+    {
+        FilterMapper<UIComponent<?>, RenderableUIComponent<?>> renderableUIComponentFilterMapper = MapperUtils.filterMapper(iComponent -> iComponent instanceof RenderableUIComponent,
+                                                                                                                            iComponent -> (RenderableUIComponent<?>) iComponent);
+
+        Set<UIComponent<?>> currentIgnoredComponents = SetUtils.toNew(ignoredComponents);
         return Optional.ofNullable(component)
-                       .map(this.createComponentRenderer(parentLocation, data))
+                       .filter(renderableUIComponentFilterMapper)
+                       .map(renderableUIComponentFilterMapper)
+                       .map(this.createComponentWrapperMapper(currentIgnoredComponents))
+                       .filter(renderableUIComponentFilterMapper)
+                       .map(renderableUIComponentFilterMapper)
+                       .map(this.createComponentRenderer(parentLocation, data, currentIgnoredComponents))
                        .orElse(null);
     }
 
-    private Function<UIComponent<?>, Node> createComponentRenderer(Location parentLocation, Optional<Data> data)
+    @SuppressWarnings("unchecked")
+    private Function<RenderableUIComponent<?>, UIComponent<?>> createComponentWrapperMapper(Set<UIComponent<?>> currentIgnoredComponents)
+    {
+        return iComponent ->
+        {
+            if (currentIgnoredComponents.contains(iComponent))
+            {
+                return iComponent;
+            }
+            else
+            {
+                UIComponentWrapper<UIComponent<?>> uiComponentWrapper = (UIComponentWrapper<UIComponent<?>>) iComponent.getWrapper();
+                UIComponent<?> wrapperComponent = uiComponentWrapper.apply(this.componentFactory, iComponent);
+
+                if (wrapperComponent != iComponent)
+                {
+                    currentIgnoredComponents.add(iComponent);
+                }
+
+                return wrapperComponent;
+            }
+        };
+    }
+
+    private Function<RenderableUIComponent<?>, Node> createComponentRenderer(Location parentLocation, Optional<Data> data,
+                                                                             Set<UIComponent<?>> currentIgnoredComponents)
     {
         return component ->
         {
             LocationSupport locationSupport = new LocationSupportImpl(parentLocation);
-
-            UIComponentRenderer renderer = ((RenderableUIComponent<?>) component).asRenderer();
+            UIComponentRenderer renderer = component.asRenderer();
             Location location = renderer.getLocation(locationSupport);
-            return renderer.render(this, location, data);
+            return renderer.render(this.createFilteringRenderingProcessor(currentIgnoredComponents), location, data);
         };
     }
 
-    @Override
-    public Node process(UIComponent<?> component, Location parentLocation)
+    private RenderingProcessor createFilteringRenderingProcessor(Set<UIComponent<?>> currentIgnoredComponents)
     {
-        return this.process(component, parentLocation, Optional.empty());
+        return new RenderingProcessor()
+        {
+            @Override
+            public Node process(UIComponent<?> component, Location parentLocation, Optional<Data> data)
+            {
+                return RenderingProcessorImpl.this.process(component, parentLocation, data, currentIgnoredComponents);
+            }
+        };
     }
+
 }

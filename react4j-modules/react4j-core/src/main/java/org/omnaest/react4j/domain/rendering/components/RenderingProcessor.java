@@ -24,7 +24,10 @@ import org.omnaest.react4j.domain.raw.Node;
 
 public interface RenderingProcessor
 {
-    public Node process(UIComponent<?> component, Location parentLocation);
-
     public Node process(UIComponent<?> component, Location parentLocation, Optional<Data> data);
+
+    public default Node process(UIComponent<?> component, Location parentLocation)
+    {
+        return this.process(component, parentLocation, Optional.empty());
+    }
 }

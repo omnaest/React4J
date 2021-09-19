@@ -995,7 +995,7 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
 
             private RenderingProcessor createRenderingProcessor()
             {
-                return new RenderingProcessorImpl();
+                return new RenderingProcessorImpl(this.componentFactory());
             }
 
             @Override

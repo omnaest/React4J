@@ -15,7 +15,10 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain.rendering;
 
+import java.util.function.BiFunction;
+
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.UIComponentFactory;
 
 /**
  * Internal extension of the {@link UIComponent} which provides a {@link UIComponentRenderer} instance
@@ -27,4 +30,10 @@ import org.omnaest.react4j.domain.UIComponent;
 public interface RenderableUIComponent<UIC extends UIComponent<?>> extends UIComponent<UIC>
 {
     public UIComponentRenderer asRenderer();
+
+    public UIComponentWrapper<UIC> getWrapper();
+
+    public static interface UIComponentWrapper<UIC extends UIComponent<?>> extends BiFunction<UIComponentFactory, UIC, UIComponent<?>>
+    {
+    }
 }

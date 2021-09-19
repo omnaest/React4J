@@ -61,6 +61,12 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
     }
 
     @Override
+    public UIComponentWrapper<UIC> getWrapper()
+    {
+        return (factory, component) -> component;
+    }
+
+    @Override
     public String getId()
     {
         return this.id;

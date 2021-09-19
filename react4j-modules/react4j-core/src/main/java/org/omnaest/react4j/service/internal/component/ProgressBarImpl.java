@@ -42,6 +42,7 @@ public class ProgressBarImpl extends AbstractUIComponent<ProgressBar> implements
     private double             minimum = 0.0;
     private double             maximum = 100.0;
     private double             value   = 0.0;
+    private boolean            padding = true;
 
     public ProgressBarImpl(ComponentContext context)
     {
@@ -55,6 +56,27 @@ public class ProgressBarImpl extends AbstractUIComponent<ProgressBar> implements
         this.minimum = minimum;
         this.maximum = maximum;
         this.value = value;
+    }
+
+    @Override
+    public ProgressBar withoutPadding()
+    {
+        this.padding = false;
+        return this;
+    }
+
+    @Override
+    public UIComponentWrapper<ProgressBar> getWrapper()
+    {
+        if (this.padding)
+        {
+            return (factory, progressBar) -> factory.newPaddingContainer()
+                                                    .withContent(progressBar);
+        }
+        else
+        {
+            return (factory, progressBar) -> progressBar;
+        }
     }
 
     @Override
@@ -173,6 +195,7 @@ public class ProgressBarImpl extends AbstractUIComponent<ProgressBar> implements
             double ratio = this.value / (this.maximum - this.minimum);
             String text = NumberUtils.formatter()
                                      .asPercentage()
+                                     .withMaximumFractionDigits(0)
                                      .format(ratio);
             return I18nText.of(this.getLocations(), text, this.getDefaultLocale(), isNonTranslatable);
         };

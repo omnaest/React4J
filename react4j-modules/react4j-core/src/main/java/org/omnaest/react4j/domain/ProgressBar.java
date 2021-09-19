@@ -22,7 +22,7 @@ public interface ProgressBar extends UIComponent<ProgressBar>
     public ProgressBar withNonTranslatedText(String text);
 
     /**
-     * Displays the progress ratio as percentage as text
+     * Displays the progress ratio as percentage as text. The precision is without any digits like e.g. "14%".
      * 
      * @return
      */
@@ -69,4 +69,11 @@ public interface ProgressBar extends UIComponent<ProgressBar>
      * @return
      */
     public ProgressBar withMaximum(double maximum);
+
+    /**
+     * Disables the padding around the {@link ProgressBar}. Padding is enabled by default.
+     * 
+     * @return
+     */
+    public ProgressBar withoutPadding();
 }

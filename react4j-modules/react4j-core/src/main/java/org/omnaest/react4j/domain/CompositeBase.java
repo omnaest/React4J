@@ -16,6 +16,8 @@
 package org.omnaest.react4j.domain;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
@@ -30,4 +32,8 @@ public interface CompositeBase<R>
 
     public R addComponent(UIComponentProvider<?> componentProvider);
 
+    public default R addComponents(Stream<? extends UIComponent<?>> components)
+    {
+        return this.addComponents(components.collect(Collectors.toList()));
+    }
 }
