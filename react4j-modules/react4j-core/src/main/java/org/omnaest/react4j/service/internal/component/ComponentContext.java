@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.function.Supplier;
+
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.i18n.UILocale;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
@@ -26,11 +28,11 @@ public class ComponentContext
     protected UILocale                     defaultLocale;
     protected LocalizedTextResolverService textResolver;
     protected EventHandlerRegistry         eventHandlerRegistry;
-    protected UIComponentFactory           uiComponentFactory;
+    protected Supplier<UIComponentFactory> uiComponentFactory;
     protected ContextFactory               contextFactory;
 
     public ComponentContext(UILocale defaultLocale, LocalizedTextResolverService textResolver, EventHandlerRegistry eventHandlerRegistry,
-                            UIComponentFactory uiComponentFactory, ContextFactory contextFactory)
+                            Supplier<UIComponentFactory> uiComponentFactory, ContextFactory contextFactory)
     {
         super();
         this.defaultLocale = defaultLocale;
@@ -62,7 +64,7 @@ public class ComponentContext
 
     public UIComponentFactory getUiComponentFactory()
     {
-        return this.uiComponentFactory;
+        return this.uiComponentFactory.get();
     }
 
     @Override

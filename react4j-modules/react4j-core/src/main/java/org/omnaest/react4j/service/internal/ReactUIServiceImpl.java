@@ -19,55 +19,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.RegExUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.omnaest.react4j.domain.Anker;
-import org.omnaest.react4j.domain.AnkerButton;
-import org.omnaest.react4j.domain.BlockQuote;
-import org.omnaest.react4j.domain.Button;
-import org.omnaest.react4j.domain.Button.Style;
-import org.omnaest.react4j.domain.Card;
-import org.omnaest.react4j.domain.Composite;
-import org.omnaest.react4j.domain.Form;
-import org.omnaest.react4j.domain.GridContainer;
-import org.omnaest.react4j.domain.Heading;
-import org.omnaest.react4j.domain.IFrame;
-import org.omnaest.react4j.domain.Icon;
-import org.omnaest.react4j.domain.Icon.StandardIcon;
-import org.omnaest.react4j.domain.Image;
-import org.omnaest.react4j.domain.ImageIndex;
-import org.omnaest.react4j.domain.IntervalRerenderingContainer;
-import org.omnaest.react4j.domain.Jumbotron;
-import org.omnaest.react4j.domain.LineBreak;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.NavigationBar;
 import org.omnaest.react4j.domain.NavigationBar.NavigationBarConsumer;
 import org.omnaest.react4j.domain.NavigationBar.NavigationBarProvider;
-import org.omnaest.react4j.domain.PaddingContainer;
-import org.omnaest.react4j.domain.Paragraph;
-import org.omnaest.react4j.domain.ProgressBar;
-import org.omnaest.react4j.domain.RatioContainer;
-import org.omnaest.react4j.domain.RatioContainer.Ratio;
 import org.omnaest.react4j.domain.ReactUI;
-import org.omnaest.react4j.domain.RerenderingContainer;
-import org.omnaest.react4j.domain.ScrollbarContainer;
-import org.omnaest.react4j.domain.SizedContainer;
-import org.omnaest.react4j.domain.Table;
-import org.omnaest.react4j.domain.Text;
-import org.omnaest.react4j.domain.TextAlignmentContainer;
-import org.omnaest.react4j.domain.Toaster;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
-import org.omnaest.react4j.domain.UIComponentFactory.MarkdownComponentFactory;
-import org.omnaest.react4j.domain.UnsortedList;
-import org.omnaest.react4j.domain.VerticalContentSwitcher;
 import org.omnaest.react4j.domain.configuration.HomePageConfiguration;
 import org.omnaest.react4j.domain.i18n.UILocale;
 import org.omnaest.react4j.domain.raw.Node;
@@ -80,37 +42,6 @@ import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.ReactUIService;
-import org.omnaest.react4j.service.internal.component.AnkerButtonImpl;
-import org.omnaest.react4j.service.internal.component.AnkerImpl;
-import org.omnaest.react4j.service.internal.component.BlockQuoteImpl;
-import org.omnaest.react4j.service.internal.component.ButtonImpl;
-import org.omnaest.react4j.service.internal.component.CardImpl;
-import org.omnaest.react4j.service.internal.component.ComponentContext;
-import org.omnaest.react4j.service.internal.component.CompositeImpl;
-import org.omnaest.react4j.service.internal.component.FormImpl;
-import org.omnaest.react4j.service.internal.component.GridContainerImpl;
-import org.omnaest.react4j.service.internal.component.HeadingImpl;
-import org.omnaest.react4j.service.internal.component.IFrameImpl;
-import org.omnaest.react4j.service.internal.component.IconImpl;
-import org.omnaest.react4j.service.internal.component.ImageImpl;
-import org.omnaest.react4j.service.internal.component.ImageIndexImpl;
-import org.omnaest.react4j.service.internal.component.IntervalRerenderingContainerImpl;
-import org.omnaest.react4j.service.internal.component.JumbotronImpl;
-import org.omnaest.react4j.service.internal.component.LineBreakImpl;
-import org.omnaest.react4j.service.internal.component.NavigationBarImpl;
-import org.omnaest.react4j.service.internal.component.PaddingContainerImpl;
-import org.omnaest.react4j.service.internal.component.ParagraphImpl;
-import org.omnaest.react4j.service.internal.component.ProgressBarImpl;
-import org.omnaest.react4j.service.internal.component.RatioContainerImpl;
-import org.omnaest.react4j.service.internal.component.RerenderingContainerImpl;
-import org.omnaest.react4j.service.internal.component.ScrollbarContainerImpl;
-import org.omnaest.react4j.service.internal.component.SizedContainerImpl;
-import org.omnaest.react4j.service.internal.component.TableImpl;
-import org.omnaest.react4j.service.internal.component.TextAlignmentContainerImpl;
-import org.omnaest.react4j.service.internal.component.TextImpl;
-import org.omnaest.react4j.service.internal.component.ToasterImpl;
-import org.omnaest.react4j.service.internal.component.UnsortedListImpl;
-import org.omnaest.react4j.service.internal.component.VerticalContentSwitcherImpl;
 import org.omnaest.react4j.service.internal.configuration.ProfileFlagConfiguration.UICacheEnabledFlag;
 import org.omnaest.react4j.service.internal.domain.ReactUIInternal;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
@@ -124,27 +55,17 @@ import org.omnaest.react4j.service.internal.nodes.service.RootNodeResolverServic
 import org.omnaest.react4j.service.internal.rerenderer.RerenderingNodeProviderRegistry;
 import org.omnaest.react4j.service.internal.rerenderer.RerenderingNodeProviderRegistry.RerenderedNodeProvider;
 import org.omnaest.react4j.service.internal.service.ContentService;
-import org.omnaest.react4j.service.internal.service.ContentService.ContentFile;
-import org.omnaest.react4j.service.internal.service.ContentService.ContentImage;
-import org.omnaest.react4j.service.internal.service.ContextFactory;
 import org.omnaest.react4j.service.internal.service.HomePageConfigurationService;
-import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
+import org.omnaest.react4j.service.internal.service.MarkdownService;
 import org.omnaest.react4j.service.internal.service.NodeHierarchyStaticRenderer;
 import org.omnaest.react4j.service.internal.service.NodeHierarchyStaticRenderer.NodeHierarchyRenderingProcessor;
 import org.omnaest.react4j.service.internal.service.ReactUIContextManager;
 import org.omnaest.react4j.service.internal.service.ReactUIContextManager.ReactUIInternalProvider;
+import org.omnaest.react4j.service.internal.service.UIComponentFactoryService;
 import org.omnaest.react4j.service.internal.service.internal.LocationSupportImpl;
 import org.omnaest.react4j.service.internal.service.internal.RenderingProcessorImpl;
-import org.omnaest.utils.EnumUtils;
-import org.omnaest.utils.ListUtils;
-import org.omnaest.utils.MapperUtils;
-import org.omnaest.utils.MatcherUtils;
-import org.omnaest.utils.MatcherUtils.Match;
-import org.omnaest.utils.PredicateUtils;
 import org.omnaest.utils.StreamUtils;
 import org.omnaest.utils.element.bi.BiElement;
-import org.omnaest.utils.markdown.MarkdownUtils;
-import org.omnaest.utils.markdown.MarkdownUtils.Element;
 import org.omnaest.utils.stream.FilterMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -153,60 +74,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverService
 {
-    private static class EventHandlerRegistrationSupportImpl implements EventHandlerRegistrationSupport
-    {
-        private final EventHandlerRegistry            eventHandlerRegistry;
-        private final RerenderingNodeProviderRegistry rerenderingNodeProviderRegistry;
-        private final Location                        location;
-        private final Target                          target;
-        private final RenderingProcessor              renderingProcessor;
-        private final RenderableUIComponent<?>        component;
-
-        private EventHandlerRegistrationSupportImpl(EventHandlerRegistry eventHandlerRegistry, RerenderingNodeProviderRegistry rerenderingNodeProviderRegistry,
-                                                    Location location, Target target, RenderingProcessor renderingProcessor, RenderableUIComponent<?> component)
-        {
-            this.eventHandlerRegistry = eventHandlerRegistry;
-            this.rerenderingNodeProviderRegistry = rerenderingNodeProviderRegistry;
-            this.location = location;
-            this.target = target;
-            this.renderingProcessor = renderingProcessor;
-            this.component = component;
-        }
-
-        @Override
-        public EventHandlerRegistrationSupport registerAsRerenderingNode()
-        {
-            RerenderedNodeProvider rerenderedNodeProvider = data -> this.renderingProcessor.process(this.component, this.location.getParent(), data);
-            this.rerenderingNodeProviderRegistry.register(this.target, rerenderedNodeProvider);
-            return this;
-        }
-
-        @Override
-        public EventHandlerRegistrationSupport register(DataEventHandler eventHandler)
-        {
-            this.eventHandlerRegistry.registerDataEventHandler(this.target, eventHandler);
-            return this;
-        }
-
-        @Override
-        public EventHandlerRegistrationSupport register(EventHandler eventHandler)
-        {
-            this.eventHandlerRegistry.registerEventHandler(this.target, eventHandler);
-            return this;
-        }
-    }
-
-    @Autowired
-    protected LocalizedTextResolverService textResolver;
 
     @Autowired
     protected EventHandlerRegistry eventHandlerRegistry;
 
     @Autowired
     protected RerenderingNodeProviderRegistry rerenderingNodeProviderRegistry;
-
-    @Autowired
-    protected ContextFactory dataContextFactory;
 
     @Autowired
     protected HomePageConfigurationService homePageConfigurationService;
@@ -216,6 +89,12 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
 
     @Autowired
     protected ContentService contentService;
+
+    @Autowired
+    protected MarkdownService markdownService;
+
+    @Autowired
+    protected UIComponentFactoryService uiComponentFactoryService;
 
     protected ReactUIContextManager uiManager = new ReactUIContextManager();
 
@@ -355,578 +234,7 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
             @Override
             public UIComponentFactory componentFactory()
             {
-                return new UIComponentFactory()
-                {
-                    private ComponentContext context = new ComponentContext(defaultLocale, ReactUIServiceImpl.this.textResolver,
-                                                                            ReactUIServiceImpl.this.eventHandlerRegistry, this,
-                                                                            ReactUIServiceImpl.this.dataContextFactory);
-
-                    @Override
-                    public Paragraph newParagraph()
-                    {
-                        return new ParagraphImpl(this.context);
-                    }
-
-                    @Override
-                    public Button newButton()
-                    {
-                        return new ButtonImpl(this.context);
-                    }
-
-                    @Override
-                    public Anker newAnker()
-                    {
-                        return new AnkerImpl(this.context);
-                    }
-
-                    @Override
-                    public AnkerButton newAnkerButton()
-                    {
-                        return new AnkerButtonImpl(this.context);
-                    }
-
-                    @Override
-                    public BlockQuote newBlockQuote()
-                    {
-                        return new BlockQuoteImpl(this.context);
-                    }
-
-                    @Override
-                    public Card newCard()
-                    {
-                        return new CardImpl(this.context);
-                    }
-
-                    @Override
-                    public Table newTable()
-                    {
-                        return new TableImpl(this.context);
-                    }
-
-                    @Override
-                    public Composite newComposite()
-                    {
-                        return new CompositeImpl(this.context);
-                    }
-
-                    @Override
-                    public GridContainer newGridContainer()
-                    {
-                        return new GridContainerImpl(this.context);
-                    }
-
-                    @Override
-                    public NavigationBar newNavigationBar()
-                    {
-                        return new NavigationBarImpl(this.context);
-                    }
-
-                    @Override
-                    public Form newForm()
-                    {
-                        return new FormImpl(this.context);
-                    }
-
-                    @Override
-                    public Image newImage()
-                    {
-                        return new ImageImpl(this.context);
-                    }
-
-                    @Override
-                    public Heading newHeading()
-                    {
-                        return new HeadingImpl(this.context);
-                    }
-
-                    @Override
-                    public Jumbotron newJumboTron()
-                    {
-                        return new JumbotronImpl(this.context);
-                    }
-
-                    @Override
-                    public UnsortedList newUnsortedList()
-                    {
-                        return new UnsortedListImpl(this.context);
-                    }
-
-                    @Override
-                    public ImageIndex newImageIndex()
-                    {
-                        return new ImageIndexImpl(this.context);
-                    }
-
-                    @Override
-                    public VerticalContentSwitcher newVerticalContentSwitcher()
-                    {
-                        return new VerticalContentSwitcherImpl(this.context);
-                    }
-
-                    @Override
-                    public ScrollbarContainer newScrollbarContainer()
-                    {
-                        return new ScrollbarContainerImpl(this.context);
-                    }
-
-                    @Override
-                    public Text newText()
-                    {
-                        return new TextImpl(this.context);
-                    }
-
-                    @Override
-                    public List<UIComponent<?>> newMarkdownText(String markdown)
-                    {
-                        return this.parseMarkdownElements(MarkdownUtils.parse(markdown, options -> options.enableWrapIntoParagraphs())
-                                                                       .get());
-                    }
-
-                    @Override
-                    public List<UIComponent<?>> newMarkdownTextFromContent(String identifier)
-                    {
-                        return this.newMarkdownText(ReactUIServiceImpl.this.contentService.findContentMarkdownFile(identifier)
-                                                                                          .map(ContentFile::asString)
-                                                                                          .orElse(""));
-                    }
-
-                    @Override
-                    public List<Card> newMarkdownCardsFromContent(String identifier)
-                    {
-                        return this.newMarkdownCards(ReactUIServiceImpl.this.contentService.findContentMarkdownFile(identifier)
-                                                                                           .map(ContentFile::asString)
-                                                                                           .orElse(""));
-                    }
-
-                    @Override
-                    public List<Card> newMarkdownCards(String markdown)
-                    {
-                        return StreamUtils.aggregateByStart(MarkdownUtils.parse(markdown, options -> options.enableWrapIntoParagraphs())
-                                                                         .get(),
-                                                            element -> element.asHeading()
-                                                                              .map(heading -> heading.getStrength() <= 1)
-                                                                              .orElse(false),
-                                                            group ->
-                                                            {
-                                                                //
-                                                                Card card = this.newCard();
-
-                                                                //
-                                                                BiElement<Optional<Element>, Stream<Element>> titleAndText = StreamUtils.splitOne(group);
-                                                                Optional<String> title = titleAndText.getFirst()
-                                                                                                     .map(Element::asHeading)
-                                                                                                     .filter(Optional::isPresent)
-                                                                                                     .map(Optional::get)
-                                                                                                     .map(MarkdownUtils.Heading::getText)
-                                                                                                     .filter(StringUtils::isNotBlank);
-
-                                                                //
-                                                                Optional<String> imageName = title.map(iTitle -> iTitle.replaceAll("[^a-zA-Z0-9]+", "_"))
-                                                                                                  .map(String::toLowerCase);
-                                                                Optional<ContentImage> firstImageNameMatch = imageName.flatMap(name -> ReactUIServiceImpl.this.contentService.findImages(name
-                                                                        + "\\.(jpg)|(png)|(svg)")
-                                                                                                                                                                             .findFirst());
-                                                                if (firstImageNameMatch.isPresent())
-                                                                {
-                                                                    card.withImage(image -> image.withImage(firstImageNameMatch.get()
-                                                                                                                               .getImagePath())
-                                                                                                 .withName(title.orElse(null)));
-                                                                }
-
-                                                                //
-                                                                Predicate<Element> firstImageFilter = this.createFirstImageAsCardImageFilter(card);
-                                                                return Stream.of(card.withTitle(title.orElse(null))
-                                                                                     .withLinkLocator(RegExUtils.replaceAll(StringUtils.lowerCase(title.orElse(null)),
-                                                                                                                            "[^a-zA-Z]+", "_"))
-                                                                                     .withContent(this.newComposite()
-                                                                                                      .addComponents(this.parseMarkdownElements(titleAndText.getSecond()
-                                                                                                                                                            .filter(firstImageFilter)))));
-                                                            })
-                                          .collect(Collectors.toList());
-                    }
-
-                    private Predicate<Element> createFirstImageAsCardImageFilter(Card card)
-                    {
-                        return StreamUtils.filterConsumer(PredicateUtils.<Element>firstElement()
-                                                                        .and(element -> element.asParagraph()
-                                                                                               .map(org.omnaest.utils.markdown.MarkdownUtils.Paragraph::getElements)
-                                                                                               .filter(PredicateUtils.listNotEmpty())
-                                                                                               .map(ListUtils::first)
-                                                                                               .flatMap(Element::asImage)
-                                                                                               .isPresent()),
-                                                          element -> Optional.ofNullable(element)
-                                                                             .flatMap(Element::asParagraph)
-                                                                             .map(org.omnaest.utils.markdown.MarkdownUtils.Paragraph::getElements)
-                                                                             .map(ListUtils::first)
-                                                                             .flatMap(Element::asImage)
-                                                                             .ifPresent(imageElement -> card.withImage(image -> image.withName(imageElement.getLabel())
-                                                                                                                                     .withImage(imageElement.getLink()))));
-                    }
-
-                    private List<UIComponent<?>> parseMarkdownElements(Stream<Element> elements)
-                    {
-                        AtomicInteger referenceLinkCounter = new AtomicInteger(1);
-                        Function<Element, Stream<UIComponent<?>>> mapper = StreamUtils.redundantFlattener(element -> Stream.of(element)
-                                                                                                                           .map(Element::asParagraph)
-                                                                                                                           .filter(Optional::isPresent)
-                                                                                                                           .map(Optional::get)
-                                                                                                                           .map(this.createMarkdownParagraphMapper(referenceLinkCounter))
-                                                                                                                           .filter(PredicateUtils.notNull())
-                                                                                                                           .map(MapperUtils.identity()),
-                                                                                                          element -> Stream.of(element)
-                                                                                                                           .map(Element::asHeading)
-                                                                                                                           .filter(Optional::isPresent)
-                                                                                                                           .map(Optional::get)
-                                                                                                                           .map(heading -> this.newParagraph()
-                                                                                                                                               .addHeading(heading.getText(),
-                                                                                                                                                           heading.getStrength()))
-                                                                                                                           .filter(PredicateUtils.notNull())
-                                                                                                                           .map(MapperUtils.identity()),
-                                                                                                          element -> Stream.of(element)
-                                                                                                                           .map(Element::asUnorderedList)
-                                                                                                                           .filter(Optional::isPresent)
-                                                                                                                           .map(Optional::get)
-                                                                                                                           .map(this.createMarkdownUnorderedListMapper(referenceLinkCounter))
-                                                                                                                           .filter(PredicateUtils.notNull())
-                                                                                                                           .map(MapperUtils.identity()),
-                                                                                                          element -> Stream.of(element)
-                                                                                                                           .map(Element::asTable)
-                                                                                                                           .filter(Optional::isPresent)
-                                                                                                                           .map(Optional::get)
-                                                                                                                           .map(this.createMarkdownTableMapper(referenceLinkCounter))
-                                                                                                                           .filter(PredicateUtils.notNull())
-                                                                                                                           .map(MapperUtils.identity()),
-                                                                                                          element -> Stream.of(element)
-                                                                                                                           .map(Element::asText)
-                                                                                                                           .filter(Optional::isPresent)
-                                                                                                                           .map(Optional::get)
-                                                                                                                           .map(this.createMarkdownTextMapper(referenceLinkCounter))
-                                                                                                                           .filter(PredicateUtils.notNull())
-                                                                                                                           .map(MapperUtils.identity()));
-                        return elements.flatMap(mapper)
-                                       .collect(Collectors.toList());
-                    }
-
-                    private Function<MarkdownUtils.UnorderedList, UnsortedList> createMarkdownUnorderedListMapper(AtomicInteger referenceLinkCounter)
-                    {
-                        return markdownList ->
-                        {
-                            boolean enableBulletPoints = markdownList.getElements()
-                                                                     .stream()
-                                                                     .findFirst()
-                                                                     .flatMap(Element::asParagraph)
-                                                                     .map(MarkdownUtils.Paragraph::getElements)
-                                                                     .map(List::stream)
-                                                                     .flatMap(Stream::findFirst)
-                                                                     .flatMap(Element::asText)
-                                                                     .map(text -> !StringUtils.startsWith(text.getValue(), "|"))
-                                                                     .orElse(true);
-                            return this.newUnsortedList()
-                                       .enableBulletPoints(enableBulletPoints)
-                                       .addEntries(markdownList.getElements()
-                                                               .stream()
-                                                               .map(Element::asParagraph)
-                                                               .filter(Optional::isPresent)
-                                                               .map(Optional::get)
-                                                               .map(this.createMarkdownParagraphMapper(referenceLinkCounter, true))
-                                                               .filter(PredicateUtils.notNull())
-                                                               .collect(Collectors.toList()));
-                        };
-                    }
-
-                    private Function<MarkdownUtils.Table, Table> createMarkdownTableMapper(AtomicInteger referenceLinkCounter)
-                    {
-                        return markdownTable -> this.newTable()
-                                                    .addRow(uiRow ->
-                                                    {
-                                                        uiRow.addCells(markdownTable.getColumns()
-                                                                                    .stream(),
-                                                                       (uiCell, markdownTableCell) ->
-                                                                       {
-                                                                           uiCell.withContent(this.parseMarkdownElements(markdownTableCell.getElements()
-                                                                                                                                          .stream()));
-                                                                       });
-                                                    })
-                                                    .addRows(markdownTable.getRows()
-                                                                          .stream(),
-                                                             (uiRow, markdownTableRow) ->
-                                                             {
-                                                                 uiRow.addCells(markdownTableRow.getCells()
-                                                                                                .stream(),
-                                                                                (uiCell, markdownTableCell) ->
-                                                                                {
-                                                                                    uiCell.withContent(this.parseMarkdownElements(markdownTableCell.getElements()
-                                                                                                                                                   .stream()));
-                                                                                });
-                                                             });
-                    }
-
-                    private Function<MarkdownUtils.Text, Text> createMarkdownTextMapper(AtomicInteger referenceLinkCounter)
-                    {
-                        return markdownText -> this.newText()
-                                                   .addText(markdownText.getValue());
-                    }
-
-                    @Override
-                    public Card newMarkdownCard(String markdown)
-                    {
-                        return ListUtils.first(this.newMarkdownCards(markdown));
-                    }
-
-                    @Override
-                    public Card newMarkdownCardFromContent(String identifier)
-                    {
-                        return this.newMarkdownCard(ReactUIServiceImpl.this.contentService.findContentMarkdownFile(identifier)
-                                                                                          .map(ContentFile::asString)
-                                                                                          .orElse(""));
-                    }
-
-                    @Override
-                    public MarkdownComponentChoice newMarkdown()
-                    {
-                        return new MarkdownComponentChoice()
-                        {
-
-                            @Override
-                            public MarkdownComponentFactory<List<UIComponent<?>>> texts()
-                            {
-                                return new AbstractMarkdownComponentFactory<List<UIComponent<?>>>(ReactUIServiceImpl.this.contentService)
-                                {
-                                    @Override
-                                    public List<UIComponent<?>> from(String markdown)
-                                    {
-                                        return newMarkdownText(markdown);
-                                    }
-                                };
-                            }
-
-                            @Override
-                            public MarkdownComponentFactory<List<Card>> cards()
-                            {
-                                return new AbstractMarkdownComponentFactory<List<Card>>(ReactUIServiceImpl.this.contentService)
-                                {
-                                    @Override
-                                    public List<Card> from(String markdown)
-                                    {
-                                        return newMarkdownCards(markdown);
-                                    }
-                                };
-                            }
-
-                            @Override
-                            public MarkdownComponentFactory<Card> card()
-                            {
-                                return new AbstractMarkdownComponentFactory<Card>(ReactUIServiceImpl.this.contentService)
-                                {
-                                    @Override
-                                    public Card from(String markdown)
-                                    {
-                                        return newMarkdownCard(markdown);
-                                    }
-                                };
-                            }
-                        };
-                    }
-
-                    private Function<MarkdownUtils.Paragraph, Paragraph> createMarkdownParagraphMapper(AtomicInteger referenceLinkCounter)
-                    {
-                        boolean removeLeadingPipe = false;
-                        return this.createMarkdownParagraphMapper(referenceLinkCounter, removeLeadingPipe);
-                    }
-
-                    private Function<MarkdownUtils.Paragraph, Paragraph> createMarkdownParagraphMapper(AtomicInteger referenceLinkCounter,
-                                                                                                       boolean removeLeadingPipe)
-                    {
-                        return markdownParagraph ->
-                        {
-                            Paragraph paragraph = this.newParagraph();
-                            markdownParagraph.getElements()
-                                             .forEach(element ->
-                                             {
-                                                 element.asText()
-                                                        .ifPresent(text ->
-                                                        {
-                                                            //
-                                                            boolean bold = text.isBold();
-                                                            if (bold)
-                                                            {
-                                                                paragraph.withBoldStyle();
-                                                            }
-
-                                                            //
-                                                            String value = removeLeadingPipe ? StringUtils.removeStart(text.getValue(), "|") : text.getValue();
-                                                            Optional<Match> iconMatch = MatcherUtils.matcher()
-                                                                                                    .ofRegEx("^\\[ICON\\:([a-zA-Z\\_]+)\\](.*)")
-                                                                                                    .findInAnd(value)
-                                                                                                    .getFirst();
-                                                            if (iconMatch.isPresent())
-                                                            {
-                                                                paragraph.addText(iconMatch.get()
-                                                                                           .getSubGroup(1)
-                                                                                           .flatMap(StandardIcon::of)
-                                                                                           .orElse(null),
-                                                                                  iconMatch.get()
-                                                                                           .getSubGroup(2)
-                                                                                           .orElse(""));
-                                                            }
-                                                            else
-                                                            {
-                                                                paragraph.addText(value);
-                                                            }
-                                                        });
-                                                 element.asHeading()
-                                                        .filter(heading -> StringUtils.isNotBlank(heading.getText()))
-                                                        .ifPresent(heading -> paragraph.addHeading(heading.getText(), heading.getStrength()));
-                                                 element.asImage()
-                                                        .ifPresent(image -> paragraph.addImage(image.getLabel(), image.getLink()));
-                                                 element.asLineBreak()
-                                                        .ifPresent(lineBreak -> paragraph.addLineBreak());
-                                                 element.asLink()
-                                                        .ifPresent(link ->
-                                                        {
-                                                            Optional<Match> buttonMatch = MatcherUtils.matcher()
-                                                                                                      .ofRegEx("^BUTTON(\\:([a-zA-Z]+))?\\:(.*)")
-                                                                                                      .findInAnd(link.getLabel())
-                                                                                                      .getFirst();
-                                                            Optional<Match> iframeMatch = MatcherUtils.matcher()
-                                                                                                      .ofRegEx("^IFRAME\\:(.*)")
-                                                                                                      .findInAnd(link.getLabel())
-                                                                                                      .getFirst();
-                                                            Optional<Match> iframeVideoMatch = MatcherUtils.matcher()
-                                                                                                           .ofRegEx("^IFRAME\\:VIDEO(\\_[x0-9]+)?\\:(.*)")
-                                                                                                           .findInAnd(link.getLabel())
-                                                                                                           .getFirst();
-                                                            Optional<Match> referenceLinkMatch = MatcherUtils.matcher()
-                                                                                                             .ofRegEx("\\[\\?\\]")
-                                                                                                             .findInAnd(link.getLabel())
-                                                                                                             .getFirst();
-                                                            if (buttonMatch.isPresent())
-                                                            {
-                                                                paragraph.addLinkButton(anker ->
-                                                                {
-                                                                    String text = buttonMatch.get()
-                                                                                             .getSubGroup(3)
-                                                                                             .orElse("");
-                                                                    String style = buttonMatch.get()
-                                                                                              .getSubGroup(2)
-                                                                                              .orElse(null);
-                                                                    anker.withText(text)
-                                                                         .withLink(link.getLink())
-                                                                         .withStyle(Style.of(style)
-                                                                                         .orElse(Style.PRIMARY));
-                                                                });
-                                                            }
-                                                            else if (iframeVideoMatch.isPresent())
-                                                            {
-                                                                String ratio = iframeVideoMatch.get()
-                                                                                               .getSubGroup(1)
-                                                                                               .orElse("");
-                                                                String title = iframeVideoMatch.get()
-                                                                                               .getSubGroup(2)
-                                                                                               .orElse("");
-                                                                paragraph.addComponent(this.newSizedContainer()
-                                                                                           .withFullWidth()
-                                                                                           .withHeightInViewPortRatio(0.8)
-                                                                                           .withContent(this.newRatioContainer()
-                                                                                                            .withRatio(EnumUtils.toEnumValue(ratio, Ratio.class)
-                                                                                                                                .orElse(Ratio._16x9))
-                                                                                                            .withContent(this.newIFrame()
-                                                                                                                             .withSourceLink(link.getLink())
-                                                                                                                             .withTitle(title)
-                                                                                                                             .allowFullScreen())));
-                                                            }
-                                                            else if (iframeMatch.isPresent())
-                                                            {
-                                                                String title = iframeMatch.get()
-                                                                                          .getSubGroup(1)
-                                                                                          .orElse("");
-                                                                paragraph.addComponent(this.newIFrame()
-                                                                                           .withTitle(title)
-                                                                                           .withSourceLink(link.getLink()));
-                                                            }
-                                                            else if (referenceLinkMatch.isPresent())
-                                                            {
-                                                                paragraph.addLink(anker -> anker.withText("[" + referenceLinkCounter.getAndIncrement() + "]")
-                                                                                                .withLink(link.getLink()));
-                                                            }
-                                                            else
-                                                            {
-                                                                paragraph.addLink(anker -> anker.withText(link.getLabel())
-                                                                                                .withLink(link.getLink()));
-                                                            }
-                                                        });
-                                             });
-                            return paragraph;
-                        };
-                    }
-
-                    @Override
-                    public LineBreak newLineBreak()
-                    {
-                        return new LineBreakImpl(this.context);
-                    }
-
-                    @Override
-                    public Toaster newToaster()
-                    {
-                        return new ToasterImpl(this.context);
-                    }
-
-                    @Override
-                    public Icon newIcon()
-                    {
-                        return new IconImpl(this.context);
-                    }
-
-                    @Override
-                    public PaddingContainer newPaddingContainer()
-                    {
-                        return new PaddingContainerImpl(this.context);
-                    }
-
-                    @Override
-                    public TextAlignmentContainer newTextAlignmentContainer()
-                    {
-                        return new TextAlignmentContainerImpl(this.context);
-                    }
-
-                    @Override
-                    public RerenderingContainer newRerenderingContainer()
-                    {
-                        return new RerenderingContainerImpl(this.context);
-                    }
-
-                    @Override
-                    public IntervalRerenderingContainer newIntervalRerenderingContainer()
-                    {
-                        return new IntervalRerenderingContainerImpl(this.context);
-                    }
-
-                    @Override
-                    public ProgressBar newProgressBar()
-                    {
-                        return new ProgressBarImpl(this.context);
-                    }
-
-                    @Override
-                    public IFrame newIFrame()
-                    {
-                        return new IFrameImpl(this.context);
-                    }
-
-                    @Override
-                    public RatioContainer newRatioContainer()
-                    {
-                        return new RatioContainerImpl(this.context);
-                    }
-
-                    @Override
-                    public SizedContainer newSizedContainer()
-                    {
-                        return new SizedContainerImpl(this.context);
-                    }
-
-                };
+                return ReactUIServiceImpl.this.uiComponentFactoryService.newInstanceFor(this.defaultLocale);
             }
 
             @Override
@@ -1046,23 +354,46 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
         return this;
     }
 
-    protected abstract class AbstractMarkdownComponentFactory<U> implements MarkdownComponentFactory<U>
+    private static class EventHandlerRegistrationSupportImpl implements EventHandlerRegistrationSupport
     {
-        private ContentService contentService;
+        private final EventHandlerRegistry            eventHandlerRegistry;
+        private final RerenderingNodeProviderRegistry rerenderingNodeProviderRegistry;
+        private final Location                        location;
+        private final Target                          target;
+        private final RenderingProcessor              renderingProcessor;
+        private final RenderableUIComponent<?>        component;
 
-        public AbstractMarkdownComponentFactory(ContentService contentService)
+        private EventHandlerRegistrationSupportImpl(EventHandlerRegistry eventHandlerRegistry, RerenderingNodeProviderRegistry rerenderingNodeProviderRegistry,
+                                                    Location location, Target target, RenderingProcessor renderingProcessor, RenderableUIComponent<?> component)
         {
-            super();
-            this.contentService = contentService;
+            this.eventHandlerRegistry = eventHandlerRegistry;
+            this.rerenderingNodeProviderRegistry = rerenderingNodeProviderRegistry;
+            this.location = location;
+            this.target = target;
+            this.renderingProcessor = renderingProcessor;
+            this.component = component;
         }
 
         @Override
-        public U fromContentFile(String identifier)
+        public EventHandlerRegistrationSupport registerAsRerenderingNode()
         {
-            return this.from(ReactUIServiceImpl.this.contentService.findContentMarkdownFile(identifier)
-                                                                   .map(ContentFile::asString)
-                                                                   .orElse(""));
+            RerenderedNodeProvider rerenderedNodeProvider = data -> this.renderingProcessor.process(this.component, this.location.getParent(), data);
+            this.rerenderingNodeProviderRegistry.register(this.target, rerenderedNodeProvider);
+            return this;
         }
 
+        @Override
+        public EventHandlerRegistrationSupport register(DataEventHandler eventHandler)
+        {
+            this.eventHandlerRegistry.registerDataEventHandler(this.target, eventHandler);
+            return this;
+        }
+
+        @Override
+        public EventHandlerRegistrationSupport register(EventHandler eventHandler)
+        {
+            this.eventHandlerRegistry.registerEventHandler(this.target, eventHandler);
+            return this;
+        }
     }
 }
