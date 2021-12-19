@@ -1,14 +1,18 @@
 package org.omnaest.react4j.service.internal.service.internal;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.omnaest.react4j.domain.Button.Style;
+import org.omnaest.react4j.domain.Card;
 import org.omnaest.react4j.domain.Icon.StandardIcon;
 import org.omnaest.react4j.domain.Paragraph;
 import org.omnaest.react4j.domain.RatioContainer.Ratio;
@@ -17,25 +21,154 @@ import org.omnaest.react4j.domain.Text;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.UnsortedList;
+import org.omnaest.react4j.service.internal.service.ContentService;
+import org.omnaest.react4j.service.internal.service.ContentService.ContentImage;
 import org.omnaest.react4j.service.internal.service.MarkdownService;
 import org.omnaest.utils.EnumUtils;
+import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.MatcherUtils;
 import org.omnaest.utils.MatcherUtils.Match;
 import org.omnaest.utils.PredicateUtils;
 import org.omnaest.utils.StreamUtils;
+import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.markdown.MarkdownUtils;
 import org.omnaest.utils.markdown.MarkdownUtils.Element;
+import org.omnaest.utils.markdown.MarkdownUtils.Image;
+import org.omnaest.utils.markdown.MarkdownUtils.Link;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MarkdownServiceImpl implements MarkdownService
 {
+    @Autowired
+    private ContentService contentService;
+
     @Override
     public FactoryLoadedMarkdownInterpreter interpreterWith(UIComponentFactory uiComponentFactory)
     {
+        ContentService contentService = this.contentService;
+
         return new FactoryLoadedMarkdownInterpreter()
         {
+            @Override
+            public List<Card> newMarkdownCards(String markdown)
+            {
+                return StreamUtils.aggregateByStart(MarkdownUtils.parse(markdown, options -> options.enableWrapIntoParagraphs())
+                                                                 .get(),
+                                                    element -> element.asHeading()
+                                                                      .map(heading -> heading.getStrength() <= 1)
+                                                                      .orElse(false),
+                                                    group ->
+                                                    {
+                                                        //
+                                                        Card card = uiComponentFactory.newCard();
+
+                                                        //
+                                                        BiElement<Optional<Element>, Stream<Element>> titleAndText = StreamUtils.splitOne(group);
+                                                        Optional<String> title = titleAndText.getFirst()
+                                                                                             .map(Element::asHeading)
+                                                                                             .filter(Optional::isPresent)
+                                                                                             .map(Optional::get)
+                                                                                             .map(MarkdownUtils.Heading::getText)
+                                                                                             .filter(StringUtils::isNotBlank);
+
+                                                        Predicate<String> imageNameOrLinkFilter = link -> StringUtils.endsWithAny(link, ".png", ".jpg", ".jpeg",
+                                                                                                                                  ".svg", ".bmp");
+                                                        List<String> imageNamesAndLinks = titleAndText.getFirst()
+                                                                                                      .map(Element::asHeading)
+                                                                                                      .filter(Optional::isPresent)
+                                                                                                      .map(Optional::get)
+                                                                                                      .map(MarkdownUtils.Heading::getImages)
+                                                                                                      .orElse(Collections.emptyList())
+                                                                                                      .stream()
+                                                                                                      .map(Image::getLink)
+                                                                                                      .filter(imageNameOrLinkFilter)
+                                                                                                      .distinct()
+                                                                                                      .collect(Collectors.toList());
+                                                        Predicate<String> imageLinkFilter = imageLink -> !contentService.findImage(imageLink)
+                                                                                                                        .isPresent();
+                                                        List<String> imageLinks = imageNamesAndLinks.stream()
+                                                                                                    .filter(imageLinkFilter)
+                                                                                                    .collect(Collectors.toList());
+                                                        List<String> imageNames = imageNamesAndLinks.stream()
+                                                                                                    .filter(imageLinkFilter.negate())
+                                                                                                    .collect(Collectors.toList());
+                                                        List<String> links = titleAndText.getFirst()
+                                                                                         .map(Element::asHeading)
+                                                                                         .filter(Optional::isPresent)
+                                                                                         .map(Optional::get)
+                                                                                         .map(MarkdownUtils.Heading::getLinks)
+                                                                                         .orElse(Collections.emptyList())
+                                                                                         .stream()
+                                                                                         .map(Link::getLink)
+                                                                                         .filter(imageNameOrLinkFilter.negate())
+                                                                                         .distinct()
+                                                                                         .collect(Collectors.toList());
+                                                        String locator = links.stream()
+                                                                              .findFirst()
+                                                                              .orElse(RegExUtils.replaceAll(StringUtils.lowerCase(title.orElse(null)),
+                                                                                                            "[^a-zA-Z]+", "_"));
+
+                                                        //
+                                                        if (imageLinks.stream()
+                                                                      .findFirst()
+                                                                      .isPresent())
+                                                        {
+                                                            String externalImageLink = imageLinks.stream()
+                                                                                                 .findFirst()
+                                                                                                 .get();
+                                                            card.withImage(image -> image.withImage(externalImageLink)
+                                                                                         .withName(title.orElse(null)));
+                                                        }
+                                                        else
+                                                        {
+                                                            String imageName = imageNames.stream()
+                                                                                         .findFirst()
+                                                                                         .orElse(locator);
+                                                            Optional<ContentImage> firstImageNameMatch = Optional.ofNullable(imageName)
+                                                                                                                 .flatMap(name -> contentService.findImages(name
+                                                                                                                         + "\\.(jpg)|(png)|(svg)")
+                                                                                                                                                .findFirst());
+                                                            if (firstImageNameMatch.isPresent())
+                                                            {
+                                                                card.withImage(image -> image.withImage(firstImageNameMatch.get()
+                                                                                                                           .getImagePath())
+                                                                                             .withName(title.orElse(null)));
+                                                            }
+                                                        }
+
+                                                        //
+                                                        Predicate<Element> firstImageFilter = this.createFirstImageAsCardImageFilter(card);
+
+                                                        return Stream.of(card.withTitle(title.orElse(null))
+                                                                             .withLinkLocator(locator)
+                                                                             .withContent(uiComponentFactory.newComposite()
+                                                                                                            .addComponents(this.parseMarkdownElements(titleAndText.getSecond()
+                                                                                                                                                                  .filter(firstImageFilter)))));
+                                                    })
+                                  .collect(Collectors.toList());
+            }
+
+            private Predicate<Element> createFirstImageAsCardImageFilter(Card card)
+            {
+                return StreamUtils.filterConsumer(PredicateUtils.<Element>firstElement()
+                                                                .and(element -> element.asParagraph()
+                                                                                       .map(org.omnaest.utils.markdown.MarkdownUtils.Paragraph::getElements)
+                                                                                       .filter(PredicateUtils.listNotEmpty())
+                                                                                       .map(ListUtils::first)
+                                                                                       .flatMap(Element::asImage)
+                                                                                       .isPresent()),
+                                                  element -> Optional.ofNullable(element)
+                                                                     .flatMap(Element::asParagraph)
+                                                                     .map(org.omnaest.utils.markdown.MarkdownUtils.Paragraph::getElements)
+                                                                     .map(ListUtils::first)
+                                                                     .flatMap(Element::asImage)
+                                                                     .ifPresent(imageElement -> card.withImage(image -> image.withName(imageElement.getLabel())
+                                                                                                                             .withImage(imageElement.getLink()))));
+            }
+
             @Override
             public List<UIComponent<?>> parseMarkdownElements(Stream<Element> elements)
             {
@@ -158,7 +291,21 @@ public class MarkdownServiceImpl implements MarkdownService
                                                 .filter(heading -> StringUtils.isNotBlank(heading.getText()))
                                                 .ifPresent(heading -> paragraph.addHeading(heading.getText(), heading.getStrength()));
                                          element.asImage()
-                                                .ifPresent(image -> paragraph.addImage(image.getLabel(), image.getLink()));
+                                                .ifPresent(image ->
+                                                {
+                                                    Optional<ContentImage> contentImage = contentService.findImage(image.getLink());
+                                                    if (contentImage.isPresent())
+                                                    {
+                                                        paragraph.addImage(contentImage.get()
+                                                                                       .getImageName(),
+                                                                           contentImage.get()
+                                                                                       .getImagePath());
+                                                    }
+                                                    else
+                                                    {
+                                                        paragraph.addImage(image.getLabel(), image.getLink());
+                                                    }
+                                                });
                                          element.asLineBreak()
                                                 .ifPresent(lineBreak -> paragraph.addLineBreak());
                                          element.asLink()

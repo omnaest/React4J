@@ -1,13 +1,7 @@
 package org.omnaest.react4j.service.internal.service.internal;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.apache.commons.lang3.RegExUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.omnaest.react4j.domain.Anker;
 import org.omnaest.react4j.domain.AnkerButton;
 import org.omnaest.react4j.domain.BlockQuote;
@@ -76,18 +70,13 @@ import org.omnaest.react4j.service.internal.component.VerticalContentSwitcherImp
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.service.ContentService;
 import org.omnaest.react4j.service.internal.service.ContentService.ContentFile;
-import org.omnaest.react4j.service.internal.service.ContentService.ContentImage;
 import org.omnaest.react4j.service.internal.service.ContextFactory;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 import org.omnaest.react4j.service.internal.service.MarkdownService;
 import org.omnaest.react4j.service.internal.service.UIComponentFactoryService;
 import org.omnaest.utils.ListUtils;
-import org.omnaest.utils.PredicateUtils;
-import org.omnaest.utils.StreamUtils;
-import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.cached.CachedElement;
 import org.omnaest.utils.markdown.MarkdownUtils;
-import org.omnaest.utils.markdown.MarkdownUtils.Element;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -274,67 +263,8 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         @Override
         public List<Card> newMarkdownCards(String markdown)
         {
-            return StreamUtils.aggregateByStart(MarkdownUtils.parse(markdown, options -> options.enableWrapIntoParagraphs())
-                                                             .get(),
-                                                element -> element.asHeading()
-                                                                  .map(heading -> heading.getStrength() <= 1)
-                                                                  .orElse(false),
-                                                group ->
-                                                {
-                                                    //
-                                                    Card card = this.newCard();
-
-                                                    //
-                                                    BiElement<Optional<Element>, Stream<Element>> titleAndText = StreamUtils.splitOne(group);
-                                                    Optional<String> title = titleAndText.getFirst()
-                                                                                         .map(Element::asHeading)
-                                                                                         .filter(Optional::isPresent)
-                                                                                         .map(Optional::get)
-                                                                                         .map(MarkdownUtils.Heading::getText)
-                                                                                         .filter(StringUtils::isNotBlank);
-
-                                                    //
-                                                    Optional<String> imageName = title.map(iTitle -> iTitle.replaceAll("[^a-zA-Z0-9]+", "_"))
-                                                                                      .map(String::toLowerCase);
-                                                    Optional<ContentImage> firstImageNameMatch = imageName.flatMap(name -> this.contentService.findImages(name
-                                                            + "\\.(jpg)|(png)|(svg)")
-                                                                                                                                              .findFirst());
-                                                    if (firstImageNameMatch.isPresent())
-                                                    {
-                                                        card.withImage(image -> image.withImage(firstImageNameMatch.get()
-                                                                                                                   .getImagePath())
-                                                                                     .withName(title.orElse(null)));
-                                                    }
-
-                                                    //
-                                                    Predicate<Element> firstImageFilter = this.createFirstImageAsCardImageFilter(card);
-                                                    return Stream.of(card.withTitle(title.orElse(null))
-                                                                         .withLinkLocator(RegExUtils.replaceAll(StringUtils.lowerCase(title.orElse(null)),
-                                                                                                                "[^a-zA-Z]+", "_"))
-                                                                         .withContent(this.newComposite()
-                                                                                          .addComponents(this.markdownService.interpreterWith(this)
-                                                                                                                             .parseMarkdownElements(titleAndText.getSecond()
-                                                                                                                                                                .filter(firstImageFilter)))));
-                                                })
-                              .collect(Collectors.toList());
-        }
-
-        private Predicate<Element> createFirstImageAsCardImageFilter(Card card)
-        {
-            return StreamUtils.filterConsumer(PredicateUtils.<Element>firstElement()
-                                                            .and(element -> element.asParagraph()
-                                                                                   .map(org.omnaest.utils.markdown.MarkdownUtils.Paragraph::getElements)
-                                                                                   .filter(PredicateUtils.listNotEmpty())
-                                                                                   .map(ListUtils::first)
-                                                                                   .flatMap(Element::asImage)
-                                                                                   .isPresent()),
-                                              element -> Optional.ofNullable(element)
-                                                                 .flatMap(Element::asParagraph)
-                                                                 .map(org.omnaest.utils.markdown.MarkdownUtils.Paragraph::getElements)
-                                                                 .map(ListUtils::first)
-                                                                 .flatMap(Element::asImage)
-                                                                 .ifPresent(imageElement -> card.withImage(image -> image.withName(imageElement.getLabel())
-                                                                                                                         .withImage(imageElement.getLink()))));
+            return this.markdownService.interpreterWith(this)
+                                       .newMarkdownCards(markdown);
         }
 
         @Override
