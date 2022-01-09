@@ -76,7 +76,6 @@ import org.omnaest.react4j.service.internal.service.MarkdownService;
 import org.omnaest.react4j.service.internal.service.UIComponentFactoryService;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.element.cached.CachedElement;
-import org.omnaest.utils.markdown.MarkdownUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -240,8 +239,7 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         public List<UIComponent<?>> newMarkdownText(String markdown)
         {
             return this.markdownService.interpreterWith(this)
-                                       .parseMarkdownElements(MarkdownUtils.parse(markdown, options -> options.enableWrapIntoParagraphs())
-                                                                           .get());
+                                       .parseMarkdownElements(markdown);
         }
 
         @Override

@@ -22,6 +22,24 @@ public interface ContentService
 
     public Stream<ContentImage> findImages(String imageNameRegEx);
 
+    /**
+     * Finds the image by name also if it is available with one of the given suffixes. Please provide the suffixes without the dot character like e.g. "png".
+     * 
+     * @param imageName
+     * @param suffixes
+     *            e.g. "png", "jpg", ...
+     * @return
+     */
+    public Optional<ContentImage> findImageWithSuffixes(String imageName, String... suffixes);
+
+    /**
+     * Finds the image by name also with standard suffixes like '.png', '.jpg', ...
+     * 
+     * @param imageName
+     * @return
+     */
+    public Optional<ContentImage> findImageWithStandardSuffixes(String imageName);
+
     public static interface ContentImage extends Supplier<byte[]>
     {
 

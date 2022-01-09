@@ -77,6 +77,23 @@ public class ContentServiceImpl implements ContentService, ContentUploadService
     }
 
     @Override
+    public Optional<ContentImage> findImageWithStandardSuffixes(String imageName)
+    {
+        return this.findImageWithSuffixes(imageName, "png", "jpg", "svg", "jpeg", "bmp");
+    }
+
+    @Override
+    public Optional<ContentImage> findImageWithSuffixes(String imageName, String... suffixes)
+    {
+        return Stream.concat(Stream.of(""), Stream.of(suffixes))
+                     .map(suffix -> imageName + "." + suffix)
+                     .map(this::findImage)
+                     .filter(Optional::isPresent)
+                     .map(Optional::get)
+                     .findFirst();
+    }
+
+    @Override
     public Optional<ContentImage> findImage(String imageName)
     {
         return Optional.ofNullable(this.imageNameToFile.get(imageName))
