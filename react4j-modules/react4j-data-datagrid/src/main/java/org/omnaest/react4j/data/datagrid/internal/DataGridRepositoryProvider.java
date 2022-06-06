@@ -19,9 +19,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
 import org.apache.commons.lang3.math.NumberUtils;
 import org.omnaest.datagrid.DataGridUtils;
 import org.omnaest.datagrid.DataGridUtils.DataGrid;
@@ -31,6 +28,9 @@ import org.omnaest.utils.repository.IndexElementRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 
 @Service
 public class DataGridRepositoryProvider implements RepositoryProvider
