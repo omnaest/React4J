@@ -8,6 +8,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.BiFunction;
 
+import javax.annotation.PreDestroy;
+
 import org.apache.commons.lang3.StringUtils;
 import org.omnaest.react4j.service.i18n.TranslationProvider;
 import org.omnaest.utils.MapperUtils;
@@ -16,8 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import jakarta.annotation.PreDestroy;
 
 @Component
 public class TranslationService

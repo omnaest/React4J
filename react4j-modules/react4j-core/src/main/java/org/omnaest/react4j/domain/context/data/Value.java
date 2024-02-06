@@ -7,4 +7,6 @@ public interface Value
     public boolean asBoolean();
 
     public int asInteger();
+
+    public double asDouble();
 }

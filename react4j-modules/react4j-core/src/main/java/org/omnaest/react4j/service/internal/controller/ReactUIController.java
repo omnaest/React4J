@@ -17,6 +17,8 @@ package org.omnaest.react4j.service.internal.controller;
 
 import java.util.Optional;
 
+import javax.annotation.PostConstruct;
+
 import org.omnaest.react4j.service.internal.handler.EventHandlerService;
 import org.omnaest.react4j.service.internal.handler.domain.EventBody;
 import org.omnaest.react4j.service.internal.handler.domain.ResponseBody;
@@ -37,8 +39,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import jakarta.annotation.PostConstruct;
 
 @RestController
 public class ReactUIController

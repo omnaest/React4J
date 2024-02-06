@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.controller.content;
 
+import javax.annotation.PostConstruct;
+
 import org.omnaest.react4j.service.internal.service.ContentService;
 import org.omnaest.react4j.service.internal.service.ContentService.ContentImage;
 import org.omnaest.react4j.service.internal.service.ContentUploadService;
@@ -33,8 +35,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import jakarta.annotation.PostConstruct;
 
 @RestController
 @ContentControllerBean

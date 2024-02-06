@@ -15,11 +15,11 @@
  ******************************************************************************/
 package org.omnaest.react4j;
 
+import javax.annotation.PostConstruct;
+
 import org.omnaest.react4j.service.ReactUIService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
-
-import jakarta.annotation.PostConstruct;
 
 //@Service
 @Profile("mock")

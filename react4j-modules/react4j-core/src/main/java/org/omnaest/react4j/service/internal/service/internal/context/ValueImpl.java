@@ -24,6 +24,12 @@ public class ValueImpl implements Value
     }
 
     @Override
+    public double asDouble()
+    {
+        return Double.valueOf(this.value);
+    }
+
+    @Override
     public boolean asBoolean()
     {
         return Boolean.valueOf(this.value);
