@@ -22,12 +22,16 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.omnaest.react4j.data.Repository;
 import org.omnaest.react4j.data.provider.RepositoryProvider;
+import org.omnaest.react4j.data.provider.memory.config.InMemoryRepositoryProviderConfiguration;
 import org.omnaest.utils.functional.Provider;
 import org.omnaest.utils.repository.ElementRepositoryUtils;
 import org.omnaest.utils.repository.IndexElementRepository;
-import org.springframework.stereotype.Service;
 
-@Service
+/**
+ * @see RepositoryProvider
+ * @see InMemoryRepositoryProviderConfiguration
+ * @author omnaest
+ */
 public class InMemoryRepositoryProvider implements RepositoryProvider
 {
     private Provider<IndexElementRepository<Map<String, Object>>> provider = () -> ElementRepositoryUtils.newConcurrentHashMapIndexElementRepository();

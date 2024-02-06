@@ -23,16 +23,20 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.omnaest.datagrid.DataGridUtils;
 import org.omnaest.datagrid.DataGridUtils.DataGrid;
 import org.omnaest.react4j.data.Repository;
+import org.omnaest.react4j.data.datagrid.internal.config.DataGridRepositoryProviderConfiguration;
 import org.omnaest.react4j.data.provider.RepositoryProvider;
 import org.omnaest.utils.repository.IndexElementRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
-@Service
+/**
+ * @see RepositoryProvider
+ * @see DataGridRepositoryProviderConfiguration
+ * @author omnaest
+ */
 public class DataGridRepositoryProvider implements RepositoryProvider
 {
     private static Logger LOG = LoggerFactory.getLogger(DataGridRepositoryProvider.class);
