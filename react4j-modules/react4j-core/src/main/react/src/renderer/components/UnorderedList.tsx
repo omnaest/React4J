@@ -1,6 +1,5 @@
 import React from "react";
 import { Node, Renderer } from "../Renderer";
-import { I18nTextValue, I18nRenderer } from "./I18nText";
 
 export interface UnorderedListNode extends Node
 {

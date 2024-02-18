@@ -59,9 +59,26 @@ public class FormNode extends AbstractNode implements Node
         @JsonProperty
         private Handler onClick;
 
+        @JsonProperty
+        private boolean disabled;
+
+        @JsonProperty
+        private FormRangeNode range;
+
         public String getType()
         {
             return this.type;
+        }
+
+        public FormRangeNode getRange()
+        {
+            return this.range;
+        }
+
+        public FormElementNodeImpl setRange(FormRangeNode range)
+        {
+            this.range = range;
+            return this;
         }
 
         public FormElementNodeImpl setType(String type)
@@ -147,6 +164,17 @@ public class FormNode extends AbstractNode implements Node
             return this;
         }
 
+        public boolean isDisabled()
+        {
+            return this.disabled;
+        }
+
+        public FormElementNodeImpl setDisabled(boolean disabled)
+        {
+            this.disabled = disabled;
+            return this;
+        }
+
     }
 
     @Override
@@ -166,4 +194,63 @@ public class FormNode extends AbstractNode implements Node
         return this;
     }
 
+    public static class FormRangeNode
+    {
+        @JsonProperty
+        private String min;
+
+        @JsonProperty
+        private String max;
+
+        @JsonProperty
+        private String step;
+
+        public String getMin()
+        {
+            return this.min;
+        }
+
+        public FormRangeNode setMin(String min)
+        {
+            this.min = min;
+            return this;
+        }
+
+        public String getMax()
+        {
+            return this.max;
+        }
+
+        public FormRangeNode setMax(String max)
+        {
+            this.max = max;
+            return this;
+        }
+
+        public String getStep()
+        {
+            return this.step;
+        }
+
+        public FormRangeNode setStep(String step)
+        {
+            this.step = step;
+            return this;
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.append("FormRangeNode [min=")
+                   .append(this.min)
+                   .append(", max=")
+                   .append(this.max)
+                   .append(", step=")
+                   .append(this.step)
+                   .append("]");
+            return builder.toString();
+        }
+
+    }
 }

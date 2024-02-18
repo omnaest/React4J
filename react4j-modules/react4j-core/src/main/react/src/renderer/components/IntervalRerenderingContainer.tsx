@@ -1,6 +1,6 @@
-import React, { Dispatch } from "react";
-import { Node, Renderer, Target } from "../Renderer";
+import React from "react";
 import { Backend } from "../../backend/Backend";
+import { Node, Renderer, Target } from "../Renderer";
 
 export interface IntervalRerenderingContainerNode extends Node
 {

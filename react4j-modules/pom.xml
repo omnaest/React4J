@@ -18,6 +18,7 @@
 		<module>react4j-data-inmemory</module>
 		<module>react4j-i18n</module>
 		<module>react4j-i18n-deepl</module>
+		<module>react4j-ui-test</module>
 	</modules>
 
 	<parent>

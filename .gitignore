@@ -45,3 +45,8 @@
 /react4j-modules/react4j-i18n-deepl/.settings
 /react4j-modules/react4j-i18n-deepl/target
 /react4j-modules/react4j-i18n-deepl/.classpath
+*.springBeans
+*.classpath
+*.project
+react4j-modules/react4j-ui-test/.settings/
+react4j-modules/react4j-ui-test/target/

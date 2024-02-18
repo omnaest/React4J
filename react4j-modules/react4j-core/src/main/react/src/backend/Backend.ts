@@ -5,8 +5,8 @@ import { ElementMap } from "../utils/Utils";
 
 export class BackendUri
 {
-    public static LOCALE_CONTEXT: string = document.documentElement.lang;
-    public static URI_UI = (BackendUri.LOCALE_CONTEXT ? BackendUri.LOCALE_CONTEXT + "/" : "") + "ui";
+    public static LOCALE_CONTEXT: string = document.documentElement.lang && document.documentElement.lang !== "%LOCALE%" ? document.documentElement.lang : null;
+    public static URI_UI = (process.env.REACT_APP_BASEURL || "") + (BackendUri.LOCALE_CONTEXT ? BackendUri.LOCALE_CONTEXT + "/" : "") + "ui";
     public static URI_UI_HANDLER = BackendUri.URI_UI + "/event";
 }
 

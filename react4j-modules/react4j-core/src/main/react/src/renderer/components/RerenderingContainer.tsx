@@ -1,10 +1,10 @@
 import React, { Dispatch } from "react";
-import { Actions } from "../../reducer/Actions";
-import { Node, Renderer, Target } from "../Renderer";
-import * as actions from '../../reducer/Action';
 import { connect } from "react-redux";
-import { UIContext } from "../data/DataContextManager";
+import * as actions from '../../reducer/Action';
+import { Actions } from "../../reducer/Actions";
 import { RootReducerState } from "../../reducer/StoreStates";
+import { Node, Renderer } from "../Renderer";
+import { UIContext } from "../data/DataContextManager";
 
 export interface RerenderingContainerNode extends Node
 {

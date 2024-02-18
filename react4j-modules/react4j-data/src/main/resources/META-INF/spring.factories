@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.omnaest.react4j.data.internal.configuration.ReactUIDataAutoConfiguration

@@ -1,7 +1,7 @@
 import React from "react";
 import { Node, Renderer } from "../Renderer";
-import { RowNode } from "./Row";
 import { Locatable } from "./Locatable";
+import { RowNode } from "./Row";
 
 export interface ContainerNode extends Node, Locatable
 {

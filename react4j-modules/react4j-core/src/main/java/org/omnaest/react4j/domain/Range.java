@@ -13,16 +13,10 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.react4j.service.internal.configuration;
+package org.omnaest.react4j.domain;
 
-import org.omnaest.react4j.service.internal.controller.content.ContentControllerBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableScheduling;
-
-@Configuration
-@ComponentScan(basePackageClasses = ContentControllerBean.class)
-@EnableScheduling
-public class ContentProviderAutoConfiguration
+public interface Range extends UIComponent<Range>
 {
+    public Range withLabel(String label);
+
 }

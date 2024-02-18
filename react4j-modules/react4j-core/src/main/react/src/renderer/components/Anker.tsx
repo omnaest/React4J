@@ -1,6 +1,6 @@
 import React from "react";
-import { Node, Renderer } from "../Renderer";
-import { I18nTextValue, I18nRenderer } from "./I18nText";
+import { Node } from "../Renderer";
+import { I18nRenderer, I18nTextValue } from "./I18nText";
 
 export interface AnkerNode extends Node
 {
@@ -21,10 +21,11 @@ export class Anker extends React.Component<Props, {}>
 
     public render(): JSX.Element
     {
+        const isSelfPage = this.props.node.page === "SELF";
         return (
             <a
                 href={this.props.node.link}
-                target={this.props.node.page === "SELF" ? "_self" : "_blank"}
+                target={isSelfPage ? "_self" : "_blank"}
                 title={I18nRenderer.render(this.props.node.title)}
             >{I18nRenderer.render(this.props.node.text)}</a>
         );

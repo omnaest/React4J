@@ -1,6 +1,6 @@
 import React from "react";
 import { Node, Renderer } from "../Renderer";
-import { I18nTextValue, I18nRenderer } from "./I18nText";
+import { I18nRenderer, I18nTextValue } from "./I18nText";
 import { Image, ImageNode } from "./Image";
 
 export interface CardNode extends Node

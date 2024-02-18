@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Node, Renderer } from "../Renderer";
-import { I18nTextValue, I18nRenderer } from "./I18nText";
+import { I18nRenderer, I18nTextValue } from "./I18nText";
 
 export interface JumbotronNode extends Node
 {
@@ -27,9 +27,9 @@ export class JumboTron extends React.Component<Props, {}>
         const hasSubTitle = subTitle && subTitle.length > 0;
         return (
             <div className={"jumbotron" + (this.props.node.fullWidth ? " jumbotron-fluid" : "")}>
-                { hasTitle && (<h2 className="display-4">{title}</h2>)}
-                { hasSubTitle && (<p className="lead">{subTitle}</p>)}
-                { (hasTitle || hasSubTitle) && (<br></br>)}
+                {hasTitle && (<h2 className="display-4">{title}</h2>)}
+                {hasSubTitle && (<p className="lead">{subTitle}</p>)}
+                {(hasTitle || hasSubTitle) && (<br></br>)}
                 {Renderer.render(this.props.node.content)}
             </div>
         );

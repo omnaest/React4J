@@ -7,6 +7,7 @@
 		<version>0.0.1-SNAPSHOT</version>
 		<groupId>org.omnaest.utils</groupId>
 	</parent>
+	<groupId>org.omnaest.react</groupId>
 	<artifactId>react4j-app-starter-parent</artifactId>
 	<packaging>pom</packaging>
 	<dependencies>
@@ -26,5 +27,4 @@
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
-	<groupId>org.omnaest.react</groupId>
 </project>

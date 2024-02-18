@@ -1,8 +1,6 @@
 
 import React from "react";
-import { Node } from "../Renderer";
-import { I18nTextValue, I18nRenderer } from "./I18nText";
-import { once, fromEvent } from "baconjs"
+import { fromEvent } from "baconjs"
 import ReactDOM from "react-dom";
 
 export interface Props

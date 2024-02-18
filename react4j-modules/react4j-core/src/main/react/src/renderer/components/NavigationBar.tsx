@@ -1,9 +1,6 @@
-
 import React from "react";
 import { Node } from "../Renderer";
-import { ImageNode, Image } from "./Image";
-import { I18nTextValue, I18nRenderer } from "./I18nText";
-import { Icon } from "./Icon";
+import { I18nRenderer, I18nTextValue } from "./I18nText";
 
 export interface NavigationBarNode extends Node
 {
@@ -35,15 +32,15 @@ export class NavigationBar extends React.Component<Props, {}>
                 <ul className="nav nav-pills page-navigation flex-nowrap flex-row">
                     {
                         this.props.node.entries.map(entry =>
-                            (
-                                <li className="nav-item">
-                                    <a
-                                        className={"nav-link" + (entry.active ? " active" : "") + (entry.disabled ? " disabled" : "")}
-                                        href={entry.linkedId ? "#" + entry.linkedId : entry.link}
-                                        target={entry.link ? "_blank" : "_self"}
-                                    >{I18nRenderer.render(entry.text)}</a>
-                                </li>
-                            )
+                        (
+                            <li className="nav-item">
+                                <a
+                                    className={"nav-link" + (entry.active ? " active" : "") + (entry.disabled ? " disabled" : "")}
+                                    href={entry.linkedId ? "#" + entry.linkedId : entry.link}
+                                    target={entry.link ? "_blank" : "_self"}
+                                >{I18nRenderer.render(entry.text)}</a>
+                            </li>
+                        )
                         )
                     }
                 </ul>

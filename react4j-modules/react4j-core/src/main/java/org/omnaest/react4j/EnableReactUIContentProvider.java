@@ -23,6 +23,8 @@ import java.lang.annotation.Target;
 
 import org.omnaest.react4j.domain.ReactUI;
 import org.omnaest.react4j.service.ReactUIService;
+import org.omnaest.react4j.service.internal.configuration.ContentProviderAutoConfiguration;
+import org.springframework.context.annotation.Import;
 
 /**
  * This enables the content provider support in Spring for the {@link ReactUI}.<br>
@@ -41,6 +43,7 @@ import org.omnaest.react4j.service.ReactUIService;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Inherited
+@Import(ContentProviderAutoConfiguration.class)
 public @interface EnableReactUIContentProvider
 {
 

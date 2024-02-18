@@ -1,8 +1,8 @@
 import React from "react";
-import { Node, Renderer, RenderingSupport } from "../Renderer";
-import { I18nTextValue, I18nRenderer } from "./I18nText";
-import { HandlerFactory, Handler } from "../handler/Handler";
+import { Node, RenderingSupport } from "../Renderer";
 import { DataContextManager } from "../data/DataContextManager";
+import { Handler, HandlerFactory } from "../handler/Handler";
+import { I18nRenderer, I18nTextValue } from "./I18nText";
 
 export interface FormNode extends Node
 {
@@ -17,12 +17,21 @@ export interface FormElement
     label: I18nTextValue;
     placeholder: I18nTextValue;
     description: I18nTextValue;
+    disabled: boolean;
+    range?: RangeFormElement;
 }
 
 export interface ButtonFormElement extends FormElement
 {
     text: I18nTextValue;
     onClick?: Handler;
+}
+
+export interface RangeFormElement 
+{
+    min: string;
+    max: string;
+    step: string;
 }
 
 export interface Props
@@ -73,6 +82,22 @@ export class Form extends React.Component<Props, State>
                         aria-describedby={element.field + "_description"}
                         onClick={HandlerFactory.onClick(buttonElement.onClick as Handler, this.props.renderingSupport?.uiContextAccessor, this.props.renderingSupport?.nodeContextAccessor)}
                     >{I18nRenderer.render(buttonElement.text)}</button>
+                );
+            }
+            else if (element.type === "RANGE")
+            {
+                const rangeElement = element.range;
+                return (
+                    <input type="range"
+                        id={element.field}
+                        className="form-control form-range"
+                        value={DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor)}
+                        min={rangeElement?.min || 0}
+                        max={rangeElement?.max || 100}
+                        step={rangeElement?.step || 1}
+                        disabled={element.disabled === true}
+                        onChange={(event) => this.handleInputChange(element, event.target.value)}
+                    />
                 );
             }
         }

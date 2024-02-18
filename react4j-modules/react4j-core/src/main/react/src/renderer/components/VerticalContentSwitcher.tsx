@@ -1,6 +1,6 @@
 import React from "react";
 import { Node, Renderer } from "../Renderer";
-import { I18nTextValue, I18nRenderer } from "./I18nText";
+import { I18nRenderer, I18nTextValue } from "./I18nText";
 
 export interface VerticalContentSwitcherNode extends Node
 {
@@ -62,14 +62,14 @@ export class VerticalContentSwitcher extends React.Component<Props, State>
                         this.props.node.elements.map((element, index) => this.state.index !== index ? (
                             <></>
                         ) : (
-                                <div className="card" key={index}>
-                                    <div className="card-body">
-                                        <div className="card-inner-body">
-                                            {Renderer.render(element.content)}
-                                        </div>
+                            <div className="card" key={index}>
+                                <div className="card-body">
+                                    <div className="card-inner-body">
+                                        {Renderer.render(element.content)}
                                     </div>
                                 </div>
-                            ))
+                            </div>
+                        ))
                     }
                 </div>
             </div>

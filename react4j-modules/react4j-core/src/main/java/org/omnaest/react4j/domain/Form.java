@@ -34,6 +34,8 @@ public interface Form extends UIComponent<Form>
 
     public Form addButton(Consumer<ButtonFormElement> formElementConsumer);
 
+    public Form addRange(Consumer<RangeFormElement> formElementConsumer);
+
     public static interface FormElement<FE extends FormElement<?>>
     {
         public FE withLabel(String label);
@@ -52,6 +54,20 @@ public interface Form extends UIComponent<Form>
     public static interface InputFormElement extends FormFieldElement<InputFormElement>
     {
         public InputFormElement withPlaceholder(String placeholder);
+    }
+
+    public static interface RangeFormElement extends FormFieldElement<RangeFormElement>
+    {
+        @Override
+        public RangeFormElement withLabel(String label);
+
+        public RangeFormElement withMin(int min);
+
+        public RangeFormElement withMax(int max);
+
+        public RangeFormElement withStep(int step);
+
+        public RangeFormElement withDisabled(boolean disabled);
     }
 
     public static interface ButtonFormElement extends FormElement<ButtonFormElement>
@@ -74,5 +90,7 @@ public interface Form extends UIComponent<Form>
         public InputFormElement newInputField();
 
         public ButtonFormElement newButton();
+
+        public RangeFormElement newRange();
     }
 }

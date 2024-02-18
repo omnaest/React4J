@@ -44,6 +44,7 @@ import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.FormNode;
 import org.omnaest.react4j.service.internal.nodes.FormNode.FormElementNodeImpl;
+import org.omnaest.react4j.service.internal.nodes.FormNode.FormRangeNode;
 import org.omnaest.react4j.service.internal.nodes.handler.ServerHandler;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 import org.omnaest.utils.element.cached.CachedElement;
@@ -86,7 +87,6 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
             }
 
             @Override
@@ -123,6 +123,12 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             {
                 return new ButtonFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext);
             }
+
+            @Override
+            public RangeFormElement newRange()
+            {
+                return new RangeFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext);
+            }
         });
         return this.add(formElement);
     }
@@ -153,6 +159,17 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             ButtonFormElement formElement = factory.newButton();
             formElementConsumer.accept(formElement);
             return formElement;
+        });
+    }
+
+    @Override
+    public Form addRange(Consumer<RangeFormElement> formElementConsumer)
+    {
+        return this.add(factory ->
+        {
+            RangeFormElement range = factory.newRange();
+            formElementConsumer.accept(range);
+            return range;
         });
     }
 
@@ -239,6 +256,68 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
 
         @Override
         public InputFormElement attachToField(Document.Field field)
+        {
+            this.field = field;
+            this.document = field.getDocument();
+            return this;
+        }
+    }
+
+    protected static class RangeFormElementImpl extends AbstractFormElementImpl<RangeFormElement> implements RangeFormElement
+    {
+        private int     min      = 0;
+        private int     max      = 100;
+        private int     step     = 1;
+        private boolean disabled = false;
+
+        protected RangeFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver,
+                                       Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry,
+                                       Supplier<? extends DataContext> parentDataContext)
+        {
+            super(identitiyProvider, textResolver, i18nTextMapper, eventHandlerRegistry, parentDataContext);
+        }
+
+        @Override
+        public RangeFormElement withMin(int min)
+        {
+            this.min = min;
+            return this;
+        }
+
+        @Override
+        public RangeFormElement withMax(int max)
+        {
+            this.max = max;
+            return this;
+        }
+
+        @Override
+        public RangeFormElement withStep(int step)
+        {
+            this.step = step;
+            return this;
+        }
+
+        @Override
+        public RangeFormElement withDisabled(boolean disabled)
+        {
+            this.disabled = disabled;
+            return this;
+        }
+
+        @Override
+        protected FormElementNode renderNode(FormElementNodeImpl node, Location location)
+        {
+            node.setType("RANGE")
+                .setRange(new FormRangeNode().setMin(Integer.toString(this.min))
+                                             .setMax(Integer.toString(this.max))
+                                             .setStep(Integer.toString(this.step)))
+                .setDisabled(this.disabled);
+            return node;
+        }
+
+        @Override
+        public RangeFormElement attachToField(Document.Field field)
         {
             this.field = field;
             this.document = field.getDocument();

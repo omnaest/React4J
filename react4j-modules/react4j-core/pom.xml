@@ -113,9 +113,9 @@
 				<groupId>com.github.eirslett</groupId>
 				<artifactId>frontend-maven-plugin</artifactId>
 				<!-- Use the latest released version: https://repo1.maven.org/maven2/com/github/eirslett/frontend-maven-plugin/ -->
-				<version>1.10.0</version>
+				<version>1.15.0</version>
 				<configuration>
-					<nodeVersion>v10.16.0</nodeVersion>
+					<nodeVersion>v21.5.0</nodeVersion>
 					<workingDirectory>src/main/react</workingDirectory>
 					<installDirectory>target</installDirectory>
 				</configuration>
@@ -147,21 +147,23 @@
 							<arguments>run build</arguments>
 						</configuration>
 					</execution>
+					<!-- 
 					<execution>
 						<id>webpack build</id>
 						<goals>
 							<goal>webpack</goal>
 						</goals>
 
-						<!-- optional: the default phase is "generate-resources" -->
+						optional: the default phase is "generate-resources"
 						<phase>generate-resources</phase>
 
 						<configuration>
-							<!-- optional: if not specified, it will run webpack's default build 
-								(and you can remove this whole <configuration> section.) -->
+							optional: if not specified, it will run webpack's default build 
+								(and you can remove this whole <configuration> section.)
 							<arguments>-p</arguments>
 						</configuration>
-					</execution>
+					</execution> -->
+
 				</executions>
 			</plugin>
 			<plugin>

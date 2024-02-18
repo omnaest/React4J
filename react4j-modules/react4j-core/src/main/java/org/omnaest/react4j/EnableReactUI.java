@@ -23,6 +23,8 @@ import java.lang.annotation.Target;
 
 import org.omnaest.react4j.domain.ReactUI;
 import org.omnaest.react4j.service.ReactUIService;
+import org.omnaest.react4j.service.internal.configuration.ReactUIAutoConfiguration;
+import org.springframework.context.annotation.Import;
 
 /**
  * This enables the {@link ReactUI} support in Spring.
@@ -35,6 +37,7 @@ import org.omnaest.react4j.service.ReactUIService;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Inherited
+@Import(ReactUIAutoConfiguration.class)
 public @interface EnableReactUI
 {
 

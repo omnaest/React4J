@@ -1,6 +1,6 @@
 import React from "react";
 import { Node } from "../Renderer";
-import { I18nTextValue, I18nRenderer } from "./I18nText";
+import { I18nRenderer, I18nTextValue } from "./I18nText";
 
 export interface TextNode extends Node
 {

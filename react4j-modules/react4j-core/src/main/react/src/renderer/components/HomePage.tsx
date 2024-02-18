@@ -1,6 +1,5 @@
 import React from "react";
 import { Node, Renderer } from "../Renderer";
-import { Icon } from "./Icon";
 
 export interface HomePageNode extends Node
 {

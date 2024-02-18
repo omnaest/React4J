@@ -1,4 +1,3 @@
-import Axios from "axios";
 import { Backend, Target } from "../../backend/Backend";
 import { UIContextAccessor } from "../data/DataContextManager";
 import { NodeContextAccessor } from "../Renderer";

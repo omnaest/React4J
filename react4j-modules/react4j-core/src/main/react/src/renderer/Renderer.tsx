@@ -33,6 +33,7 @@ import { IntervalRerenderingContainer, IntervalRerenderingContainerNode } from "
 import { RatioContainer, RatioContainerNode } from "./components/RatioContainer";
 import { IFrameContainer, IFrameContainerNode } from "./components/IFrameContainer";
 import { SizedContainer, SizedContainerNode } from "./components/SizedContainer";
+import { Range, RangeNode } from "./components/Range";
 
 export interface Node
 {
@@ -196,6 +197,10 @@ export class Renderer
             else if (node.type === SizedContainer.TYPE)
             {
                 return <SizedContainer node={node as SizedContainerNode} />
+            }
+            else if (node.type === Range.TYPE)
+            {
+                return <Range node={node as RangeNode} />
             }
             else 
             {

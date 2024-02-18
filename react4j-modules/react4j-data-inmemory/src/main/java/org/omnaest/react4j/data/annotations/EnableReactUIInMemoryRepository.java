@@ -22,6 +22,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.omnaest.react4j.data.provider.RepositoryProvider;
+import org.omnaest.react4j.data.provider.memory.config.InMemoryRepositoryProviderConfiguration;
+import org.springframework.context.annotation.Import;
 
 /**
  * This enables the {@link ReactUI} support for a default {@link RepositoryProvider} based on the linked react4j-data-* dependency like e.g.
@@ -33,6 +35,7 @@ import org.omnaest.react4j.data.provider.RepositoryProvider;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Inherited
+@Import(InMemoryRepositoryProviderConfiguration.class)
 public @interface EnableReactUIInMemoryRepository
 {
 }
