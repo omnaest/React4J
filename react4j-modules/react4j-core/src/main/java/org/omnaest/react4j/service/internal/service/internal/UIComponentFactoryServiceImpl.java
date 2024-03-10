@@ -25,6 +25,7 @@ import org.omnaest.react4j.domain.Paragraph;
 import org.omnaest.react4j.domain.ProgressBar;
 import org.omnaest.react4j.domain.RatioContainer;
 import org.omnaest.react4j.domain.RerenderingContainer;
+import org.omnaest.react4j.domain.SVGContainer;
 import org.omnaest.react4j.domain.ScrollbarContainer;
 import org.omnaest.react4j.domain.SizedContainer;
 import org.omnaest.react4j.domain.Table;
@@ -61,6 +62,7 @@ import org.omnaest.react4j.service.internal.component.ParagraphImpl;
 import org.omnaest.react4j.service.internal.component.ProgressBarImpl;
 import org.omnaest.react4j.service.internal.component.RatioContainerImpl;
 import org.omnaest.react4j.service.internal.component.RerenderingContainerImpl;
+import org.omnaest.react4j.service.internal.component.SVGContainerImpl;
 import org.omnaest.react4j.service.internal.component.ScrollbarContainerImpl;
 import org.omnaest.react4j.service.internal.component.SizedContainerImpl;
 import org.omnaest.react4j.service.internal.component.TableImpl;
@@ -387,6 +389,12 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         public NativeHtml newNativeHtml()
         {
             return new NativeHtmlImpl(this.context);
+        }
+
+        @Override
+        public SVGContainer newSVGContainer()
+        {
+            return new SVGContainerImpl(this.context);
         }
 
         @Override

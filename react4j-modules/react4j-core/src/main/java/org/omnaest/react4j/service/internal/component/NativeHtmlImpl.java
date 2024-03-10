@@ -16,6 +16,7 @@
 package org.omnaest.react4j.service.internal.component;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Location;
@@ -35,23 +36,28 @@ import org.omnaest.utils.template.TemplateUtils;
 
 public class NativeHtmlImpl extends AbstractUIComponent<NativeHtml> implements NativeHtml
 {
-    private String source;
+    private Supplier<String> sourceProvider = () -> null;
 
     public NativeHtmlImpl(ComponentContext context)
     {
         super(context);
     }
 
-    public NativeHtmlImpl(ComponentContext context, String source)
+    public NativeHtmlImpl(ComponentContext context, Supplier<String> sourceProvider)
     {
         super(context);
-        this.source = source;
+        this.sourceProvider = sourceProvider;
     }
 
     @Override
     public NativeHtml withSource(String source)
     {
-        this.source = source;
+        return this.withSource(() -> source);
+    }
+
+    public NativeHtml withSource(Supplier<String> sourceProvider)
+    {
+        this.sourceProvider = sourceProvider;
         return this;
     }
 
@@ -70,7 +76,7 @@ public class NativeHtmlImpl extends AbstractUIComponent<NativeHtml> implements N
             public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return NativeHtmlNode.builder()
-                                     .source(NativeHtmlImpl.this.source)
+                                     .source(NativeHtmlImpl.this.sourceProvider.get())
                                      .build();
             }
 
@@ -108,6 +114,6 @@ public class NativeHtmlImpl extends AbstractUIComponent<NativeHtml> implements N
     @Override
     public UIComponentProvider<NativeHtml> asTemplateProvider()
     {
-        return () -> new NativeHtmlImpl(this.context, this.source);
+        return () -> new NativeHtmlImpl(this.context, this.sourceProvider);
     }
 }

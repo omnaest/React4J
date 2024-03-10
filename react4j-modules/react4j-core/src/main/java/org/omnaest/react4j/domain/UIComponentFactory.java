@@ -150,5 +150,7 @@ public interface UIComponentFactory
 
     public NativeHtml newNativeHtml();
 
+    public SVGContainer newSVGContainer();
+
     public SizedContainer newSizedContainer();
 }
