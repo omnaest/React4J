@@ -15,13 +15,13 @@
  ******************************************************************************/
 package org.omnaest.react4j;
 
-import javax.annotation.PostConstruct;
-
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.react4j.service.ReactUIService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class MockUI

@@ -24,7 +24,7 @@ public class CorsWebConfiguration
     }
 
     @Bean
-    public WebMvcConfigurer corsConfigurer()
+    WebMvcConfigurer corsConfigurer()
     {
         return new WebMvcConfigurer()
         {
