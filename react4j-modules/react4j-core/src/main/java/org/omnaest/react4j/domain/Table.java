@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain;
 
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -28,6 +29,10 @@ public interface Table extends UIComponent<Table>
     public Table withColumnTitles(Iterable<String> titles);
 
     public Table addRow(Consumer<Row> rowConsumer);
+
+    public <UIC extends UIComponent<?>> Table addRowContent(List<UIC> components);
+
+    public Table addRowTextContent(List<String> texts);
 
     /**
      * Consumes a given element {@link Stream} and creates a new {@link Row} for each element and provides the {@link Row} together with the element in the
