@@ -1,7 +1,7 @@
 package org.omnaest.react4j.service.internal.handler.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 
 import java.util.Collections;
 import java.util.Optional;

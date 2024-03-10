@@ -18,6 +18,7 @@ import org.omnaest.react4j.domain.ImageIndex;
 import org.omnaest.react4j.domain.IntervalRerenderingContainer;
 import org.omnaest.react4j.domain.Jumbotron;
 import org.omnaest.react4j.domain.LineBreak;
+import org.omnaest.react4j.domain.NativeHtml;
 import org.omnaest.react4j.domain.NavigationBar;
 import org.omnaest.react4j.domain.PaddingContainer;
 import org.omnaest.react4j.domain.Paragraph;
@@ -53,6 +54,7 @@ import org.omnaest.react4j.service.internal.component.ImageIndexImpl;
 import org.omnaest.react4j.service.internal.component.IntervalRerenderingContainerImpl;
 import org.omnaest.react4j.service.internal.component.JumbotronImpl;
 import org.omnaest.react4j.service.internal.component.LineBreakImpl;
+import org.omnaest.react4j.service.internal.component.NativeHtmlImpl;
 import org.omnaest.react4j.service.internal.component.NavigationBarImpl;
 import org.omnaest.react4j.service.internal.component.PaddingContainerImpl;
 import org.omnaest.react4j.service.internal.component.ParagraphImpl;
@@ -379,6 +381,12 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         public IFrame newIFrame()
         {
             return new IFrameImpl(this.context);
+        }
+
+        @Override
+        public NativeHtml newNativeHtml()
+        {
+            return new NativeHtmlImpl(this.context);
         }
 
         @Override

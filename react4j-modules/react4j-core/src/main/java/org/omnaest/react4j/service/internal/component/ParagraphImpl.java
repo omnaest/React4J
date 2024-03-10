@@ -52,8 +52,9 @@ import org.omnaest.utils.template.TemplateUtils;
 
 public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Paragraph
 {
-    private List<UIComponent<?>> elements = new ArrayList<>();
-    private boolean              bold     = false;
+    private List<UIComponent<?>> elements              = new ArrayList<>();
+    private boolean              bold                  = false;
+    private boolean              addLineBreakAfterText = false;
 
     public ParagraphImpl(ComponentContext context)
     {
@@ -91,6 +92,12 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
                                        .addText(text));
         }
         this.elements.add(composite);
+
+        if (this.addLineBreakAfterText)
+        {
+            this.addLineBreak();
+        }
+
         return this;
     }
 
@@ -283,5 +290,18 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
         return () -> new ParagraphImpl(this.context, this.elements.stream()
                                                                   .collect(Collectors.toList()),
                                        this.bold);
+    }
+
+    @Override
+    public Paragraph withLineBreakAfterEachText()
+    {
+        return this.withLineBreakAfterEachText(true);
+    }
+
+    @Override
+    public Paragraph withLineBreakAfterEachText(boolean enabled)
+    {
+        this.addLineBreakAfterText = enabled;
+        return this;
     }
 }

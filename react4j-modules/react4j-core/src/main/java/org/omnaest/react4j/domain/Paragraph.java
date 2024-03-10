@@ -74,4 +74,8 @@ public interface Paragraph extends UIComponent<Paragraph>
 
     public Paragraph addComponent(UIComponent<?> component);
 
+    public Paragraph withLineBreakAfterEachText();
+
+    public Paragraph withLineBreakAfterEachText(boolean enabled);
+
 }

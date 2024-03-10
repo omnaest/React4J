@@ -148,5 +148,7 @@ public interface UIComponentFactory
 
     public IFrame newIFrame();
 
+    public NativeHtml newNativeHtml();
+
     public SizedContainer newSizedContainer();
 }

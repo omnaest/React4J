@@ -34,6 +34,7 @@ import { RatioContainer, RatioContainerNode } from "./components/RatioContainer"
 import { IFrameContainer, IFrameContainerNode } from "./components/IFrameContainer";
 import { SizedContainer, SizedContainerNode } from "./components/SizedContainer";
 import { Range, RangeNode } from "./components/Range";
+import { NativeHtml, NativeHtmlNode } from "./components/NativeHtml";
 
 export interface Node
 {
@@ -201,6 +202,10 @@ export class Renderer
             else if (node.type === Range.TYPE)
             {
                 return <Range node={node as RangeNode} />
+            }
+            else if (node.type === NativeHtml.TYPE)
+            {
+                return <NativeHtml node={node as NativeHtmlNode} />
             }
             else 
             {
