@@ -18,6 +18,7 @@ package org.omnaest.react4j.domain;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.support.UIContentHolder;
@@ -44,6 +45,8 @@ public interface Table extends UIComponent<Table>
      */
     public <E> Table addRows(Stream<E> elements, BiConsumer<Row, E> rowAndElementConsumer);
 
+    public <E> Table addRowsTextContent(List<E> elements, Function<E, List<String>> element);
+
     public static interface Row
     {
         public Row addCell(Consumer<Cell> cellConsumer);
@@ -61,4 +64,5 @@ public interface Table extends UIComponent<Table>
     public Table fromCSV(String csv);
 
     public Table fromDataTable(org.omnaest.utils.table.Table table);
+
 }

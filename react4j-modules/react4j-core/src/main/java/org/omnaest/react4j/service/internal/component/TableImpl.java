@@ -102,6 +102,41 @@ public class TableImpl extends AbstractUIComponentWithSubComponents<Table> imple
     }
 
     @Override
+    public <UIC extends UIComponent<?>> Table addRowContent(List<UIC> components)
+    {
+        return this.addRow(row -> row.addCells(Optional.ofNullable(components)
+                                                       .orElse(Collections.emptyList())
+                                                       .stream(),
+                                               Cell::withContent));
+    }
+
+    @Override
+    public Table addRowTextContent(List<String> texts)
+    {
+        return this.addRowContent(Optional.ofNullable(texts)
+                                          .orElse(Collections.emptyList())
+                                          .stream()
+                                          .map(text -> this.context.getUiComponentFactory()
+                                                                   .newText()
+                                                                   .addText(text))
+                                          .toList());
+    }
+
+    @Override
+    public <E> Table addRowsTextContent(List<E> elements, Function<E, List<String>> elementToTextContentMapper)
+    {
+        if (elementToTextContentMapper != null)
+        {
+            Optional.ofNullable(elements)
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .map(elementToTextContentMapper)
+                    .forEach(this::addRowTextContent);
+        }
+        return this;
+    }
+
+    @Override
     public Table fromCSVResource(String resourcePath)
     {
         return this.fromCSV(ClassUtils.loadResource(this, resourcePath)
@@ -298,27 +333,6 @@ public class TableImpl extends AbstractUIComponentWithSubComponents<Table> imple
                                                                   .collect(Collectors.toList()),
                                    this.rows.stream()
                                             .collect(Collectors.toList()));
-    }
-
-    @Override
-    public <UIC extends UIComponent<?>> Table addRowContent(List<UIC> components)
-    {
-        return this.addRow(row -> row.addCells(Optional.ofNullable(components)
-                                                       .orElse(Collections.emptyList())
-                                                       .stream(),
-                                               Cell::withContent));
-    }
-
-    @Override
-    public Table addRowTextContent(List<String> texts)
-    {
-        return this.addRowContent(Optional.ofNullable(texts)
-                                          .orElse(Collections.emptyList())
-                                          .stream()
-                                          .map(text -> this.context.getUiComponentFactory()
-                                                                   .newText()
-                                                                   .addText(text))
-                                          .toList());
     }
 
 }
