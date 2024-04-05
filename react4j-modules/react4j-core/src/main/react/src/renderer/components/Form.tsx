@@ -31,7 +31,7 @@ export interface ValidationFeedback {
 }
 
 export interface ValidationMessage {
-    type: "valid" | "invalid";
+    type: "VALID" | "INVALID";
     text: I18nTextValue;
 }
 

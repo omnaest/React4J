@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j;
 
+import org.omnaest.react4j.component.form.Form.InputFormElement.ValidationMessageType;
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.react4j.service.ReactUIService;
@@ -43,8 +44,13 @@ public class MockUI
                                                                               Field nameField = document.getField("nameField");
                                                                               Field rangefield = document.getField("rangeField");
                                                                               form.addInputField(input -> input.attachToField(nameField)
-                                                                                                               .withLabel("Name:"))
-                                                                                  .addInputField(input -> input.withLabel("Description:"))
+                                                                                                               .withLabel("Name:")
+                                                                                                               .addValidationMessage("No!")
+                                                                                                               .addValidationMessage(ValidationMessageType.VALID,
+                                                                                                                                     "Yes!"))
+                                                                                  .addInputField(input -> input.withLabel("Description:")
+                                                                                                               .addValidationMessage(ValidationMessageType.VALID,
+                                                                                                                                     "Yes!"))
                                                                                   .addInputField(input -> input.withLabel("Category:"))
                                                                                   .addRange(range -> range.attachToField(rangefield)
                                                                                                           .withLabel("Range:")

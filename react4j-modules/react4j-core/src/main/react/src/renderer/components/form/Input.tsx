@@ -29,7 +29,7 @@ export class Input extends React.Component<Props> {
         const element = this.props.element;
         const htmlId = this.props.id;
         const validClassName = ValidationMessageHelper.determineFormControlClassName(element.validationFeedback);
-        const ariaDescribedByValidation = ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, this.props.element?.validationFeedback);
+        const ariaDescribedByValidation = ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId,element.validationFeedback);
         return (
             <>
                 {FormLabelHelper.renderLabel(htmlId, element.label)}

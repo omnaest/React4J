@@ -56,6 +56,21 @@ public interface Form extends UIComponent<Form>
     public static interface InputFormElement extends FormFieldElement<InputFormElement>
     {
         public InputFormElement withPlaceholder(String placeholder);
+
+        /**
+         * Short for {@link #addValidationMessage(ValidationMessageType, String)} with {@link ValidationMessageType#INVALID}
+         * 
+         * @param message
+         * @return
+         */
+        public InputFormElement addValidationMessage(String message);
+
+        public InputFormElement addValidationMessage(ValidationMessageType validationMessageType, String message);
+
+        public static enum ValidationMessageType
+        {
+            VALID, INVALID
+        }
     }
 
     public static interface RangeFormElement extends FormFieldElement<RangeFormElement>

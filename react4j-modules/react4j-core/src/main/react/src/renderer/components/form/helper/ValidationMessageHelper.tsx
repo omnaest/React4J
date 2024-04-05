@@ -45,7 +45,7 @@ export class ValidationMessageHelper {
         return validationFeedback?.messages?.map((message, index) =>
         (
             <div id={ValidationMessageHelper.determineValidationMessageId(htmlId, index)}
-                className={message.type === "valid" ? "valid-feedback" : "invalid-feedback"} >
+                className={message.type === "VALID" ? "valid-feedback" : "invalid-feedback"} >
                 {I18nRenderer.render(message.text)}
             </div>
         ));

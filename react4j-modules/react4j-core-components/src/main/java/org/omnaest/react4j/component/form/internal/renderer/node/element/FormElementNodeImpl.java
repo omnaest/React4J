@@ -1,11 +1,16 @@
 package org.omnaest.react4j.component.form.internal.renderer.node.element;
 
-import org.omnaest.react4j.component.form.internal.renderer.node.FormNode.FormRangeNode;
+import org.omnaest.react4j.component.form.internal.renderer.node.element.validation.ValidationFeedbackNode;
 import org.omnaest.react4j.service.internal.nodes.handler.Handler;
 import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder(toBuilder = true)
 public class FormElementNodeImpl implements FormElementNode
 {
     @JsonProperty
@@ -37,6 +42,9 @@ public class FormElementNodeImpl implements FormElementNode
 
     @JsonProperty
     private FormRangeNode range;
+
+    @JsonProperty
+    private ValidationFeedbackNode validationFeedback;
 
     public String getType()
     {

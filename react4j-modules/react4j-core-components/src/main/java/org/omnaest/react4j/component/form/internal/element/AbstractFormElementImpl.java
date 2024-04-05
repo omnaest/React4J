@@ -49,10 +49,12 @@ public abstract class AbstractFormElementImpl<FE extends FormElement<?>> impleme
         Location location = Optional.ofNullable(this.getField())
                                     .map(field -> Location.of(Location.of(parentLocation, this.id), field))
                                     .orElse(Location.of(parentLocation, this.id));
-        return this.renderNode(new FormElementNodeImpl().setField(this.getField())
-                                                        .setContextId(context.getId(location))
-                                                        .setLabel(this.textResolver.apply(this.label, location))
-                                                        .setDescription(this.textResolver.apply(this.description, location)),
+        return this.renderNode(FormElementNodeImpl.builder()
+                                                  .field(this.getField())
+                                                  .contextId(context.getId(location))
+                                                  .label(this.textResolver.apply(this.label, location))
+                                                  .description(this.textResolver.apply(this.description, location))
+                                                  .build(),
                                location);
     }
 
