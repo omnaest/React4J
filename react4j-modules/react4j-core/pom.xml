@@ -8,9 +8,8 @@
 
     <parent>
         <groupId>org.omnaest.react</groupId>
-        <artifactId>react4j-parent</artifactId>
+        <artifactId>react4j-modules</artifactId>
         <version>0.0.1-SNAPSHOT</version>
-        <relativePath>../react4j-parent/pom.xml</relativePath>
     </parent>
 
     <dependencies>
@@ -75,6 +74,21 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.omnaest.react</groupId>
+            <artifactId>react4j-core-markdown</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.omnaest.react</groupId>
+            <artifactId>react4j-core-content</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.omnaest.react</groupId>
+            <artifactId>react4j-core-components</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>org.omnaest.react</groupId>
             <artifactId>react4j-data</artifactId>

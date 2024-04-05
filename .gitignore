@@ -50,3 +50,16 @@
 *.project
 react4j-modules/react4j-ui-test/.settings/
 react4j-modules/react4j-ui-test/target/
+*.factorypath
+react4j-modules/react4j-app-modules/.settings/
+react4j-modules/react4j-app-modules/react4j-app-starter-parent/.settings/
+react4j-modules/react4j-app-modules/react4j-ui-test/.settings/
+react4j-modules/react4j-core-components/.settings/
+react4j-modules/react4j-core-components/target/
+react4j-modules/react4j-core-content/.settings/
+react4j-modules/react4j-core-content/target/
+react4j-modules/react4j-core-markdown/.settings/
+react4j-modules/react4j-core-markdown/target/
+react4j-modules/react4j-app-modules/react4j-ui-test/target/
+react4j-modules/react4j-app-modules/target/
+react4j-modules/react4j-app-modules/react4j-app-starter-parent/target/

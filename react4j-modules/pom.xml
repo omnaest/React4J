@@ -1,30 +1,59 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.omnaest.react</groupId>
-	<artifactId>react4j-modules</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<packaging>pom</packaging>
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.omnaest.react</groupId>
+    <artifactId>react4j-modules</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
-	<modules>
-		<module>react4j-parent</module>
-		<module>react4j-core</module>
-		<module>react4j-test</module>
-		<module>react4j</module>
-		<module>react4j-data</module>
-		<module>react4j-data-datagrid</module>
-		<module>react4j-app-starter-parent</module>
-		<module>react4j-data-inmemory</module>
-		<module>react4j-i18n</module>
-		<module>react4j-i18n-deepl</module>
-		<module>react4j-ui-test</module>
-	</modules>
+    <modules>
+        <module>react4j-core-components</module>
+        <module>react4j-core-content</module>
+        <module>react4j-core-markdown</module>
+        <module>react4j-core</module>
+        <module>react4j-test</module>
+        <module>react4j</module>
+        <module>react4j-data</module>
+        <module>react4j-data-datagrid</module>
+        <module>react4j-data-inmemory</module>
+        <module>react4j-i18n</module>
+        <module>react4j-i18n-deepl</module>
+        <module>react4j-app-modules</module>
+    </modules>
 
-	<parent>
-		<groupId>org.omnaest.utils</groupId>
-		<artifactId>CommonsParent</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
-	</parent>
+    <parent>
+        <groupId>org.omnaest.utils</groupId>
+        <artifactId>CommonsParent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>6.1.5</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.omnaest.utils</groupId>
+            <artifactId>CommonsTest</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 </project>

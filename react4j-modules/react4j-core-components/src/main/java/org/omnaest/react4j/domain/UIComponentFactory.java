@@ -17,8 +17,6 @@ package org.omnaest.react4j.domain;
 
 import java.util.List;
 
-import org.omnaest.react4j.service.internal.service.ContentService;
-
 /**
  * Factory for all UI relevant {@link UIComponent}s like grids, forms, paragraphs, cards, ankers, buttons, etc.
  * 
