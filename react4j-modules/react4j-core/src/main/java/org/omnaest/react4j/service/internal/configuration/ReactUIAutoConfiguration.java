@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.configuration;
 
+import org.omnaest.react4j.component.ReactUIComponents;
 import org.omnaest.react4j.service.ReactUIService;
 import org.omnaest.react4j.service.internal.controller.content.ContentControllerBean;
 import org.springframework.context.annotation.ComponentScan;
@@ -23,6 +24,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
 @ComponentScan(basePackageClasses = ReactUIService.class, excludeFilters = @ComponentScan.Filter(classes = { ContentControllerBean.class }))
+@ComponentScan(basePackageClasses = ReactUIComponents.class, excludeFilters = @ComponentScan.Filter(classes = { ContentControllerBean.class }))
 @EnableScheduling
 public class ReactUIAutoConfiguration
 {

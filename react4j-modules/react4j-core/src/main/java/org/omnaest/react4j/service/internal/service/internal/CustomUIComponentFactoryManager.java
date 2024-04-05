@@ -1,5 +1,6 @@
 package org.omnaest.react4j.service.internal.service.internal;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class CustomUIComponentFactoryManager
 {
     @Autowired
-    protected List<CustomUIComponentFactory<?>> uiComponentFactories;
+    protected List<CustomUIComponentFactory<?>> uiComponentFactories = new ArrayList<>();
 
     protected CachedElement<CustomUIComponentFactoryIndex> customUIComponentFactoryIndexHolder = CachedElement.of(this::newIndex);
 
