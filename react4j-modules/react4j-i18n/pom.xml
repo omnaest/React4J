@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.omnaest.react</groupId>
     <artifactId>react4j-modules</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>react4j-i18n</artifactId>
   <groupId>org.omnaest.react</groupId>

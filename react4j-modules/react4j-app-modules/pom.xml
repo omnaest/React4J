@@ -9,6 +9,7 @@
     </parent>
     <groupId>org.omnaest.react</groupId>
     <artifactId>react4j-app-modules</artifactId>
+     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
         <module>react4j-app-starter-parent</module>
@@ -18,17 +19,17 @@
         <dependency>
             <groupId>org.omnaest.react</groupId>
             <artifactId>react4j-core</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.omnaest.react</groupId>
             <artifactId>react4j-data-datagrid</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.omnaest.react</groupId>
             <artifactId>react4j-data-inmemory</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>
