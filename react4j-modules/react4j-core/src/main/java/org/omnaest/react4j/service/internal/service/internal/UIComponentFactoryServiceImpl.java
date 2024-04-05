@@ -2,13 +2,14 @@ package org.omnaest.react4j.service.internal.service.internal;
 
 import java.util.List;
 
-import org.omnaest.react4j.domain.Anker;
-import org.omnaest.react4j.domain.AnkerButton;
+import org.omnaest.react4j.component.anker.Anker;
+import org.omnaest.react4j.component.ankerbutton.AnkerButton;
+import org.omnaest.react4j.component.form.Form;
+import org.omnaest.react4j.component.table.Table;
 import org.omnaest.react4j.domain.BlockQuote;
 import org.omnaest.react4j.domain.Button;
 import org.omnaest.react4j.domain.Card;
 import org.omnaest.react4j.domain.Composite;
-import org.omnaest.react4j.domain.Form;
 import org.omnaest.react4j.domain.GridContainer;
 import org.omnaest.react4j.domain.Heading;
 import org.omnaest.react4j.domain.IFrame;
@@ -28,7 +29,6 @@ import org.omnaest.react4j.domain.RerenderingContainer;
 import org.omnaest.react4j.domain.SVGContainer;
 import org.omnaest.react4j.domain.ScrollbarContainer;
 import org.omnaest.react4j.domain.SizedContainer;
-import org.omnaest.react4j.domain.Table;
 import org.omnaest.react4j.domain.Text;
 import org.omnaest.react4j.domain.TextAlignmentContainer;
 import org.omnaest.react4j.domain.Toaster;
@@ -38,14 +38,11 @@ import org.omnaest.react4j.domain.UIComponentFactory.MarkdownComponentFactory;
 import org.omnaest.react4j.domain.UnsortedList;
 import org.omnaest.react4j.domain.VerticalContentSwitcher;
 import org.omnaest.react4j.domain.i18n.UILocale;
-import org.omnaest.react4j.service.internal.component.AnkerButtonImpl;
-import org.omnaest.react4j.service.internal.component.AnkerImpl;
 import org.omnaest.react4j.service.internal.component.BlockQuoteImpl;
 import org.omnaest.react4j.service.internal.component.ButtonImpl;
 import org.omnaest.react4j.service.internal.component.CardImpl;
 import org.omnaest.react4j.service.internal.component.ComponentContext;
 import org.omnaest.react4j.service.internal.component.CompositeImpl;
-import org.omnaest.react4j.service.internal.component.FormImpl;
 import org.omnaest.react4j.service.internal.component.GridContainerImpl;
 import org.omnaest.react4j.service.internal.component.HeadingImpl;
 import org.omnaest.react4j.service.internal.component.IFrameImpl;
@@ -65,7 +62,6 @@ import org.omnaest.react4j.service.internal.component.RerenderingContainerImpl;
 import org.omnaest.react4j.service.internal.component.SVGContainerImpl;
 import org.omnaest.react4j.service.internal.component.ScrollbarContainerImpl;
 import org.omnaest.react4j.service.internal.component.SizedContainerImpl;
-import org.omnaest.react4j.service.internal.component.TableImpl;
 import org.omnaest.react4j.service.internal.component.TextAlignmentContainerImpl;
 import org.omnaest.react4j.service.internal.component.TextImpl;
 import org.omnaest.react4j.service.internal.component.ToasterImpl;
@@ -82,6 +78,8 @@ import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.element.cached.CachedElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
@@ -101,29 +99,27 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
     @Autowired
     protected ContextFactory contextFactory;
 
+    @Autowired
+    protected CustomUIComponentFactoryManager customUIComponentFactoryManager;
+
     @Override
     public UIComponentFactory newInstanceFor(UILocale locale)
     {
         CachedElement<UIComponentFactory> factoryHolder = CachedElement.of(() -> null);
         UIComponentFactoryImpl uiComponentFactoryImpl = new UIComponentFactoryImpl(new ComponentContext(locale, this.textResolver, this.eventHandlerRegistry,
                                                                                                         factoryHolder, this.contextFactory),
-                                                                                   this.contentService, this.markdownService);
+                                                                                   this.contentService, this.markdownService,
+                                                                                   this.customUIComponentFactoryManager);
         return factoryHolder.setAndGet(uiComponentFactoryImpl);
     }
 
+    @RequiredArgsConstructor
     private static class UIComponentFactoryImpl implements UIComponentFactory
     {
-        private ContentService   contentService;
-        private MarkdownService  markdownService;
-        private ComponentContext context;
-
-        public UIComponentFactoryImpl(ComponentContext context, ContentService contentService, MarkdownService markdownService)
-        {
-            super();
-            this.contentService = contentService;
-            this.markdownService = markdownService;
-            this.context = context;
-        }
+        private final ComponentContext                context;
+        private final ContentService                  contentService;
+        private final MarkdownService                 markdownService;
+        private final CustomUIComponentFactoryManager customUIComponentFactoryManager;
 
         @Override
         public Paragraph newParagraph()
@@ -140,13 +136,19 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         @Override
         public Anker newAnker()
         {
-            return new AnkerImpl(this.context);
+            return this.newComponent(Anker.class);
+        }
+
+        public <UIC extends UIComponent<UIC>> UIC newComponent(Class<UIC> type)
+        {
+            return this.customUIComponentFactoryManager.newInstance(type, this.context)
+                                                       .get();
         }
 
         @Override
         public AnkerButton newAnkerButton()
         {
-            return new AnkerButtonImpl(this.context);
+            return this.newComponent(AnkerButton.class);
         }
 
         @Override
@@ -164,7 +166,7 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         @Override
         public Table newTable()
         {
-            return new TableImpl(this.context);
+            return this.newComponent(Table.class);
         }
 
         @Override
@@ -188,7 +190,7 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         @Override
         public Form newForm()
         {
-            return new FormImpl(this.context);
+            return this.newComponent(Form.class);
         }
 
         @Override

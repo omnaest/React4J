@@ -13,34 +13,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.react4j.domain;
+package org.omnaest.react4j.component.form.internal.renderer.node.element;
 
-import org.omnaest.react4j.domain.Button.Style;
-
-public interface AnkerButton extends UIComponent<AnkerButton>
+public interface FormElementNode
 {
-    public AnkerButton withText(String text);
 
-    public AnkerButton withLink(String link);
-
-    public AnkerButton withStyle(Style style);
-
-    /**
-     * Enables the target of the link to be on the same page. Default is a new blank page.
-     * 
-     * @return
-     */
-    public AnkerButton whichOpensOnSamePage();
-
-    /**
-     * Creates a link to an in page anker like
-     * 
-     * <pre>
-     * &lta href="#element"/&gt
-     * </pre>
-     * 
-     * @param locator
-     * @return
-     */
-    public AnkerButton withLocator(String locator);
 }

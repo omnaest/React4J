@@ -13,9 +13,10 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.react4j.service.internal.nodes;
+package org.omnaest.react4j.component.anker.internal.renderer.node;
 
 import org.omnaest.react4j.domain.raw.Node;
+import org.omnaest.react4j.service.internal.nodes.AbstractNode;
 import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;

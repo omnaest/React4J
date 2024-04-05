@@ -13,7 +13,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.react4j.domain;
+package org.omnaest.react4j.component.anker;
+
+import org.omnaest.react4j.domain.UIComponent;
 
 public interface Anker extends UIComponent<Anker>
 {

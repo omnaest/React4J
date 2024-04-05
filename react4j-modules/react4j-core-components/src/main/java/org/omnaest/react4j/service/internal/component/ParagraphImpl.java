@@ -26,8 +26,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.omnaest.react4j.domain.Anker;
-import org.omnaest.react4j.domain.AnkerButton;
+import org.omnaest.react4j.component.anker.Anker;
+import org.omnaest.react4j.component.ankerbutton.AnkerButton;
 import org.omnaest.react4j.domain.Composite;
 import org.omnaest.react4j.domain.Icon.StandardIcon;
 import org.omnaest.react4j.domain.Location;

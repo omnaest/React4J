@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.react4j.domain;
+package org.omnaest.react4j.component.table;
 
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.support.UIContentHolder;
 
 public interface Table extends UIComponent<Table>

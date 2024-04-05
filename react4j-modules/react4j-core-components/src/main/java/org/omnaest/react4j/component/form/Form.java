@@ -13,16 +13,18 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.react4j.domain;
+package org.omnaest.react4j.component.form;
 
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNode;
+import org.omnaest.react4j.domain.Location;
+import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.context.Context;
 import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.context.document.Document;
-import org.omnaest.react4j.domain.raw.FormElementNode;
 
 public interface Form extends UIComponent<Form>
 {
