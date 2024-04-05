@@ -40,8 +40,10 @@ public class MockUI
                                                                           .withUIContext((form, context) ->
                                                                           {
                                                                               Document document = context.getFirstDocument();
+                                                                              Field nameField = document.getField("nameField");
                                                                               Field rangefield = document.getField("rangeField");
-                                                                              form.addInputField(input -> input.withLabel("Name:"))
+                                                                              form.addInputField(input -> input.attachToField(nameField)
+                                                                                                               .withLabel("Name:"))
                                                                                   .addInputField(input -> input.withLabel("Description:"))
                                                                                   .addInputField(input -> input.withLabel("Category:"))
                                                                                   .addRange(range -> range.attachToField(rangefield)

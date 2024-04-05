@@ -29,7 +29,7 @@ export class Input extends React.Component<Props> {
         const element = this.props.element;
         const htmlId = this.props.id;
         const validClassName = ValidationMessageHelper.determineFormControlClassName(element.validationFeedback);
-        const ariaDescribedByValidation = ValidationMessageHelper.determineValidationFeedbackHtmlIds(htmlId, this.props.element?.validationFeedback).join(" ");
+        const ariaDescribedByValidation = ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, this.props.element?.validationFeedback);
         return (
             <>
                 {FormLabelHelper.renderLabel(htmlId, element.label)}
@@ -38,7 +38,8 @@ export class Input extends React.Component<Props> {
                     className={"form-control " + validClassName}
                     aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ariaDescribedByValidation}
                     placeholder={I18nRenderer.render(element.placeholder)}
-                    required={element.required !== false}
+                    aria-label={I18nRenderer.render(element.placeholder)}
+                    required={element.required === true}
                     value={DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor)}
                     onChange={(event) => this.handleInputChange(element, event.target.value)}
                 />

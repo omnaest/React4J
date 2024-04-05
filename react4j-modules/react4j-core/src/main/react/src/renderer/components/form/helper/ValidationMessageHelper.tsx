@@ -24,10 +24,17 @@ export class ValidationMessageHelper {
             return "";
         }
     }
+
     public static determineValidationFeedbackHtmlIds(htmlId: string, validationFeedback: ValidationFeedback): string[] {
         return validationFeedback?.messages?.map((message, index) =>
             ValidationMessageHelper.determineValidationMessageId(htmlId, index)
-        );
+        ) || [];
+    }
+
+    public static determineValidationFeedbackJoinedHtmlIds(htmlId: string, validationFeedback: ValidationFeedback): string {
+        return validationFeedback?.messages?.map((message, index) =>
+            ValidationMessageHelper.determineValidationMessageId(htmlId, index)
+        )?.join(" ") || "";
     }
 
     private static determineValidationMessageId(htmlId: string, index: number): string {

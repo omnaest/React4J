@@ -58,6 +58,10 @@ interface State {
 export class Form extends React.Component<Props, State> {
     public static TYPE: string = "FORM";
 
+    private Form() {
+        this.state = { updateCounter: 0 };
+    }
+
     private handleInputChange(element: FormElement, value: string) {
         const updateCounter = DataContextManager.updateFieldByContext(element.contextId, element.field, value, this.props.renderingSupport?.uiContextAccessor);
         this.setState({ updateCounter: updateCounter });
@@ -71,7 +75,7 @@ export class Form extends React.Component<Props, State> {
                         id={htmlId}
                         element={element}
                         onUpdate={(element, value) => this.handleInputChange(element, value)}
-                        updateCounter={this.state.updateCounter}
+                        updateCounter={this.state?.updateCounter}
                         renderingSupport={this.props.renderingSupport}
                     />
                 );
@@ -95,7 +99,7 @@ export class Form extends React.Component<Props, State> {
                             id={htmlId}
                             type="button"
                             className="btn btn-primary"
-                            aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackHtmlIds(htmlId, element.validationFeedback).join(" ")}
+                            aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, element.validationFeedback)}
                             onClick={HandlerFactory.onClick(buttonElement.onClick as Handler, this.props.renderingSupport?.uiContextAccessor, this.props.renderingSupport?.nodeContextAccessor)}
                         >{I18nRenderer.render(buttonElement.text)}</button>
                         {FormDescriptionHelper.renderDescription(htmlId, element.description)}
@@ -112,13 +116,13 @@ export class Form extends React.Component<Props, State> {
                         <input type="range"
                             id={htmlId}
                             className={"form-control form-range " + validClassName}
-                            aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackHtmlIds(htmlId, element.validationFeedback).join(" ")}
+                            aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, element.validationFeedback)}
                             value={DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor)}
                             min={rangeElement?.min || 0}
                             max={rangeElement?.max || 100}
                             step={rangeElement?.step || 1}
                             disabled={element.disabled === true}
-                            required={element.required !== false}
+                            required={element.required === true}
                             onChange={(event) => this.handleInputChange(element, event.target.value)}
                         />
                         {FormDescriptionHelper.renderDescription(htmlId, element.description)}

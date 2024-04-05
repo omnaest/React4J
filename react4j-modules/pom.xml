@@ -27,6 +27,22 @@
         <artifactId>CommonsParent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
+    
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>omnaest</id>
+            <name>Danny Kunz</name>
+            <email>awonderland6@googlemail.com</email>
+        </developer>
+    </developers>
 
     <distributionManagement>
         <snapshotRepository>
