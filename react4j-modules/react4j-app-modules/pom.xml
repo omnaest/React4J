@@ -9,7 +9,7 @@
     </parent>
     <groupId>org.omnaest.react</groupId>
     <artifactId>react4j-app-modules</artifactId>
-     <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
         <module>react4j-app-starter-parent</module>

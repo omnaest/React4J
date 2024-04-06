@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.omnaest.react</groupId>
         <artifactId>react4j-app-modules</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>react4j-ui-test</artifactId>
 </project>
