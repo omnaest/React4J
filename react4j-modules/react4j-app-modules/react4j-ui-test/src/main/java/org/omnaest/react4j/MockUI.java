@@ -17,12 +17,8 @@ package org.omnaest.react4j;
 
 import org.apache.commons.lang3.StringUtils;
 import org.omnaest.react4j.component.form.Form;
-import org.omnaest.react4j.component.form.Form.ButtonFormElement;
-import org.omnaest.react4j.component.form.Form.ButtonFormElement.Messaging;
 import org.omnaest.react4j.component.form.Form.ValidationMessageType;
 import org.omnaest.react4j.domain.UIComponent.UIContextConsumer;
-import org.omnaest.react4j.domain.context.Context;
-import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.context.data.Value;
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.document.Document.Field;
@@ -124,27 +120,23 @@ public class MockUI
                                         .withStep(1)
                                         .withDisabled(false))
                 .addButton(button -> button.withText("Save")
-                                           .onClick(new ButtonFormElement.ButtonEventHandler()
+                                           .onClick((data, messaging, context1) ->
                                            {
-                                               @Override
-                                               public Data apply(Data data, Messaging messaging, Context context)
-                                               {
-                                                   data.getFieldValue(nameField)
-                                                       .map(Value::asString)
-                                                       .filter(StringUtils::isNotBlank)
-                                                       .ifPresentOrElse(value ->
-                                                       {
-                                                           messaging.addValidationMessage(nameField, ValidationMessageType.VALID, "Yes! Yes!");
-                                                           System.out.println(value);
-                                                       }, () ->
-                                                       {
-                                                           messaging.addValidationMessage(nameField, "Omg! no! Enter at least something!");
-                                                           data.setFieldValue(nameField, "Something!!");
-                                                       });
-                                                   messaging.addValidationMessage(descriptionField, ValidationMessageType.VALID, "Yes!");
+                                               data.getFieldValue(nameField)
+                                                   .map(Value::asString)
+                                                   .filter(StringUtils::isNotBlank)
+                                                   .ifPresentOrElse(value ->
+                                                   {
+                                                       messaging.addValidationMessage(nameField, ValidationMessageType.VALID, "Yes! Yes!");
+                                                       System.out.println(value);
+                                                   }, () ->
+                                                   {
+                                                       messaging.addValidationMessage(nameField, "Omg! no! Enter at least something!");
+                                                       data.setFieldValue(nameField, "Something!!");
+                                                   });
+                                               messaging.addValidationMessage(descriptionField, ValidationMessageType.VALID, "Yes!");
 
-                                                   return data;
-                                               }
+                                               return data;
                                            }));
         };
     }
