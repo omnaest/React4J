@@ -15,6 +15,10 @@
  ******************************************************************************/
 package org.omnaest.react4j;
 
+import java.util.LinkedHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import org.apache.commons.lang3.StringUtils;
 import org.omnaest.react4j.component.form.Form;
 import org.omnaest.react4j.component.form.Form.ValidationMessageType;
@@ -109,6 +113,7 @@ public class MockUI
             Field nameField = document.getField("nameField");
             Field descriptionField = document.getField("descriptionField");
             Field rangefield = document.getField("rangeField");
+            Field dropDownfield = document.getField("dropDownField");
             form.addInputField(input -> input.attachToField(nameField)
                                              .withLabel("Name:"))
                 .addInputField(input -> input.attachToField(descriptionField)
@@ -119,6 +124,16 @@ public class MockUI
                                         .withMax(4)
                                         .withStep(1)
                                         .withDisabled(false))
+                .addDropDown(dropDown -> dropDown.attachToField(dropDownfield)
+                                                 .withLabel("Select:")
+                                                 .withOptions(options -> options.addOption("1", "label 1")
+                                                                                .addOption("2", "label 2")
+                                                                                .addDisabledOption("3", "label 3")
+                                                                                .addOptions(IntStream.range(4, 100)
+                                                                                                     .boxed()
+                                                                                                     .collect(Collectors.toMap(i -> "" + i, i -> "label " + i,
+                                                                                                                               (a, b) -> a,
+                                                                                                                               LinkedHashMap::new)))))
                 .addButton(button -> button.withText("Save")
                                            .onClick((data, messaging, context1) ->
                                            {

@@ -21,6 +21,7 @@ import java.util.function.Function;
 import org.omnaest.react4j.component.form.Form;
 import org.omnaest.react4j.component.form.internal.data.FormData;
 import org.omnaest.react4j.component.form.internal.element.ButtonFormElementImpl;
+import org.omnaest.react4j.component.form.internal.element.DropDownFormElementImpl;
 import org.omnaest.react4j.component.form.internal.element.InputFormElementImpl;
 import org.omnaest.react4j.component.form.internal.element.RangeFormElementImpl;
 import org.omnaest.react4j.component.form.internal.renderer.FormRendererImpl;
@@ -81,6 +82,13 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             {
                 return new RangeFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext);
             }
+
+            @Override
+            public DropDownFormElement newDropDown()
+            {
+                return new DropDownFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext);
+            }
+
         });
         return this.add(formElement);
     }
@@ -122,6 +130,17 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             RangeFormElement range = factory.newRange();
             formElementConsumer.accept(range);
             return range;
+        });
+    }
+
+    @Override
+    public Form addDropDown(Consumer<DropDownFormElement> formElementConsumer)
+    {
+        return this.add(factory ->
+        {
+            DropDownFormElement dropDown = factory.newDropDown();
+            formElementConsumer.accept(dropDown);
+            return dropDown;
         });
     }
 

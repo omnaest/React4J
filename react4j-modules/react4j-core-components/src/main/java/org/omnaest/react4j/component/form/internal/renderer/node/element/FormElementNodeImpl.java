@@ -42,6 +42,9 @@ public class FormElementNodeImpl implements FormElementNode
     @JsonProperty
     private FormRangeNode range;
 
+    @JsonProperty
+    private FormDropDownNode dropDown;
+
     public String getType()
     {
         return this.type;

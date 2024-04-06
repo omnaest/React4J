@@ -93,7 +93,7 @@ export class Form extends React.Component<Props, State> {
                                     id={htmlId}
                                     element={element as DropDownFormElement}
                                     onUpdate={(element, value) => this.handleInputChange(element, value, renderingSupport)}
-                                    updateCounter={this.state.updateCounter}
+                                    updateCounter={this.state?.updateCounter}
                                     renderingSupport={renderingSupport}
                                 />
                             );

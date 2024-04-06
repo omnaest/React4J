@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.component.form;
 
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -33,11 +34,13 @@ public interface Form extends UIComponent<Form>
 
     public Form add(FormElement<?> formElement);
 
-    public Form addInputField(Consumer<InputFormElement> formElementConsumer);
+    public Form addInputField(Consumer<InputFormElement> inputField);
 
-    public Form addButton(Consumer<ButtonFormElement> formElementConsumer);
+    public Form addButton(Consumer<ButtonFormElement> button);
 
-    public Form addRange(Consumer<RangeFormElement> formElementConsumer);
+    public Form addRange(Consumer<RangeFormElement> range);
+
+    public Form addDropDown(Consumer<DropDownFormElement> dropDown);
 
     public static interface FormElement<FE extends FormElement<?>>
     {
@@ -58,6 +61,22 @@ public interface Form extends UIComponent<Form>
     {
         public InputFormElement withPlaceholder(String placeholder);
 
+    }
+
+    public static interface DropDownFormElement extends FormFieldElement<DropDownFormElement>
+    {
+        public DropDownFormElement withOptions(Consumer<DropDownOptions> options);
+
+        public static interface DropDownOptions
+        {
+            public DropDownOptions addOption(String key, String label);
+
+            public DropDownOptions addOption(String key, String label, boolean disabled);
+
+            public DropDownOptions addDisabledOption(String key, String label);
+
+            public DropDownOptions addOptions(Map<String, String> options);
+        }
     }
 
     public static interface RangeFormElement extends FormFieldElement<RangeFormElement>
@@ -112,5 +131,7 @@ public interface Form extends UIComponent<Form>
         public ButtonFormElement newButton();
 
         public RangeFormElement newRange();
+
+        public DropDownFormElement newDropDown();
     }
 }

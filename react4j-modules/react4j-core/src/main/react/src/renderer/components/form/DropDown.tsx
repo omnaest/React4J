@@ -8,12 +8,17 @@ import { FormDescriptionHelper } from "./helper/FormDescriptionHelper";
 import { FormLabelHelper } from "./helper/FormLabelHelper";
 
 export interface DropDownFormElement extends FormElement {
+    dropDown: DropDownNode;
+}
+
+export interface DropDownNode {
     options: DropDownOption[];
 }
 
 export interface DropDownOption {
     key: string;
     label: I18nTextValue;
+    disabled?: boolean;
 }
 
 export interface Props {
@@ -45,15 +50,15 @@ export class DropDown extends React.Component<Props, State> {
             <>
                 {FormLabelHelper.renderLabel(htmlId, element.label)}
                 <select
-                    className={"form-select " + validClassName}
+                    className={"form-control form-select " + validClassName}
                     id={htmlId}
                     aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ariaDescribedByValidation}
                     required={element.required === true}
                     value={DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor)}
                     onChange={(event) => this.handleInputChange(element, event.target.value)}
                 >
-                    {this.props.element?.options?.map((option) => (
-                        <option selected disabled value={option.key}>{I18nRenderer.render(option.label)}</option>
+                    {this.props.element?.dropDown?.options?.map((option) => (
+                        <option disabled={option.disabled} value={option.key}>{I18nRenderer.render(option.label)}</option>
                     ))}
                 </select >
                 {FormDescriptionHelper.renderDescription(htmlId, element.description)}
