@@ -37,8 +37,9 @@ export class DropDown extends React.Component<Props, State> {
 
     public render(): JSX.Element {
         const element = this.props.element;
+        const uiContext = this.props.renderingSupport?.uiContextAccessor?.getUIContextById(element.contextId);
         const htmlId = this.props.id;
-        const validClassName = ValidationMessageHelper.determineFormControlClassName(element.validationFeedback);
+        const validClassName = ValidationMessageHelper.determineFormControlClassName(uiContext, element.field);
         const ariaDescribedByValidation = ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, this.props.element?.validationFeedback);
         return (
             <>
@@ -56,7 +57,7 @@ export class DropDown extends React.Component<Props, State> {
                     ))}
                 </select >
                 {FormDescriptionHelper.renderDescription(htmlId, element.description)}
-                {ValidationMessageHelper.renderValidationFeedback(htmlId, element.validationFeedback)}
+                {ValidationMessageHelper.renderValidationFeedback(htmlId, uiContext, element.field)}
             </>
         );
     }

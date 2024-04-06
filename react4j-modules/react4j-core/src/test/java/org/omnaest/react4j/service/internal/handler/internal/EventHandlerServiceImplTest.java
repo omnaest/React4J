@@ -28,7 +28,8 @@ public class EventHandlerServiceImplTest
         IntStream.range(1, 10)
                  .forEach(ii ->
                  {
-                     this.eventHandlerService.handleEvent(new EventBody(Target.empty(), new DataWithContext("contextId", Collections.emptyMap())));
+                     this.eventHandlerService.handleEvent(new EventBody(Target.empty(),
+                                                                        new DataWithContext("contextId", Collections.emptyMap(), Collections.emptyMap())));
                      this.simulateUIRerendering();
                      assertEquals(ii, this.eventHandlerExecutionCounter.get());
                  });

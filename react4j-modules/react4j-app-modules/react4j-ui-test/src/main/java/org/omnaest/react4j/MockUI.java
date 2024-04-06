@@ -15,7 +15,15 @@
  ******************************************************************************/
 package org.omnaest.react4j;
 
-import org.omnaest.react4j.component.form.Form.InputFormElement.ValidationMessageType;
+import org.apache.commons.lang3.StringUtils;
+import org.omnaest.react4j.component.form.Form;
+import org.omnaest.react4j.component.form.Form.ButtonFormElement;
+import org.omnaest.react4j.component.form.Form.ButtonFormElement.Messaging;
+import org.omnaest.react4j.component.form.Form.ValidationMessageType;
+import org.omnaest.react4j.domain.UIComponent.UIContextConsumer;
+import org.omnaest.react4j.domain.context.Context;
+import org.omnaest.react4j.domain.context.data.Data;
+import org.omnaest.react4j.domain.context.data.Value;
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.react4j.service.ReactUIService;
@@ -38,27 +46,7 @@ public class MockUI
 
             reactUI.addNewComponent(factory -> factory.newCard()
                                                       .withContent(factory.newForm()
-                                                                          .withUIContext((form, context) ->
-                                                                          {
-                                                                              Document document = context.getFirstDocument();
-                                                                              Field nameField = document.getField("nameField");
-                                                                              Field rangefield = document.getField("rangeField");
-                                                                              form.addInputField(input -> input.attachToField(nameField)
-                                                                                                               .withLabel("Name:")
-                                                                                                               .addValidationMessage("No!")
-                                                                                                               .addValidationMessage(ValidationMessageType.VALID,
-                                                                                                                                     "Yes!"))
-                                                                                  .addInputField(input -> input.withLabel("Description:")
-                                                                                                               .addValidationMessage(ValidationMessageType.VALID,
-                                                                                                                                     "Yes!"))
-                                                                                  .addInputField(input -> input.withLabel("Category:"))
-                                                                                  .addRange(range -> range.attachToField(rangefield)
-                                                                                                          .withLabel("Range:")
-                                                                                                          .withMax(4)
-                                                                                                          .withStep(1)
-                                                                                                          .withDisabled(false))
-                                                                                  .addButton(button -> button.saveOnClick());
-                                                                          })));
+                                                                          .withUIContext(this.newForm())));
             //            .withNavigationBar(navigationBar -> navigationBar.addEntry(entry -> entry.withText("News")
             //                                                                                            .withLinkedLocator("news")))
             //                   .addNewComponent(factory -> factory.newParagraph()
@@ -115,5 +103,49 @@ public class MockUI
             //                                                      )
             ;
         });
+    }
+
+    private UIContextConsumer<Form> newForm()
+    {
+        return (form, context) ->
+        {
+            Document document = context.getFirstDocument();
+            Field nameField = document.getField("nameField");
+            Field descriptionField = document.getField("descriptionField");
+            Field rangefield = document.getField("rangeField");
+            form.addInputField(input -> input.attachToField(nameField)
+                                             .withLabel("Name:"))
+                .addInputField(input -> input.attachToField(descriptionField)
+                                             .withLabel("Description:"))
+                .addInputField(input -> input.withLabel("Category:"))
+                .addRange(range -> range.attachToField(rangefield)
+                                        .withLabel("Range:")
+                                        .withMax(4)
+                                        .withStep(1)
+                                        .withDisabled(false))
+                .addButton(button -> button.withText("Save")
+                                           .onClick(new ButtonFormElement.ButtonEventHandler()
+                                           {
+                                               @Override
+                                               public Data apply(Data data, Messaging messaging, Context context)
+                                               {
+                                                   data.getFieldValue(nameField)
+                                                       .map(Value::asString)
+                                                       .filter(StringUtils::isNotBlank)
+                                                       .ifPresentOrElse(value ->
+                                                       {
+                                                           messaging.addValidationMessage(nameField, ValidationMessageType.VALID, "Yes! Yes!");
+                                                           System.out.println(value);
+                                                       }, () ->
+                                                       {
+                                                           messaging.addValidationMessage(nameField, "Omg! no! Enter at least something!");
+                                                           data.setFieldValue(nameField, "Something!!");
+                                                       });
+                                                   messaging.addValidationMessage(descriptionField, ValidationMessageType.VALID, "Yes!");
+
+                                                   return data;
+                                               }
+                                           }));
+        };
     }
 }

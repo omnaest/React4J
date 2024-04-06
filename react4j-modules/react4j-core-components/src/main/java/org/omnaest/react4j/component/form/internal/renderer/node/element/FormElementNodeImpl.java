@@ -1,6 +1,5 @@
 package org.omnaest.react4j.component.form.internal.renderer.node.element;
 
-import org.omnaest.react4j.component.form.internal.renderer.node.element.validation.ValidationFeedbackNode;
 import org.omnaest.react4j.service.internal.nodes.handler.Handler;
 import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
@@ -42,9 +41,6 @@ public class FormElementNodeImpl implements FormElementNode
 
     @JsonProperty
     private FormRangeNode range;
-
-    @JsonProperty
-    private ValidationFeedbackNode validationFeedback;
 
     public String getType()
     {

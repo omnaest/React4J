@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.omnaest.react4j.component.form;
 
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -25,6 +24,8 @@ import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.context.Context;
 import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.context.document.Document;
+import org.omnaest.react4j.domain.context.document.Document.Field;
+import org.omnaest.utils.functional.TriFunction;
 
 public interface Form extends UIComponent<Form>
 {
@@ -57,20 +58,6 @@ public interface Form extends UIComponent<Form>
     {
         public InputFormElement withPlaceholder(String placeholder);
 
-        /**
-         * Short for {@link #addValidationMessage(ValidationMessageType, String)} with {@link ValidationMessageType#INVALID}
-         * 
-         * @param message
-         * @return
-         */
-        public InputFormElement addValidationMessage(String message);
-
-        public InputFormElement addValidationMessage(ValidationMessageType validationMessageType, String message);
-
-        public static enum ValidationMessageType
-        {
-            VALID, INVALID
-        }
     }
 
     public static interface RangeFormElement extends FormFieldElement<RangeFormElement>
@@ -97,9 +84,25 @@ public interface Form extends UIComponent<Form>
 
         public ButtonFormElement saveOnClick();
 
-        public static interface ButtonEventHandler extends BiFunction<Data, Context, Data>
+        public static interface ButtonEventHandler extends TriFunction<Data, Messaging, Context, Data>
         {
         }
+
+        public static interface Messaging
+        {
+            public Messaging addValidationMessage(String field, String text);
+
+            public Messaging addValidationMessage(Field field, String text);
+
+            public Messaging addValidationMessage(String field, ValidationMessageType validationMessageType, String text);
+
+            public Messaging addValidationMessage(Field field, ValidationMessageType validationMessageType, String text);
+        }
+    }
+
+    public static enum ValidationMessageType
+    {
+        VALID, INVALID
     }
 
     public static interface FormElementFactory

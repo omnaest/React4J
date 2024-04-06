@@ -1,6 +1,8 @@
 import React from "react";
 import { ValidationFeedback } from "../../Form";
 import { I18nRenderer } from "../../I18nText";
+import { UIContext } from "../../../data/DataContextManager";
+import { ElementMap } from "../../../../utils/Utils";
 
 export class ValidationMessageHelper {
 
@@ -12,7 +14,13 @@ export class ValidationMessageHelper {
         }
     }
 
-    public static determineFormControlClassName(validationFeedback: ValidationFeedback) {
+    private static determineValidationFeedback(uiContext: UIContext | undefined, fieldName: string) {
+        const fieldToValidationFeedback = uiContext?.internalData?.["validationFeedback"] as unknown as ElementMap<ValidationFeedback>;
+        return fieldToValidationFeedback?.[fieldName];
+    }
+
+    public static determineFormControlClassName(uiContext: UIContext | undefined, fieldName: string) {
+        const validationFeedback: ValidationFeedback = ValidationMessageHelper.determineValidationFeedback(uiContext, fieldName);
         const validSummary = ValidationMessageHelper.determineAllFeedbackValidationSummary(validationFeedback);
         if (validSummary === "valid") {
             return "is-valid";
@@ -41,7 +49,8 @@ export class ValidationMessageHelper {
         return htmlId + "_validation_message_" + index;
     }
 
-    public static renderValidationFeedback(htmlId: string, validationFeedback: ValidationFeedback): React.ReactNode {
+    public static renderValidationFeedback(htmlId: string, uiContext: UIContext | undefined, fieldName: string): React.ReactNode {
+        const validationFeedback: ValidationFeedback = ValidationMessageHelper.determineValidationFeedback(uiContext, fieldName);
         return validationFeedback?.messages?.map((message, index) =>
         (
             <div id={ValidationMessageHelper.determineValidationMessageId(htmlId, index)}

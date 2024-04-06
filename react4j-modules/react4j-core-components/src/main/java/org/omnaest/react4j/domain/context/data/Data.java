@@ -16,6 +16,7 @@
 package org.omnaest.react4j.domain.context.data;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -30,6 +31,11 @@ public interface Data
     public static Data empty()
     {
         return EMPTY;
+    }
+
+    public static Data newInstance()
+    {
+        return Data.of(null, new HashMap<>());
     }
 
     public Map<String, Object> toMap();
@@ -73,8 +79,12 @@ public interface Data
 
     public Data setFieldValue(String field, Object value);
 
+    public Data setFieldValue(Field field, Object value);
+
     public Optional<Value> getFieldValue(String field);
 
     public Optional<Value> getFieldValue(Field field);
+
+    public Data clone();
 
 }

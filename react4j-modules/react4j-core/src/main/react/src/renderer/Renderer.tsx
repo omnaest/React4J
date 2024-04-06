@@ -26,7 +26,7 @@ import { Toaster, ToasterNode } from "./components/Toaster";
 import { Icon, IconNode } from "./components/Icon";
 import { PaddingContainer, PaddingContainerNode } from "./components/PaddingContainer";
 import { TextAlignmentContainer, TextAlignmentContainerNode } from "./components/TextAlignmentContainer";
-import RerenderingContainer, { RerenderingContainerNode, UpdateUIContextAction } from "./components/RerenderingContainer";
+import RerenderingContainer, { RerenderingContainerNode } from "./components/RerenderingContainer";
 import { UIContext, UIContextAccessor } from "./data/DataContextManager";
 import { ProgressBar, ProgressBarNode } from "./components/ProgressBar";
 import { IntervalRerenderingContainer, IntervalRerenderingContainerNode } from "./components/IntervalRerenderingContainer";
@@ -36,179 +36,136 @@ import { SizedContainer, SizedContainerNode } from "./components/SizedContainer"
 import { Range, RangeNode } from "./components/Range";
 import { NativeHtml, NativeHtmlNode } from "./components/NativeHtml";
 
-export interface Node
-{
+export interface Node {
     target: Target;
     uiContext?: UIContext;
     type: string;
 }
 
-export interface Target extends Array<string>
-{
+export interface Target extends Array<string> {
 }
 
-export interface RenderingSupport
-{
+export interface RenderingSupport {
     uiContextAccessor: UIContextAccessor,
     nodeContextAccessor: NodeContextAccessor
 }
 
-export interface NodeContextAccessor
-{
+export interface NodeContextAccessor {
     updateNode(node: Node): void;
 }
 
-export class Renderer
-{
-    public static render(node: Node, renderingSupport?: RenderingSupport): JSX.Element
-    {
-        if (node)
-        {
-            if (node.type === "JUMBOTRON")
-            {
+export class Renderer {
+    public static render(node: Node, renderingSupport?: RenderingSupport): JSX.Element {
+        if (node) {
+            if (node.type === "JUMBOTRON") {
                 return <JumboTron node={node as JumbotronNode} />;
             }
-            else if (node.type === RerenderingContainer.TYPE)
-            {
+            else if (node.type === RerenderingContainer.TYPE) {
                 return <RerenderingContainer node={node as RerenderingContainerNode} />
             }
-            else if (node.type === IntervalRerenderingContainer.TYPE)
-            {
+            else if (node.type === IntervalRerenderingContainer.TYPE) {
                 return <IntervalRerenderingContainer node={node as IntervalRerenderingContainerNode} />
             }
-            else if (node.type === UnorderedList.TYPE)
-            {
+            else if (node.type === UnorderedList.TYPE) {
                 return <UnorderedList node={node as UnorderedListNode} />
             }
-            else if (node.type === Image.TYPE)
-            {
+            else if (node.type === Image.TYPE) {
                 return <Image node={node as ImageNode} />;
             }
-            else if (node.type === Icon.TYPE)
-            {
+            else if (node.type === Icon.TYPE) {
                 return <Icon node={node as IconNode} />;
             }
-            else if (node.type === Button.TYPE)
-            {
+            else if (node.type === Button.TYPE) {
                 return <Button node={node as ButtonNode} />;
             }
-            else if (node.type === ImageIndex.TYPE)
-            {
+            else if (node.type === ImageIndex.TYPE) {
                 return <ImageIndex
                     node={node as ImageIndexNode}
                     render={node => this.render(node)}
                 />
             }
-            else if (node.type === PaddingContainer.TYPE)
-            {
+            else if (node.type === PaddingContainer.TYPE) {
                 return <PaddingContainer node={node as PaddingContainerNode} />;
             }
-            else if (node.type === NavigationBar.TYPE)
-            {
+            else if (node.type === NavigationBar.TYPE) {
                 return <NavigationBar node={node as NavigationBarNode} />
             }
-            else if (node.type === Container.TYPE)
-            {
+            else if (node.type === Container.TYPE) {
                 return <Container node={node as ContainerNode} />
             }
-            else if (node.type === Row.TYPE)
-            {
+            else if (node.type === Row.TYPE) {
                 return <Row node={node as RowNode} />
             }
-            else if (node.type === Cell.TYPE)
-            {
+            else if (node.type === Cell.TYPE) {
                 return <Cell node={node as CellNode} />
             }
-            else if (node.type === Heading.TYPE)
-            {
+            else if (node.type === Heading.TYPE) {
                 return <Heading node={node as HeadingNode} />
             }
-            else if (node.type === BlockQuote.TYPE)
-            {
+            else if (node.type === BlockQuote.TYPE) {
                 return <BlockQuote node={node as BlockQuoteNode} />
             }
-            else if (node.type === Card.TYPE)
-            {
+            else if (node.type === Card.TYPE) {
                 return <Card node={node as CardNode} />
             }
-            else if (node.type === Composite.TYPE)
-            {
+            else if (node.type === Composite.TYPE) {
                 return <Composite node={node as CompositeNode} />
             }
-            else if (node.type === Paragraph.TYPE)
-            {
+            else if (node.type === Paragraph.TYPE) {
                 return <Paragraph node={node as ParagraphNode} />
             }
-            else if (node.type === Table.TYPE)
-            {
+            else if (node.type === Table.TYPE) {
                 return <Table node={node as TableNode} />
             }
-            else if (node.type === Anker.TYPE)
-            {
+            else if (node.type === Anker.TYPE) {
                 return <Anker node={node as AnkerNode} />
             }
-            else if (node.type === AnkerButton.TYPE)
-            {
+            else if (node.type === AnkerButton.TYPE) {
                 return <AnkerButton node={node as AnkerButtonNode} />
             }
-            else if (node.type === LineBreak.TYPE)
-            {
+            else if (node.type === LineBreak.TYPE) {
                 return <LineBreak node={node as LineBreakNode} />
             }
-            else if (node.type === VerticalContentSwitcher.TYPE)
-            {
+            else if (node.type === VerticalContentSwitcher.TYPE) {
                 return <VerticalContentSwitcher node={node as VerticalContentSwitcherNode} />
             }
-            else if (node.type === HomePage.TYPE)
-            {
+            else if (node.type === HomePage.TYPE) {
                 return <HomePage node={node as HomePageNode} />
             }
-            else if (node.type === Form.TYPE)
-            {
+            else if (node.type === Form.TYPE) {
                 return <Form node={node as FormNode} renderingSupport={renderingSupport} />
             }
-            else if (node.type === ScrollbarContainer.TYPE)
-            {
+            else if (node.type === ScrollbarContainer.TYPE) {
                 return <ScrollbarContainer node={node as ScrollbarContainerNode} />
             }
-            else if (node.type === Text.TYPE)
-            {
+            else if (node.type === Text.TYPE) {
                 return <Text node={node as TextNode} />
             }
-            else if (node.type === TextAlignmentContainer.TYPE)
-            {
+            else if (node.type === TextAlignmentContainer.TYPE) {
                 return <TextAlignmentContainer node={node as TextAlignmentContainerNode} />
             }
-            else if (node.type === Toaster.TYPE)
-            {
+            else if (node.type === Toaster.TYPE) {
                 return <Toaster node={node as ToasterNode} />
             }
-            else if (node.type === ProgressBar.TYPE)
-            {
+            else if (node.type === ProgressBar.TYPE) {
                 return <ProgressBar node={node as ProgressBarNode} />
             }
-            else if (node.type === RatioContainer.TYPE)
-            {
+            else if (node.type === RatioContainer.TYPE) {
                 return <RatioContainer node={node as RatioContainerNode} />
             }
-            else if (node.type === IFrameContainer.TYPE)
-            {
+            else if (node.type === IFrameContainer.TYPE) {
                 return <IFrameContainer node={node as IFrameContainerNode} />
             }
-            else if (node.type === SizedContainer.TYPE)
-            {
+            else if (node.type === SizedContainer.TYPE) {
                 return <SizedContainer node={node as SizedContainerNode} />
             }
-            else if (node.type === Range.TYPE)
-            {
+            else if (node.type === Range.TYPE) {
                 return <Range node={node as RangeNode} />
             }
-            else if (node.type === NativeHtml.TYPE)
-            {
+            else if (node.type === NativeHtml.TYPE) {
                 return <NativeHtml node={node as NativeHtmlNode} />
             }
-            else 
-            {
+            else {
                 console.log("Invalid node " + node.type);
                 console.log(node);
             }

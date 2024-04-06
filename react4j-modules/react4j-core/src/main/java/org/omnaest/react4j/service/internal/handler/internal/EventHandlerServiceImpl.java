@@ -27,6 +27,7 @@ import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.handler.EventHandlerService;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
+import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler.MappedData;
 import org.omnaest.react4j.service.internal.handler.domain.DataWithContext;
 import org.omnaest.react4j.service.internal.handler.domain.EventBody;
 import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
@@ -66,10 +67,13 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
     @Override
     public void registerEventHandler(Target target, EventHandler eventHandler)
     {
-        this.registerDataEventHandler(target, data ->
+        this.registerDataEventHandler(target, (data, internalData) ->
         {
             eventHandler.invoke();
-            return data;
+            return MappedData.builder()
+                             .data(data)
+                             .internalData(internalData)
+                             .build();
         });
     }
 
@@ -80,6 +84,8 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
                                           .map(EventBody::getTarget);
         Optional<Data> data = Optional.ofNullable(eventBody.getDataWithContext())
                                       .map(dwc -> Data.of(dwc.getContextId(), dwc.getData()));
+        Optional<Data> internalData = Optional.ofNullable(eventBody.getDataWithContext())
+                                              .map(dwc -> Data.of(dwc.getContextId(), dwc.getInternalData()));
         Optional<TargetNode> rerenderedNode = this.executeTransactionalAndPublishStagingHandlers(() -> target.flatMap(targetNode -> this.rerenderingService.rerenderTargetNode(targetNode,
                                                                                                                                                                                data)));
 
@@ -87,10 +93,15 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
                                   .orElse(Collections.emptyMap())::get)
                      .filter(handlers -> !handlers.isEmpty())
                      .flatMap(handlers -> handlers.stream()
-                                                  .map(handler -> handler.invoke(data.orElse(Data.EMPTY)))
+                                                  .map(handler -> handler.invoke(data.orElse(Data.newInstance()), internalData.orElse(Data.newInstance())))
                                                   .reduce((d1, d2) -> d1.mergeWith(d2)))
                      .map(responseData -> new ResponseBody().setTarget(eventBody.getTarget())
-                                                            .setDataWithContext(new DataWithContext(responseData.getContextId(), responseData.toMap()))
+                                                            .setDataWithContext(new DataWithContext(responseData.getData()
+                                                                                                                .getContextId(),
+                                                                                                    responseData.getData()
+                                                                                                                .toMap(),
+                                                                                                    responseData.getInternalData()
+                                                                                                                .toMap()))
                                                             .setTargetNode(rerenderedNode.orElse(null)));
     }
 

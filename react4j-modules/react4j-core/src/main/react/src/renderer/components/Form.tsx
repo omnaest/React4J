@@ -7,6 +7,9 @@ import { Input } from "./form/Input";
 import { ValidationMessageHelper } from "./form/helper/ValidationMessageHelper";
 import { FormDescriptionHelper } from "./form/helper/FormDescriptionHelper";
 import { DropDown, DropDownFormElement } from "./form/DropDown";
+import { RerenderingHelper } from "../support/RerenderingHelper";
+import RerenderingContainer from "./RerenderingContainer";
+import LocalRerenderingContainer from "./LocalRerenderingContainer";
 
 export interface FormNode extends Node {
     elements: FormElement[];
@@ -58,84 +61,93 @@ interface State {
 export class Form extends React.Component<Props, State> {
     public static TYPE: string = "FORM";
 
-    private Form() {
+    public Form() {
         this.state = { updateCounter: 0 };
     }
 
-    private handleInputChange(element: FormElement, value: string) {
-        const updateCounter = DataContextManager.updateFieldByContext(element.contextId, element.field, value, this.props.renderingSupport?.uiContextAccessor);
+    private handleInputChange(element: FormElement, value: string, renderingSupport: RenderingSupport) {
+        const updateCounter = DataContextManager.updateFieldByContext(element.contextId, element.field, value, renderingSupport?.uiContextAccessor);
         this.setState({ updateCounter: updateCounter });
     }
 
     private renderElement(htmlId: string, element: FormElement): React.ReactNode {
-        if (element) {
-            if (element.type === Input.TYPE) {
-                return (
-                    <Input
-                        id={htmlId}
-                        element={element}
-                        onUpdate={(element, value) => this.handleInputChange(element, value)}
-                        updateCounter={this.state?.updateCounter}
-                        renderingSupport={this.props.renderingSupport}
-                    />
-                );
-            }
-            else if (element.type === DropDown.TYPE) {
-                return (
-                    <DropDown
-                        id={htmlId}
-                        element={element as DropDownFormElement}
-                        onUpdate={(element, value) => this.handleInputChange(element, value)}
-                        updateCounter={this.state.updateCounter}
-                        renderingSupport={this.props.renderingSupport}
-                    />
-                );
-            }
-            else if (element.type === "BUTTON") {
-                const buttonElement = element as ButtonFormElement;
-                return (
-                    <>
-                        <button
-                            id={htmlId}
-                            type="button"
-                            className="btn btn-primary"
-                            aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, element.validationFeedback)}
-                            onClick={HandlerFactory.onClick(buttonElement.onClick as Handler, this.props.renderingSupport?.uiContextAccessor, this.props.renderingSupport?.nodeContextAccessor)}
-                        >{I18nRenderer.render(buttonElement.text)}</button>
-                        {FormDescriptionHelper.renderDescription(htmlId, element.description)}
-                        {ValidationMessageHelper.renderValidationFeedback(htmlId, element.validationFeedback)}
-                    </>
-                );
-            }
-            else if (element.type === "RANGE") {
-                const rangeElement = element.range;
-                const validClassName = ValidationMessageHelper.determineFormControlClassName(element.validationFeedback);
-                return (
-                    <>
-                        <label htmlFor={htmlId}>{I18nRenderer.render(element.label)}</label>
-                        <input type="range"
-                            id={htmlId}
-                            className={"form-control form-range " + validClassName}
-                            aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, element.validationFeedback)}
-                            value={DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor)}
-                            min={rangeElement?.min || 0}
-                            max={rangeElement?.max || 100}
-                            step={rangeElement?.step || 1}
-                            disabled={element.disabled === true}
-                            required={element.required === true}
-                            onChange={(event) => this.handleInputChange(element, event.target.value)}
-                        />
-                        {FormDescriptionHelper.renderDescription(htmlId, element.description)}
-                        {ValidationMessageHelper.renderValidationFeedback(htmlId, element.validationFeedback)}
-                    </>
-                );
-            }
-        }
+        const uiContextId = element.contextId;
+        return (
+            <LocalRerenderingContainer contextId={uiContextId}>
+                {(renderingSupport: RenderingSupport) => {
+                    if (element) {
+                        if (element.type === Input.TYPE) {
+                            return (
+                                <Input
+                                    id={htmlId}
+                                    element={element}
+                                    onUpdate={(element, value) => this.handleInputChange(element, value, renderingSupport)}
+                                    updateCounter={this.state?.updateCounter}
+                                    renderingSupport={renderingSupport}
+                                />
+                            );
+                        }
+                        else if (element.type === DropDown.TYPE) {
+                            return (
+                                <DropDown
+                                    id={htmlId}
+                                    element={element as DropDownFormElement}
+                                    onUpdate={(element, value) => this.handleInputChange(element, value, renderingSupport)}
+                                    updateCounter={this.state.updateCounter}
+                                    renderingSupport={renderingSupport}
+                                />
+                            );
+                        }
+                        else if (element.type === "BUTTON") {
+                            const buttonElement = element as ButtonFormElement;
+                            const uiContext = renderingSupport?.uiContextAccessor?.getUIContextById(element.contextId);
+                            return (
+                                <>
+                                    <button
+                                        id={htmlId}
+                                        type="button"
+                                        className="btn btn-primary"
+                                        aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, element.validationFeedback)}
+                                        onClick={HandlerFactory.onClick(buttonElement.onClick as Handler, renderingSupport?.uiContextAccessor, renderingSupport?.nodeContextAccessor)}
+                                    >{I18nRenderer.render(buttonElement.text)}</button>
+                                    {FormDescriptionHelper.renderDescription(htmlId, element.description)}
+                                    {ValidationMessageHelper.renderValidationFeedback(htmlId, uiContext, element.field)}
+                                </>
+                            );
+                        }
+                        else if (element.type === "RANGE") {
+                            const rangeElement = element.range;
+                            const uiContext = renderingSupport?.uiContextAccessor?.getUIContextById(element.contextId);
+                            const validClassName = ValidationMessageHelper.determineFormControlClassName(uiContext, element.field);
+                            return (
+                                <>
+                                    <label htmlFor={htmlId}>{I18nRenderer.render(element.label)}</label>
+                                    <input type="range"
+                                        id={htmlId}
+                                        className={"form-control form-range " + validClassName}
+                                        aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, element.validationFeedback)}
+                                        value={DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor)}
+                                        min={rangeElement?.min || 0}
+                                        max={rangeElement?.max || 100}
+                                        step={rangeElement?.step || 1}
+                                        disabled={element.disabled === true}
+                                        required={element.required === true}
+                                        onChange={(event) => this.handleInputChange(element, event.target.value, renderingSupport)}
+                                    />
+                                    {FormDescriptionHelper.renderDescription(htmlId, element.description)}
+                                    {ValidationMessageHelper.renderValidationFeedback(htmlId, uiContext, element.field)}
+                                </>
+                            );
+                        }
+                        else {
+                            return (<></>);
+                        }
+                    }
+                }
+                }
+            </LocalRerenderingContainer>);
     }
 
-    private renderValidationFeedback(htmlId: string, validationFeedback: ValidationFeedback): React.ReactNode {
-        return;
-    }
 
     public render(): JSX.Element {
         return (

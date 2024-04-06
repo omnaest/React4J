@@ -17,8 +17,26 @@ package org.omnaest.react4j.service.internal.handler.domain;
 
 import org.omnaest.react4j.domain.context.data.Data;
 
+import lombok.Builder;
+
 @FunctionalInterface
 public interface DataEventHandler
 {
-    public Data invoke(Data data);
+    public MappedData invoke(Data data, Data internalData);
+
+    @lombok.Data
+    @Builder
+    public static class MappedData
+    {
+        private final Data data;
+        private final Data internalData;
+
+        public MappedData mergeWith(MappedData mappedData)
+        {
+            return MappedData.builder()
+                             .data(this.data.mergeWith(mappedData.getData()))
+                             .internalData(this.internalData.mergeWith(mappedData.getInternalData()))
+                             .build();
+        }
+    }
 }

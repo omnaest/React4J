@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.omnaest.react4j.component.form.Form.InputFormElement.ValidationMessageType;
+import org.omnaest.react4j.component.form.Form.ValidationMessageType;
 
 public class ValidationMessageTypeMapperTest
 {
