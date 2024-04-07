@@ -138,10 +138,8 @@ export class Form extends React.Component<Props, State> {
                             </>
                         );
                     }
-                    else {
-                        return (<></>);
-                    }
                 }
+                return (<></>);
             }
 
         )

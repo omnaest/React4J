@@ -35,6 +35,7 @@ import { IFrameContainer, IFrameContainerNode } from "./components/IFrameContain
 import { SizedContainer, SizedContainerNode } from "./components/SizedContainer";
 import { Range, RangeNode } from "./components/Range";
 import { NativeHtml, NativeHtmlNode } from "./components/NativeHtml";
+import { RerenderingHelper } from "./support/RerenderingHelper";
 
 export interface Node {
     target: Target;
@@ -56,6 +57,17 @@ export interface NodeContextAccessor {
 
 export class Renderer {
     public static render(node: Node, renderingSupport?: RenderingSupport): JSX.Element {
+        if (node?.uiContext) {
+            return RerenderingHelper.wrapInRerenderingContainer(node.uiContext?.contextId,
+                (renderingSupport) => {
+                    return this.renderNode(node, renderingSupport);
+                });
+        } else {
+            return this.renderNode(node, renderingSupport);
+        }
+    }
+
+    public static renderNode(node: Node, renderingSupport?: RenderingSupport): JSX.Element {
         if (node) {
             if (node.type === "JUMBOTRON") {
                 return <JumboTron node={node as JumbotronNode} />;
