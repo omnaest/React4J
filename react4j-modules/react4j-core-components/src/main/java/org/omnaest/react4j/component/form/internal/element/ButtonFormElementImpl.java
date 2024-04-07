@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import org.omnaest.react4j.component.form.Form.ButtonFormElement;
 import org.omnaest.react4j.component.form.Form.ValidationMessageType;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNode;
-import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNodeImpl;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.validation.ValidationFeedbackNode;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.validation.ValidationMessageNode;
 import org.omnaest.react4j.domain.Location;
@@ -45,7 +44,7 @@ public class ButtonFormElementImpl extends AbstractFormElementImpl<ButtonFormEle
     }
 
     @Override
-    protected FormElementNode renderNode(FormElementNodeImpl node, Location location)
+    protected FormElementNode renderNode(FormElementNode node, Location location)
     {
         Context dataContext = this.getEffectiveContext();
         Target target = Target.from(location);

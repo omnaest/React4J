@@ -12,7 +12,6 @@ import org.omnaest.react4j.component.form.internal.element.DropDownFormElementIm
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormDropDownNode;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormDropDownNode.DropDownOptionNode;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNode;
-import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNodeImpl;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.context.data.DataContext;
 import org.omnaest.react4j.domain.context.document.Document;
@@ -38,7 +37,7 @@ public class DropDownFormElementImpl extends AbstractFormElementImpl<DropDownFor
     }
 
     @Override
-    protected FormElementNode renderNode(FormElementNodeImpl node, Location location)
+    protected FormElementNode renderNode(FormElementNode node, Location location)
     {
         DropDownData data = this.data.build();
         return node.toBuilder()

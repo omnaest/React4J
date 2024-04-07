@@ -39,7 +39,7 @@ import { RerenderingHelper } from "./support/RerenderingHelper";
 
 export interface Node {
     target: Target;
-    uiContext?: UIContext;
+    uiContextId?: string;
     type: string;
 }
 
@@ -57,8 +57,8 @@ export interface NodeContextAccessor {
 
 export class Renderer {
     public static render(node: Node, renderingSupport?: RenderingSupport): JSX.Element {
-        if (node?.uiContext) {
-            return RerenderingHelper.wrapInRerenderingContainer(node.uiContext?.contextId,
+        if (node?.uiContextId) {
+            return RerenderingHelper.wrapIntoRerenderingContainer(node.uiContextId,
                 (renderingSupport) => {
                     return this.renderNode(node, renderingSupport);
                 });

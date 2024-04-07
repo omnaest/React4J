@@ -6,7 +6,6 @@ import java.util.function.Supplier;
 
 import org.omnaest.react4j.component.form.Form.FormElement;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNode;
-import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNodeImpl;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.context.Context;
 import org.omnaest.react4j.domain.context.data.DataContext;
@@ -49,12 +48,12 @@ public abstract class AbstractFormElementImpl<FE extends FormElement<?>> impleme
         Location location = Optional.ofNullable(this.getField())
                                     .map(field -> Location.of(Location.of(parentLocation, this.id), field))
                                     .orElse(Location.of(parentLocation, this.id));
-        return this.renderNode(FormElementNodeImpl.builder()
-                                                  .field(this.getField())
-                                                  .contextId(context.getId(location))
-                                                  .label(this.textResolver.apply(this.label, location))
-                                                  .description(this.textResolver.apply(this.description, location))
-                                                  .build(),
+        return this.renderNode(FormElementNode.builder()
+                                              .field(this.getField())
+                                              .contextId(context.getId(location))
+                                              .label(this.textResolver.apply(this.label, location))
+                                              .description(this.textResolver.apply(this.description, location))
+                                              .build(),
                                location);
     }
 
@@ -65,7 +64,7 @@ public abstract class AbstractFormElementImpl<FE extends FormElement<?>> impleme
                        .orElseGet(this.parentDataContext::get);
     }
 
-    protected abstract FormElementNode renderNode(FormElementNodeImpl node, Location location);
+    protected abstract FormElementNode renderNode(FormElementNode node, Location location);
 
     private String getField()
     {

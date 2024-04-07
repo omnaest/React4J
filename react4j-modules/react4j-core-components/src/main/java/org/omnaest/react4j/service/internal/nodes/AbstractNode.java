@@ -21,20 +21,26 @@ import org.omnaest.utils.json.AbstractJSONSerializable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.Getter;
+
+@Getter
 public abstract class AbstractNode extends AbstractJSONSerializable implements Node
 {
     @JsonProperty
     private Target target;
 
-    @Override
-    public Target getTarget()
-    {
-        return this.target;
-    }
+    @JsonProperty
+    private String uiContextId;
 
     protected Node setTarget(Target target)
     {
         this.target = target;
+        return this;
+    }
+
+    protected Node setUiContextId(String uiContextId)
+    {
+        this.uiContextId = uiContextId;
         return this;
     }
 

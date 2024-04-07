@@ -5,7 +5,6 @@ import java.util.function.Supplier;
 
 import org.omnaest.react4j.component.form.Form.InputFormElement;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNode;
-import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNodeImpl;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.context.data.DataContext;
 import org.omnaest.react4j.domain.context.document.Document;
@@ -32,7 +31,7 @@ public class InputFormElementImpl extends AbstractFormElementImpl<InputFormEleme
     }
 
     @Override
-    protected FormElementNode renderNode(FormElementNodeImpl node, Location location)
+    protected FormElementNode renderNode(FormElementNode node, Location location)
     {
         return node.toBuilder()
                    .type("INPUT")

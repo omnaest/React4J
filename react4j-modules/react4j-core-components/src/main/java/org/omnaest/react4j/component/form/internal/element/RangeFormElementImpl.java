@@ -5,7 +5,6 @@ import java.util.function.Supplier;
 
 import org.omnaest.react4j.component.form.Form.RangeFormElement;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNode;
-import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNodeImpl;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormRangeNode;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.context.data.DataContext;
@@ -57,7 +56,7 @@ public class RangeFormElementImpl extends AbstractFormElementImpl<RangeFormEleme
     }
 
     @Override
-    protected FormElementNode renderNode(FormElementNodeImpl node, Location location)
+    protected FormElementNode renderNode(FormElementNode node, Location location)
     {
         node.setType("RANGE")
             .setRange(new FormRangeNode().setMin(Integer.toString(this.min))
