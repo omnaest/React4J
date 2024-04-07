@@ -84,7 +84,7 @@ public class TranslationFileService implements TranslationProvider, TranslationP
     @Override
     public Optional<Translator> getTranslator(Locale sourceLocale, Locale targetLocale)
     {
-        return OptionalUtils.bothOfNullable(sourceLocale, targetLocale)
+        return OptionalUtils.bothElementsOfNullable(sourceLocale, targetLocale)
                             .filter(sourceAndTargetLocale -> this.localeToKeyToTextStore.containsKey(sourceAndTargetLocale.getFirst()))
                             .filter(sourceAndTargetLocale -> this.localeToKeyToTextStore.containsKey(sourceAndTargetLocale.getSecond()))
                             .map(sourceAndTargetLocale ->

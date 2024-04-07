@@ -29,11 +29,14 @@ export interface UpdateActions extends UpdateUIContextActions {
 }
 
 export class RenderingSupportHelper {
-    public static connect<C extends typeof React.Component>(container: C, contextIdExtractor: (props: any) => string | undefined, defaultNodeProvider: (props: any) => any): ConnectedComponent<C, any> {
+    public static connect<C extends typeof React.Component>(container: C, uiContextIdsExtractor: (props: any) => string[] | undefined, defaultNodeProvider: (props: any) => any): ConnectedComponent<C, any> {
         const mapStateToProps = ({ uiContexts, nodes }: RootReducerState, props: any) => {
-            const contextId = contextIdExtractor(props);
-            const uiContext: UIContext = uiContexts[contextId || ""];
-            const uiContextRenderingCounter = uiContext?.updateCounter || 0;
+            let uiContextRenderingCounter = 0;
+            const contextIds = uiContextIdsExtractor(props);
+            contextIds?.forEach((contextId) => {
+                const uiContext: UIContext = uiContexts[contextId];
+                uiContextRenderingCounter += uiContext?.updateCounter || 0;
+            })
             const node = (nodes[props.node?.target?.join(".")] || defaultNodeProvider(props));
             return { uiContextRenderingCounter, uiContexts, node } as UIContextsState;
         }
@@ -60,24 +63,42 @@ export class RenderingSupportHelper {
     }
 
     private static newUIContextAccessor(uiContextsState: UIContextsState, updateUIContextAction: UpdateUIContextActions): UIContextAccessor {
+        const updateUIContext = (uiContext: UIContext) => {
+            if (uiContext) {
+                uiContext.updateCounter = 1 + Math.max(uiContextsState.uiContexts[uiContext.contextId]?.updateCounter || 0, uiContext.updateCounter || 0);
+                uiContextsState.uiContexts[uiContext.contextId] = uiContext;
+                updateUIContextAction.updateUIContext(uiContext);
+            }
+        };
+        const getUIContextById = (contextId: string) => {
+            if (!uiContextsState.uiContexts[contextId]) {
+                uiContextsState.uiContexts[contextId] = {
+                    contextId: contextId,
+                    data: {},
+                    internalData: {},
+                    updateCounter: 0
+                };
+            }
+            return uiContextsState.uiContexts[contextId];
+        };
         return {
-            updateUIContext: (uiContext) => {
-                if (uiContext) {
-                    uiContext.updateCounter = 1 + Math.max(uiContextsState.uiContexts[uiContext.contextId]?.updateCounter, uiContext.updateCounter);
-                    uiContextsState.uiContexts[uiContext.contextId] = uiContext;
-                    updateUIContextAction.updateUIContext(uiContext);
-                }
-            },
-            getUIContextById: (contextId) => {
-                if (!uiContextsState.uiContexts[contextId]) {
-                    uiContextsState.uiContexts[contextId] = {
-                        contextId: contextId,
-                        data: {},
+            updateUIContext: updateUIContext,
+            initializeUIContext: (uiContextNode?) => {
+                if (uiContextNode?.contextId && !uiContextsState.uiContexts[uiContextNode?.contextId]) {
+                    const uiContext = {
+                        ...uiContextNode,
                         updateCounter: 0
                     };
+                    if (!uiContext.data) {
+                        uiContext.data = {};
+                    }
+                    if (!uiContext.internalData) {
+                        uiContext.internalData = {};
+                    }
+                    updateUIContext(uiContext);
                 }
-                return uiContextsState.uiContexts[contextId];
-            }
+            },
+            getUIContextById: getUIContextById
         };
     }
 }

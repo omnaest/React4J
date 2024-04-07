@@ -33,5 +33,4 @@ public class NativeHtmlNode extends AbstractNode implements Node
 
     @JsonProperty
     private String source;
-
 }

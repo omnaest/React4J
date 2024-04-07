@@ -30,6 +30,7 @@ import org.omnaest.react4j.domain.rendering.RenderableUIComponent.UIComponentWra
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.service.internal.nodes.context.UIContextDataNode;
 import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.SetUtils;
 import org.omnaest.utils.stream.FilterMapper;
@@ -101,7 +102,19 @@ public class RenderingProcessorImpl implements RenderingProcessor
             LocationSupport locationSupport = new LocationSupportImpl(parentLocation);
             UIComponentRenderer renderer = component.asRenderer();
             Location location = renderer.getLocation(locationSupport);
-            return renderer.render(this.createFilteringRenderingProcessor(currentIgnoredComponents), location, data);
+            Node node = renderer.render(this.createFilteringRenderingProcessor(currentIgnoredComponents), location, data);
+
+            component.getUIContextInitialDataIfPresent()
+                     .ifPresent(uiContextData -> node.setUiContextData(UIContextDataNode.builder()
+                                                                                        .contextId(uiContextData.getContextIdCreator()
+                                                                                                                .apply(location))
+                                                                                        .data(uiContextData.getData()
+
+                                                                                                           .toMap())
+                                                                                        .internalData(uiContextData.getInternalData()
+                                                                                                                   .toMap())
+                                                                                        .build()));
+            return node;
         };
     }
 

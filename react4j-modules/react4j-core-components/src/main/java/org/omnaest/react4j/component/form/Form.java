@@ -16,6 +16,7 @@
 package org.omnaest.react4j.component.form;
 
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -102,6 +103,8 @@ public interface Form extends UIComponent<Form>
         @Override
         public RangeFormElement withLabel(String label);
 
+        public RangeFormElement withInitialValue(int initialValue);
+
         public RangeFormElement withMin(int min);
 
         public RangeFormElement withMax(int max);
@@ -109,6 +112,7 @@ public interface Form extends UIComponent<Form>
         public RangeFormElement withStep(int step);
 
         public RangeFormElement withDisabled(boolean disabled);
+
     }
 
     public static interface ButtonFormElement extends FormElement<ButtonFormElement>
@@ -119,9 +123,15 @@ public interface Form extends UIComponent<Form>
 
         public ButtonFormElement onClick(ButtonEventHandler eventHandler);
 
+        public ButtonFormElement onClick(ButtonEventHandlerWithMessaging eventHandler);
+
         public ButtonFormElement saveOnClick();
 
-        public static interface ButtonEventHandler extends TriFunction<Data, Messaging, Context, Data>
+        public static interface ButtonEventHandler extends BiFunction<Data, Context, Data>
+        {
+        }
+
+        public static interface ButtonEventHandlerWithMessaging extends TriFunction<Data, Messaging, Context, Data>
         {
         }
 

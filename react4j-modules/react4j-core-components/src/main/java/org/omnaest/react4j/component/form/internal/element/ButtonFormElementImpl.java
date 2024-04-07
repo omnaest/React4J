@@ -26,6 +26,7 @@ import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler.Mapp
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.handler.ServerHandler;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
+import org.omnaest.utils.FunctionUtils;
 import org.omnaest.utils.PredicateUtils;
 
 import lombok.Getter;
@@ -35,19 +36,22 @@ public class ButtonFormElementImpl extends AbstractFormElementImpl<ButtonFormEle
 {
     private I18nText         text;
     private DataEventHandler eventHandler;
+    private int              index;
 
     public ButtonFormElementImpl(Function<Class<?>, String> identityProvider, LocalizedTextResolverService textResolver,
                                  Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry,
-                                 Supplier<? extends DataContext> parentDataContext)
+                                 Supplier<? extends DataContext> parentDataContext, int index)
     {
         super(identityProvider, textResolver, i18nTextMapper, eventHandlerRegistry, parentDataContext);
+        this.index = index;
     }
 
     @Override
     protected FormElementNode renderNode(FormElementNode node, Location location)
     {
         Context dataContext = this.getEffectiveContext();
-        Target target = Target.from(location);
+        Location buttonLocation = location.and("button[" + this.index + "]");
+        Target target = Target.from(buttonLocation);
         this.eventHandlerRegistry.registerDataEventHandler(target, this.eventHandler);
         node.setType("BUTTON")
             .setText(this.textResolver.apply(this.text, location))
@@ -64,6 +68,12 @@ public class ButtonFormElementImpl extends AbstractFormElementImpl<ButtonFormEle
 
     @Override
     public ButtonFormElement onClick(ButtonEventHandler eventHandler)
+    {
+        return this.onClick((data, messaging, buttonContext) -> FunctionUtils.applyWith(data, buttonContext, eventHandler));
+    }
+
+    @Override
+    public ButtonFormElement onClick(ButtonEventHandlerWithMessaging eventHandler)
     {
         this.eventHandler = (previousData, previousInternalData) ->
         {

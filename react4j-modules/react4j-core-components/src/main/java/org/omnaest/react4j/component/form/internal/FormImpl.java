@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.component.form.internal;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -31,6 +32,7 @@ import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.component.AbstractUIComponent;
 import org.omnaest.react4j.service.internal.component.ComponentContext;
+import org.omnaest.react4j.service.internal.component.uicontext.UIContextManager;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 import org.omnaest.utils.element.cached.CachedElement;
@@ -62,9 +64,15 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         LocalizedTextResolverService textResolver = FormImpl.this.getTextResolver();
         Function<String, I18nText> i18nTextMapper = FormImpl.this.i18nTextMapper();
         EventHandlerRegistry eventHandlerRegistry = this.getEventHandlerRegistry();
+        UIContextManager uiContextManager = this.uiContextManager;
         CachedElement<? extends DataContext> dataContext = this.dataContextProvider;
+        int numberOfFormElements = this.data.build()
+                                            .getElements()
+                                            .size();
         FormElement<?> formElement = formElementFactoryConsumer.apply(new FormElementFactory()
         {
+            private AtomicInteger buttonCounter = new AtomicInteger(numberOfFormElements);
+
             @Override
             public InputFormElement newInputField()
             {
@@ -74,13 +82,15 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             @Override
             public ButtonFormElement newButton()
             {
-                return new ButtonFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext);
+                return new ButtonFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext,
+                                                 this.buttonCounter.incrementAndGet());
             }
 
             @Override
             public RangeFormElement newRange()
             {
-                return new RangeFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext);
+                return new RangeFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext,
+                                                uiContextManager);
             }
 
             @Override

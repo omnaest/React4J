@@ -30,4 +30,4 @@ class RerenderingContainer extends React.Component<PropsWithReduxStore, State> {
     }
 }
 
-export default RenderingSupportHelper.connect<typeof RerenderingContainer>(RerenderingContainer, (props: Props) => props.node?.content?.uiContextId, (props: Props) => props.node);
+export default RenderingSupportHelper.connect<typeof RerenderingContainer>(RerenderingContainer, (props: Props) => props.node?.content?.uiContextIds, (props: Props) => props.node);

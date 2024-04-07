@@ -23,4 +23,4 @@ class LocalRerenderingContainer extends React.Component<PropsWithReduxStore, Sta
     }
 }
 
-export default RenderingSupportHelper.connect(LocalRerenderingContainer, (props: Props) => props.contextId, (props: Props) => undefined);
+export default RenderingSupportHelper.connect(LocalRerenderingContainer, (props: Props) => props.contextId ? [props.contextId] : undefined, (props: Props) => undefined);

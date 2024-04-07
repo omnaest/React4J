@@ -11,10 +11,13 @@ export interface DataContext {
 export interface Data extends ElementMap<any> {
 }
 
-export interface UIContext {
+export interface UIContextDataNode {
     contextId: string;
     data: UIContextData;
     internalData?: UIContextInternalData;
+}
+
+export interface UIContext extends UIContextDataNode {
     updateCounter: number;
 }
 
@@ -30,6 +33,8 @@ export interface UIContextAccessor {
     getUIContextById(contextId: string): UIContext;
 
     updateUIContext(uiContext: UIContext): void;
+
+    initializeUIContext(uiContext?: UIContextDataNode): void;
 }
 
 export class DataContextManager {

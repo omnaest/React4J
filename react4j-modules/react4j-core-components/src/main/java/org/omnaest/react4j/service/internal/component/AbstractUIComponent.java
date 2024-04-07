@@ -18,6 +18,7 @@ package org.omnaest.react4j.service.internal.component;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -33,9 +34,11 @@ import org.omnaest.react4j.domain.context.ui.UIContext;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.i18n.UILocale;
 import org.omnaest.react4j.domain.rendering.RenderableUIComponent;
+import org.omnaest.react4j.service.internal.component.uicontext.UIContextManager;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.service.ContextFactory;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
+import org.omnaest.utils.ConsumerUtils;
 import org.omnaest.utils.element.cached.CachedElement;
 
 public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements RenderableUIComponent<UIC>
@@ -45,19 +48,25 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
     protected ComponentContext                     context;
     protected CachedElement<DefineableDataContext> dataContextProvider = CachedElement.of(() -> this.context.getContextFactory()
                                                                                                             .newDataContextInstance(this.getLocations()));
-    protected CachedElement<UIContext>             uiContextProvider   = CachedElement.of(() -> this.context.getContextFactory()
-                                                                                                            .newUIContextInstance(this.getLocations()));
+    protected UIContextManager                     uiContextManager;
 
     public AbstractUIComponent(ComponentContext context)
     {
         super();
         this.context = context;
+        this.uiContextManager = new UIContextManager(context, this::getLocations);
     }
 
     protected String newComponentId(Class<?> type)
     {
         return type.getSimpleName()
                    .toLowerCase();
+    }
+
+    @Override
+    public Optional<UIContextData> getUIContextInitialDataIfPresent()
+    {
+        return this.uiContextManager.getUIContextInitialData();
     }
 
     @Override
@@ -151,25 +160,18 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
     }
 
     @Override
-    public RerenderingContainer withUIContext(UIContextConsumer<UIC> uiContextConsumer)
+    public UIC withUIContext(UIContextConsumer<UIC> uiContextConsumer)
     {
         return this.withUIContext((component, context, data) -> uiContextConsumer.accept(component, context));
     }
 
-    public RerenderingContainer withUIContext(UIContextAndDataConsumer<UIC> uiContextConsumer)
+    @SuppressWarnings("unchecked")
+    @Override
+    public UIC withUIContext(UIContextAndDataConsumer<UIC> uiContextConsumer)
     {
-        UIContext uiContext = this.uiContextProvider.get();
-        return this.getUiComponentFactory()
-                   .newRerenderingContainer()
-                   .withDataDrivenContent(data ->
-                   {
-                       UIC clone = this.asTemplateProvider()
-                                       .get();
-                       uiContextConsumer.accept(clone, uiContext, data);
-                       return clone;
-                   })
-                   .withUIContext(uiContext)
-                   .disableStaticNodeRerendering();
+        UIContext uiContext = this.uiContextManager.getOrCreateUIContext();
+        ConsumerUtils.consumeWith((UIC) this, uiContext, this.uiContextManager.getOrCreateInitialData(), uiContextConsumer);
+        return (UIC) this;
     }
 
     @Override
@@ -189,7 +191,17 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
     @Override
     public RerenderingContainer withRerenderingUIContext(UIContextAndDataConsumer<UIC> rerenderingUIContextConsumer)
     {
-        return this.withUIContext((first, second, data) -> rerenderingUIContextConsumer.accept(first, second, data))
+        UIContext uiContext = this.uiContextManager.getOrCreateUIContext();
+        return this.getUiComponentFactory()
+                   .newRerenderingContainer()
+                   .withDataDrivenContent(data ->
+                   {
+                       UIC clone = this.asTemplateProvider()
+                                       .get();
+                       rerenderingUIContextConsumer.accept(clone, uiContext, data);
+                       return clone;
+                   })
+                   .withUIContext(uiContext)
                    .enableStaticNodeRerendering();
     }
 

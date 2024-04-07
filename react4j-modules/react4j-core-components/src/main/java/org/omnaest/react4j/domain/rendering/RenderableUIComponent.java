@@ -15,10 +15,16 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain.rendering;
 
+import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
+import org.omnaest.react4j.domain.context.data.Data;
+
+import lombok.Builder;
 
 /**
  * Internal extension of the {@link UIComponent} which provides a {@link UIComponentRenderer} instance
@@ -30,6 +36,21 @@ import org.omnaest.react4j.domain.UIComponentFactory;
 public interface RenderableUIComponent<UIC extends UIComponent<?>> extends UIComponent<UIC>
 {
     public UIComponentRenderer asRenderer();
+
+    public Optional<UIContextData> getUIContextInitialDataIfPresent();
+
+    @lombok.Data
+    @Builder
+    public static class UIContextData
+    {
+        private final ContextIdCreator contextIdCreator;
+        private final Data             data;
+        private final Data             internalData;
+    }
+
+    public static interface ContextIdCreator extends Function<Location, String>
+    {
+    }
 
     public UIComponentWrapper<UIC> getWrapper();
 

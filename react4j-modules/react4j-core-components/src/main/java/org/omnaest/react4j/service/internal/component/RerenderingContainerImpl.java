@@ -32,7 +32,7 @@ import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.domain.support.UIComponentProviderWithData;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.RerenderingContainerNode;
-import org.omnaest.react4j.service.internal.nodes.context.UIContextNode;
+import org.omnaest.react4j.service.internal.nodes.context.UIContextDataNode;
 
 public class RerenderingContainerImpl extends AbstractUIComponentAndContentHolder<RerenderingContainer> implements RerenderingContainer
 {
@@ -68,12 +68,14 @@ public class RerenderingContainerImpl extends AbstractUIComponentAndContentHolde
             public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new RerenderingContainerNode().setContent(Optional.ofNullable(RerenderingContainerImpl.this.content)
-                                                                         .map(contentProvider -> contentProvider.apply(data.orElse(Data.empty())))
+                                                                         .map(contentProvider -> contentProvider.apply(data.orElse(Data.newInstance())))
                                                                          .map(content -> renderingProcessor.process(content, location))
                                                                          .orElse(null))
                                                      .setUiContext(Optional.ofNullable(RerenderingContainerImpl.this.uiContext)
-                                                                           .map(uiContext -> new UIContextNode().setContextId(uiContext.getId(location)))
-                                                                           .orElse((UIContextNode) null))
+                                                                           .map(uiContext -> UIContextDataNode.builder()
+                                                                                                              .contextId(uiContext.getId(location))
+                                                                                                              .build())
+                                                                           .orElse((UIContextDataNode) null))
                                                      .setEnableNodeReload(RerenderingContainerImpl.this.enableStaticNodeRerendering)
                                                      .setTarget(Target.from(location));
             }

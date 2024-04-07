@@ -27,7 +27,7 @@ import { Icon, IconNode } from "./components/Icon";
 import { PaddingContainer, PaddingContainerNode } from "./components/PaddingContainer";
 import { TextAlignmentContainer, TextAlignmentContainerNode } from "./components/TextAlignmentContainer";
 import RerenderingContainer, { RerenderingContainerNode } from "./components/RerenderingContainer";
-import { UIContext, UIContextAccessor } from "./data/DataContextManager";
+import { UIContext, UIContextAccessor, UIContextDataNode } from "./data/DataContextManager";
 import { ProgressBar, ProgressBarNode } from "./components/ProgressBar";
 import { IntervalRerenderingContainer, IntervalRerenderingContainerNode } from "./components/IntervalRerenderingContainer";
 import { RatioContainer, RatioContainerNode } from "./components/RatioContainer";
@@ -36,12 +36,15 @@ import { SizedContainer, SizedContainerNode } from "./components/SizedContainer"
 import { Range, RangeNode } from "./components/Range";
 import { NativeHtml, NativeHtmlNode } from "./components/NativeHtml";
 import { RerenderingHelper } from "./support/RerenderingHelper";
+import { RenderingSupportHelper } from "./support/RenderingSupportHelper";
 
 export interface Node {
     target: Target;
-    uiContextId?: string;
+    uiContextIds?: string[];
+    uiContextData?: UIContextDataNode;
     type: string;
 }
+
 
 export interface Target extends Array<string> {
 }
@@ -57,13 +60,29 @@ export interface NodeContextAccessor {
 
 export class Renderer {
     public static render(node: Node, renderingSupport?: RenderingSupport): JSX.Element {
-        if (node?.uiContextId) {
-            return RerenderingHelper.wrapIntoRerenderingContainer(node.uiContextId,
+        if (node?.uiContextData?.contextId) {
+            return RerenderingHelper.wrapIntoRerenderingContainer([node.uiContextData.contextId],
+                (renderingSupport) => {
+                    renderingSupport?.uiContextAccessor.initializeUIContext(node.uiContextData);
+                    return this.renderWithRelatedUIContexts(node, renderingSupport);
+                });
+        }
+        else {
+            return this.renderWithRelatedUIContexts(node, renderingSupport);
+        }
+    }
+
+    public static renderWithRelatedUIContexts(node: Node, renderingSupport?: RenderingSupport): JSX.Element {
+        if ((node?.uiContextIds?.length || 0) > 0) {
+            return RerenderingHelper.wrapIntoRerenderingContainer(node.uiContextIds,
                 (renderingSupport) => {
                     return this.renderNode(node, renderingSupport);
                 });
-        } else {
+        } else if (node) {
             return this.renderNode(node, renderingSupport);
+        }
+        else {
+            return <></>;
         }
     }
 

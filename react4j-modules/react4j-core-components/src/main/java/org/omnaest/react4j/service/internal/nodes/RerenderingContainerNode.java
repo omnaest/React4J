@@ -17,7 +17,7 @@ package org.omnaest.react4j.service.internal.nodes;
 
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
-import org.omnaest.react4j.service.internal.nodes.context.UIContextNode;
+import org.omnaest.react4j.service.internal.nodes.context.UIContextDataNode;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -28,9 +28,6 @@ public class RerenderingContainerNode extends AbstractNode implements Node
 
     @JsonProperty
     private Node content;
-
-    @JsonProperty
-    private UIContextNode uiContext;
 
     @JsonProperty
     private boolean enableNodeReload;
@@ -52,14 +49,9 @@ public class RerenderingContainerNode extends AbstractNode implements Node
         return this;
     }
 
-    public UIContextNode getUiContext()
+    public RerenderingContainerNode setUiContext(UIContextDataNode uiContext)
     {
-        return this.uiContext;
-    }
-
-    public RerenderingContainerNode setUiContext(UIContextNode uiContext)
-    {
-        this.uiContext = uiContext;
+        super.setUiContextData(uiContext);
         return this;
     }
 

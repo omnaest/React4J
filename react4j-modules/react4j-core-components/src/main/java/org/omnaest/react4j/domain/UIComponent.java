@@ -37,7 +37,9 @@ public interface UIComponent<UIC extends UIComponent<?>>
      */
     public UIC withDataContext(BiConsumer<UIC, DefineableDataContext> dataContextConsumer);
 
-    public RerenderingContainer withUIContext(UIContextConsumer<UIC> uiContextConsumer);
+    public UIC withUIContext(UIContextConsumer<UIC> uiContextConsumer);
+
+    public UIC withUIContext(UIContextAndDataConsumer<UIC> uiContextConsumer);
 
     public RerenderingContainer withRerenderingUIContext(UIContextAndDataConsumer<UIC> rerenderingUiContextConsumer);
 

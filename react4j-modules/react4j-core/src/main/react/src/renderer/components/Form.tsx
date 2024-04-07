@@ -72,7 +72,7 @@ export class Form extends React.Component<Props, State> {
     }
 
     private renderElement(htmlId: string, element: FormElement): React.ReactNode {
-        return RerenderingHelper.wrapIntoRerenderingContainer(element.contextId,
+        return RerenderingHelper.wrapIntoRerenderingContainer([element.contextId],
             (renderingSupport) => {
                 if (element) {
                     if (element.type === Input.TYPE) {

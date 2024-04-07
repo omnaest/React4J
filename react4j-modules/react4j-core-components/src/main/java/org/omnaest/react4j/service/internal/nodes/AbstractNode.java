@@ -15,8 +15,13 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.nodes;
 
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
+
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
+import org.omnaest.react4j.service.internal.nodes.context.UIContextDataNode;
 import org.omnaest.utils.json.AbstractJSONSerializable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,7 +35,10 @@ public abstract class AbstractNode extends AbstractJSONSerializable implements N
     private Target target;
 
     @JsonProperty
-    private String uiContextId;
+    private Set<String> uiContextIds = new LinkedHashSet<>();
+
+    @JsonProperty
+    private Optional<UIContextDataNode> uiContextData = Optional.empty();
 
     protected Node setTarget(Target target)
     {
@@ -38,9 +46,25 @@ public abstract class AbstractNode extends AbstractJSONSerializable implements N
         return this;
     }
 
-    protected Node setUiContextId(String uiContextId)
+    protected Node addUiContextId(String uiContextId)
     {
-        this.uiContextId = uiContextId;
+        if (uiContextId != null)
+        {
+            this.uiContextIds.add(uiContextId);
+        }
+        return this;
+    }
+
+    protected Node setUiContextIds(Set<String> uiContextIds)
+    {
+        this.uiContextIds = uiContextIds;
+        return this;
+    }
+
+    @Override
+    public Node setUiContextData(UIContextDataNode uiContextData)
+    {
+        this.uiContextData = Optional.ofNullable(uiContextData);
         return this;
     }
 

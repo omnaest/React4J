@@ -92,5 +92,4 @@ public class AnkerButtonNode extends AbstractNode implements Node
         this.style = style;
         return this;
     }
-
 }

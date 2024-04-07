@@ -16,10 +16,13 @@
 package org.omnaest.react4j.domain.raw;
 
 import org.omnaest.react4j.service.internal.handler.domain.Target;
+import org.omnaest.react4j.service.internal.nodes.context.UIContextDataNode;
 
 public interface Node
 {
     public String getType();
 
     public Target getTarget();
+
+    public Node setUiContextData(UIContextDataNode uiContextData);
 }

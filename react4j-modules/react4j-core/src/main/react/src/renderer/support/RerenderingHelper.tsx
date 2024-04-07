@@ -3,10 +3,10 @@ import { RenderingSupport } from '../Renderer';
 import LocalRerenderingContainer from "../components/LocalRerenderingContainer";
 
 export class RerenderingHelper {
-    public static wrapIntoRerenderingContainer(uiContextId: string | undefined, component: (renderingSupport?: RenderingSupport) => JSX.Element): JSX.Element {
-        if (uiContextId) {
+    public static wrapIntoRerenderingContainer(uiContextIds: string[] | undefined, component: (renderingSupport?: RenderingSupport) => JSX.Element): JSX.Element {
+        if (uiContextIds) {
             return (
-                <LocalRerenderingContainer contextId={uiContextId}>
+                <LocalRerenderingContainer contextId={uiContextIds}>
                     {component}
                 </LocalRerenderingContainer>
             );

@@ -105,18 +105,18 @@ public interface UIComponentRenderer
 
         public UIComponent<?> getComponent()
         {
-            return component;
+            return this.component;
         }
 
         public Location getParentLocation()
         {
-            return parentLocation;
+            return this.parentLocation;
         }
 
         @Override
         public String toString()
         {
-            return "ParentLocationAndComponent [component=" + component + ", parentLocation=" + parentLocation + "]";
+            return "ParentLocationAndComponent [component=" + this.component + ", parentLocation=" + this.parentLocation + "]";
         }
 
         public static ParentLocationAndComponent of(Location parentLocation, UIComponent<?> component)

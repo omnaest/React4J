@@ -22,7 +22,7 @@ import java.util.stream.IntStream;
 import org.apache.commons.lang3.StringUtils;
 import org.omnaest.react4j.component.form.Form;
 import org.omnaest.react4j.component.form.Form.ValidationMessageType;
-import org.omnaest.react4j.domain.UIComponent.UIContextConsumer;
+import org.omnaest.react4j.domain.UIComponent.UIContextAndDataConsumer;
 import org.omnaest.react4j.domain.context.data.Value;
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.document.Document.Field;
@@ -105,28 +105,33 @@ public class MockUI
         });
     }
 
-    private UIContextConsumer<Form> newForm()
+    private UIContextAndDataConsumer<Form> newForm()
     {
-        return (form, context) ->
+        return (form, context, initialData) ->
         {
             Document document = context.getFirstDocument();
             Field nameField = document.getField("nameField");
             Field descriptionField = document.getField("descriptionField");
             Field rangefield = document.getField("rangeField");
             Field dropDownfield = document.getField("dropDownField");
+
+            initialData.setFieldValue(descriptionField, "Hello there!!!");
+            initialData.setFieldValue(rangefield, 1);
+
             form.addInputField(input -> input.attachToField(nameField)
                                              .withLabel("Name:"))
                 .addInputField(input -> input.attachToField(descriptionField)
                                              .withLabel("Description:"))
                 .addInputField(input -> input.withLabel("Category:"))
                 .addRange(range -> range.attachToField(rangefield)
+                                        .withInitialValue(1)
                                         .withLabel("Range:")
                                         .withMax(4)
                                         .withStep(1)
                                         .withDisabled(false))
                 .addDropDown(dropDown -> dropDown.attachToField(dropDownfield)
                                                  .withLabel("Select:")
-                                                 .withMultiselectSupport()
+                                                 //                                                 .withMultiselectSupport()
                                                  .withOptions(options -> options.addOption("1", "label 1")
                                                                                 .addOption("2", "label 2")
                                                                                 .addDisabledOption("3", "label 3")
