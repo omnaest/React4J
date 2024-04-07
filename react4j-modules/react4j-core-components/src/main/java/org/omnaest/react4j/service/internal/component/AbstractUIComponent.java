@@ -156,7 +156,6 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
         return this.withUIContext((component, context, data) -> uiContextConsumer.accept(component, context));
     }
 
-    @SuppressWarnings("unchecked")
     public RerenderingContainer withUIContext(UIContextAndDataConsumer<UIC> uiContextConsumer)
     {
         UIContext uiContext = this.uiContextProvider.get();

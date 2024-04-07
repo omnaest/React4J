@@ -1,6 +1,6 @@
 import React, { ReactElement } from "react";
 import { RenderingSupport } from "../Renderer";
-import { RerenderingHelper, UIContextsState, UpdateActions } from "../support/RerenderingHelper";
+import { RenderingSupportHelper, UIContextsState, UpdateActions } from "../support/RenderingSupportHelper";
 
 export interface Props {
     contextId: string | undefined;
@@ -15,7 +15,7 @@ type PropsWithReduxStore = Props & UIContextsState & UpdateActions;
 class LocalRerenderingContainer extends React.Component<PropsWithReduxStore, State> {
     public render(): JSX.Element {
         if (this.props.children) {
-            return this.props.children(RerenderingHelper.newRenderingSupport(this.props, this.props));
+            return this.props.children(RenderingSupportHelper.newRenderingSupport(this.props, this.props));
         }
         else {
             return (<></>);
@@ -23,4 +23,4 @@ class LocalRerenderingContainer extends React.Component<PropsWithReduxStore, Sta
     }
 }
 
-export default RerenderingHelper.connect(LocalRerenderingContainer, (props: Props) => props.contextId, (props: Props) => undefined);
+export default RenderingSupportHelper.connect(LocalRerenderingContainer, (props: Props) => props.contextId, (props: Props) => undefined);
