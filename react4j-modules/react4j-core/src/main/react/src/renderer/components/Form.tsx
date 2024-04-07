@@ -65,7 +65,7 @@ export class Form extends React.Component<Props, State> {
         this.state = { updateCounter: 0 };
     }
 
-    private handleInputChange(element: FormElement, value: string, renderingSupport: RenderingSupport) {
+    private handleInputChange(element: FormElement, value: string | string[], renderingSupport: RenderingSupport) {
         const updateCounter = DataContextManager.updateFieldByContext(element.contextId, element.field, value, renderingSupport?.uiContextAccessor);
         this.setState({ updateCounter: updateCounter });
     }

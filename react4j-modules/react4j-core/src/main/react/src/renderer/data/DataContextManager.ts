@@ -19,7 +19,7 @@ export interface UIContext {
 }
 
 export interface UIContextData {
-    [key: string]: string;
+    [key: string]: string | string[];
 }
 
 export interface UIContextInternalData {
@@ -56,7 +56,7 @@ export class DataContextManager {
         dataContext.updateCounter++;
     }
 
-    public static updateFieldByContext(contextId: string, field: string, value: string, uiContextAccessor?: UIContextAccessor): number {
+    public static updateFieldByContext(contextId: string, field: string, value: string | string[], uiContextAccessor?: UIContextAccessor): number {
         if (contextId) {
             if (uiContextAccessor) {
                 const uiContext = uiContextAccessor.getUIContextById(contextId);
@@ -75,10 +75,10 @@ export class DataContextManager {
         return 0;
     }
 
-    public static getFieldValue(contextId: string, field: string, uiContextAccessor: UIContextAccessor | undefined): string {
+    public static getFieldValue(contextId: string, field: string, uiContextAccessor: UIContextAccessor | undefined): string | string[] {
         if (uiContextAccessor && contextId && field) {
             const uiContext = uiContextAccessor.getUIContextById(contextId);
-            return uiContext?.data[field] || "";
+            return uiContext?.data[field];
         }
         else {
             return "";

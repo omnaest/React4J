@@ -126,6 +126,7 @@ public class MockUI
                                         .withDisabled(false))
                 .addDropDown(dropDown -> dropDown.attachToField(dropDownfield)
                                                  .withLabel("Select:")
+                                                 .withMultiselectSupport()
                                                  .withOptions(options -> options.addOption("1", "label 1")
                                                                                 .addOption("2", "label 2")
                                                                                 .addDisabledOption("3", "label 3")
@@ -150,6 +151,14 @@ public class MockUI
                                                        data.setFieldValue(nameField, "Something!!");
                                                    });
                                                messaging.addValidationMessage(descriptionField, ValidationMessageType.VALID, "Yes!");
+
+                                               data.getFieldValue(dropDownfield)
+                                                   .map(Value::asStringList)
+                                                   .ifPresentOrElse(System.out::println, () ->
+                                                   {
+                                                       messaging.addValidationMessage(dropDownfield, "Omg! no! Select at least something!");
+                                                       data.setFieldValue(dropDownfield, "10");
+                                                   });
 
                                                return data;
                                            }));

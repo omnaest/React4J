@@ -81,7 +81,7 @@ public class DataImpl implements Data
     public Optional<Value> getFieldValue(String field)
     {
         return Optional.ofNullable(this.fieldToValue)
-                       .map(map -> (String) map.get(field))
+                       .map(map -> map.get(field))
                        .map(ValueImpl::new);
     }
 

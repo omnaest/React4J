@@ -12,6 +12,7 @@ export interface DropDownFormElement extends FormElement {
 }
 
 export interface DropDownNode {
+    multiselect: boolean;
     options: DropDownOption[];
 }
 
@@ -25,7 +26,7 @@ export interface Props {
     id: string;
     element: DropDownFormElement
     renderingSupport?: RenderingSupport;
-    onUpdate: (element: DropDownFormElement, value: string) => void
+    onUpdate: (element: DropDownFormElement, value: string | string[]) => void
     updateCounter: number;
 }
 
@@ -36,8 +37,18 @@ interface State {
 export class DropDown extends React.Component<Props, State> {
     public static TYPE: string = "DROPDOWN";
 
-    private handleInputChange(element: DropDownFormElement, value: string) {
-        this.props.onUpdate(element, value);
+    private handleInputChange(element: DropDownFormElement, value: string, options: HTMLOptionsCollection) {
+        if (element.dropDown?.multiselect) {
+            const values: string[] = [];
+            for (var i = 0, l = options.length; i < l; i++) {
+                if (options[i].selected) {
+                    values.push(options[i].value);
+                }
+            }
+            this.props.onUpdate(element, values);
+        } else {
+            this.props.onUpdate(element, value);
+        }
     }
 
     public render(): JSX.Element {
@@ -46,19 +57,21 @@ export class DropDown extends React.Component<Props, State> {
         const htmlId = this.props.id;
         const validClassName = ValidationMessageHelper.determineFormControlClassName(uiContext, element.field);
         const ariaDescribedByValidation = ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, this.props.element?.validationFeedback);
+        const value = DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor);
         return (
             <>
                 {FormLabelHelper.renderLabel(htmlId, element.label)}
                 <select
                     className={"form-control form-select " + validClassName}
                     id={htmlId}
-                    aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ariaDescribedByValidation}
+                    value={value}
+                    onChange={(event) => this.handleInputChange(element, event.target.value, event.target.options)}
                     required={element.required === true}
-                    value={DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor)}
-                    onChange={(event) => this.handleInputChange(element, event.target.value)}
+                    multiple={element.dropDown.multiselect}
+                    aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ariaDescribedByValidation}
                 >
                     {this.props.element?.dropDown?.options?.map((option) => (
-                        <option disabled={option.disabled} value={option.key}>{I18nRenderer.render(option.label)}</option>
+                        <option selected={option.key === value} disabled={option.disabled} value={option.key}>{I18nRenderer.render(option.label)}</option>
                     ))}
                 </select >
                 {FormDescriptionHelper.renderDescription(htmlId, element.description)}

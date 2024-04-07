@@ -41,7 +41,6 @@ public class DropDownFormElementImpl extends AbstractFormElementImpl<DropDownFor
     protected FormElementNode renderNode(FormElementNodeImpl node, Location location)
     {
         DropDownData data = this.data.build();
-
         return node.toBuilder()
                    .type("DROPDOWN")
                    .dropDown(FormDropDownNode.builder()
@@ -57,6 +56,7 @@ public class DropDownFormElementImpl extends AbstractFormElementImpl<DropDownFor
                                                                                                                      .isDisabled())
                                                                                                 .build())
                                                           .toList())
+                                             .multiselect(data.isMultiselect())
                                              .build())
                    .build();
     }
@@ -84,7 +84,10 @@ public class DropDownFormElementImpl extends AbstractFormElementImpl<DropDownFor
     public static class DropDownData
     {
         @Singular("addOption")
-        private Map<String, DropDownEntry> options;
+        private final Map<String, DropDownEntry> options;
+
+        @Default
+        private final boolean multiselect = false;
     }
 
     @Data
@@ -139,6 +142,19 @@ public class DropDownFormElementImpl extends AbstractFormElementImpl<DropDownFor
             return this;
         }
 
+    }
+
+    @Override
+    public DropDownFormElement withMultiselectSupport(boolean enabled)
+    {
+        this.data.multiselect(enabled);
+        return this;
+    }
+
+    @Override
+    public DropDownFormElement withMultiselectSupport()
+    {
+        return this.withMultiselectSupport(true);
     }
 
 }

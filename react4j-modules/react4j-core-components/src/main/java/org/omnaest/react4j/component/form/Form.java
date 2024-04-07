@@ -24,6 +24,7 @@ import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.context.Context;
 import org.omnaest.react4j.domain.context.data.Data;
+import org.omnaest.react4j.domain.context.data.Value;
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.utils.functional.TriFunction;
@@ -65,6 +66,22 @@ public interface Form extends UIComponent<Form>
 
     public static interface DropDownFormElement extends FormFieldElement<DropDownFormElement>
     {
+        /**
+         * Enables the multiselect support. Note that with this flag enabled the {@link Data#getFieldValue(String)} will return a {@link Value#asStringList()}
+         * object instead of a simple {@link Value#asString()}.
+         * 
+         * @param enabled
+         * @return
+         */
+        public DropDownFormElement withMultiselectSupport(boolean enabled);
+
+        /**
+         * Similar to {@link #withMultiselectSupport(boolean)} with true as parameter
+         * 
+         * @return
+         */
+        public DropDownFormElement withMultiselectSupport();
+
         public DropDownFormElement withOptions(Consumer<DropDownOptions> options);
 
         public static interface DropDownOptions
@@ -77,6 +94,7 @@ public interface Form extends UIComponent<Form>
 
             public DropDownOptions addOptions(Map<String, String> options);
         }
+
     }
 
     public static interface RangeFormElement extends FormFieldElement<RangeFormElement>

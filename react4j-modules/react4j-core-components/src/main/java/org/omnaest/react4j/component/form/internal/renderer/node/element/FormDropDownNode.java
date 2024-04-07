@@ -18,6 +18,9 @@ public class FormDropDownNode
     @Singular("addOption")
     private List<DropDownOptionNode> options;
 
+    @JsonProperty
+    private boolean multiselect;
+
     @Data
     @Builder
     public static class DropDownOptionNode
