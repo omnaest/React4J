@@ -161,4 +161,17 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
                                                          .toBuilder());
     }
 
+    @Override
+    public Form withResponsiveness(boolean responsive)
+    {
+        this.data.responsive(responsive);
+        return this;
+    }
+
+    @Override
+    public Form withDisabledResponsiveness()
+    {
+        return this.withResponsiveness(false);
+    }
+
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import org.omnaest.react4j.component.form.Form.FormElement;
 
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.Singular;
 
@@ -14,4 +15,7 @@ public class FormData
 {
     @Singular("addElement")
     private List<FormElement<?>> elements;
+
+    @Default
+    private boolean responsive = true;
 }

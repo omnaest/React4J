@@ -32,7 +32,8 @@ public class FormRendererImpl implements UIComponentRenderer
     @Override
     public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
     {
-        return new FormNode().setElements(this.formData.getElements()
+        return new FormNode().setResponsive(this.formData.isResponsive())
+                             .setElements(this.formData.getElements()
                                                        .stream()
                                                        .map(element -> element.render(location))
                                                        .collect(Collectors.toList()));

@@ -30,17 +30,19 @@ export class Input extends React.Component<Props> {
         const uiContext = this.props.renderingSupport?.uiContextAccessor?.getUIContextById(element.contextId);
         const htmlId = this.props.id;
         const validClassName = ValidationMessageHelper.determineFormControlClassName(uiContext, element.field);
+        const readonlyClassName = element.readonly ? " form-control-plaintext" : ""
         const ariaDescribedByValidation = ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, element.validationFeedback);
         return (
             <>
                 {FormLabelHelper.renderLabel(htmlId, element.label)}
                 <input
                     id={htmlId}
-                    className={"form-control " + validClassName}
+                    className={"form-control " + validClassName + readonlyClassName}
                     aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ariaDescribedByValidation}
                     placeholder={I18nRenderer.render(element.placeholder)}
                     aria-label={I18nRenderer.render(element.placeholder)}
                     required={element.required === true}
+                    readOnly={element.readonly === true}
                     value={DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor)}
                     onChange={(event) => this.handleInputChange(element, event.target.value)}
                 />

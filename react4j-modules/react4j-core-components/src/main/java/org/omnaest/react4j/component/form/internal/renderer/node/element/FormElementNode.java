@@ -1,6 +1,5 @@
 package org.omnaest.react4j.component.form.internal.renderer.node.element;
 
-import org.omnaest.react4j.service.internal.nodes.handler.Handler;
 import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,19 +30,22 @@ public class FormElementNode
     private I18nTextValue description;
 
     @JsonProperty
-    private I18nTextValue text;
-
-    @JsonProperty
-    private Handler onClick;
-
-    @JsonProperty
     private boolean disabled;
+
+    @JsonProperty
+    private boolean readonly;
+
+    @JsonProperty
+    private String colspan;
 
     @JsonProperty
     private FormRangeNode range;
 
     @JsonProperty
     private FormDropDownNode dropDown;
+
+    @JsonProperty
+    private FormButtonNode button;
 
     public String getType()
     {
@@ -108,28 +110,6 @@ public class FormElementNode
     public FormElementNode setDescription(I18nTextValue description)
     {
         this.description = description;
-        return this;
-    }
-
-    public FormElementNode setText(I18nTextValue text)
-    {
-        this.text = text;
-        return this;
-    }
-
-    public I18nTextValue getText()
-    {
-        return this.text;
-    }
-
-    public Handler getOnClick()
-    {
-        return this.onClick;
-    }
-
-    public FormElementNode setOnClick(Handler onClick)
-    {
-        this.onClick = onClick;
         return this;
     }
 

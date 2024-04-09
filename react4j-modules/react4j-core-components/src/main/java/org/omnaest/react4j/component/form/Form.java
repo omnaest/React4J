@@ -30,8 +30,16 @@ import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.utils.functional.TriFunction;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 public interface Form extends UIComponent<Form>
 {
+    public Form withResponsiveness(boolean responsive);
+
+    public Form withDisabledResponsiveness();
+
     public Form add(Function<FormElementFactory, FormElement<?>> formElementFactoryConsumer);
 
     public Form add(FormElement<?> formElement);
@@ -50,12 +58,31 @@ public interface Form extends UIComponent<Form>
 
         public FE withDescription(String description);
 
+        public FE withColumnSpan(ColumnSpan columnSpan);
+
+        public FE withColumnSpan(int columnSpan);
+
         public FormElementNode render(Location parentLocation);
+
+        public static enum ColumnSpan
+        {
+            ONE_COLUMN,
+            TWO_COLUMNS,
+            THREE_COLUMNS,
+            FOUR_COLUMNS,
+            FIVE_COLUMNS,
+            SIX_COLUMNS,
+            SEVEN_COLUMNS,
+            EIGHT_COLUMNS,
+            NINE_COLUMNS,
+            TEN_COLUMNS,
+            ELEVEN_COLUMNS,
+            TWELVE_COLUMNS
+        }
     }
 
     public static interface FormFieldElement<FE extends FormFieldElement<?>> extends FormElement<FE>
     {
-
         public FE attachToField(Document.Field field);
     }
 
@@ -121,11 +148,46 @@ public interface Form extends UIComponent<Form>
 
         public ButtonFormElement withText(String text);
 
+        public ButtonFormElement withVariant(Variant variant);
+
+        public ButtonFormElement withSize(Size size);
+
+        public ButtonFormElement withOutline(boolean outline);
+
+        public ButtonFormElement withOutline();
+
         public ButtonFormElement onClick(ButtonEventHandler eventHandler);
 
         public ButtonFormElement onClick(ButtonEventHandlerWithMessaging eventHandler);
 
         public ButtonFormElement saveOnClick();
+
+        @Getter
+        @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+        public static enum Variant
+        {
+            REGULAR(""),
+            PRIMARY("primary"),
+            SECONDARY("secondary"),
+            SUCCESS("success"),
+            DANGER("danger"),
+            WARNING("warning"),
+            INFO("info"),
+            LIGHT("light"),
+            DARK("dark"),
+            LINK("link");
+
+            private final String identifier;
+        }
+
+        @Getter
+        @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+        public static enum Size
+        {
+            REGULAR(""), SMALL("sm"), LARGE("lg");
+
+            private final String identifier;
+        }
 
         public static interface ButtonEventHandler extends BiFunction<Data, Context, Data>
         {
@@ -145,6 +207,7 @@ public interface Form extends UIComponent<Form>
 
             public Messaging addValidationMessage(Field field, ValidationMessageType validationMessageType, String text);
         }
+
     }
 
     public static enum ValidationMessageType

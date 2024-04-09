@@ -10,6 +10,7 @@ import org.omnaest.react4j.component.table.internal.TableImpl.RowImpl;
 import org.omnaest.react4j.component.table.internal.data.TableData;
 import org.omnaest.react4j.component.table.internal.renderer.node.TableNode;
 import org.omnaest.react4j.component.table.internal.renderer.node.TableNode.CellNode;
+import org.omnaest.react4j.component.table.internal.renderer.node.TableNode.OptionsNode;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.raw.Node;
@@ -31,7 +32,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TableRendererImpl implements UIComponentRenderer
 {
-    private final TableData                    data2;
+    private final TableData                    data;
     private final LocalizedTextResolverService textResolver;
     private final Provider<String>             idProvider;
 
@@ -42,21 +43,26 @@ public class TableRendererImpl implements UIComponentRenderer
     }
 
     @Override
-    public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
+    public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> persistenceData)
     {
-        return new TableNode().setColumnTitles(this.textResolver.apply(this.data2.getColumnTitles(), location))
-                              .setRows(this.data2.getRows()
-                                                 .stream()
-                                                 .map(MapperUtils.withIntCounter())
-                                                 .map(rowAndIndex -> new TableNode.RowNode().setCells(rowAndIndex.getFirst()
-                                                                                                                 .getCells()
-                                                                                                                 .stream()
-                                                                                                                 .map(MapperUtils.withIntCounter())
-                                                                                                                 .map(this.createCellRenderer(renderingProcessor,
-                                                                                                                                              location,
-                                                                                                                                              rowAndIndex))
-                                                                                                                 .collect(Collectors.toList())))
-                                                 .collect(Collectors.toList()));
+        return TableNode.builder()
+                        .columnTitles(this.textResolver.apply(this.data.getColumnTitles(), location))
+                        .rows(this.data.getRows()
+                                       .stream()
+                                       .map(MapperUtils.withIntCounter())
+                                       .map(rowAndIndex -> new TableNode.RowNode().setCells(rowAndIndex.getFirst()
+                                                                                                       .getCells()
+                                                                                                       .stream()
+                                                                                                       .map(MapperUtils.withIntCounter())
+                                                                                                       .map(this.createCellRenderer(renderingProcessor,
+                                                                                                                                    location, rowAndIndex))
+                                                                                                       .collect(Collectors.toList())))
+                                       .collect(Collectors.toList()))
+                        .options(OptionsNode.builder()
+                                            .responsive(this.data.isResponsive())
+                                            .size(this.data.getSize())
+                                            .build())
+                        .build();
     }
 
     private Function<BiElement<CellImpl, Integer>, CellNode> createCellRenderer(RenderingProcessor renderingProcessor, Location location,
@@ -117,17 +123,17 @@ public class TableRendererImpl implements UIComponentRenderer
     @Override
     public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
     {
-        return this.data2.getRows()
-                         .stream()
-                         .map(MapperUtils.withIntCounter())
-                         .flatMap(rowAndIndex -> rowAndIndex.getFirst()
-                                                            .getCells()
-                                                            .stream()
-                                                            .map(MapperUtils.withIntCounter())
-                                                            .map(cellAndIndex -> ParentLocationAndComponent.of(this.createCellLocation(parentLocation,
-                                                                                                                                       rowAndIndex,
-                                                                                                                                       cellAndIndex),
-                                                                                                               cellAndIndex.getFirst()
-                                                                                                                           .getContent())));
+        return this.data.getRows()
+                        .stream()
+                        .map(MapperUtils.withIntCounter())
+                        .flatMap(rowAndIndex -> rowAndIndex.getFirst()
+                                                           .getCells()
+                                                           .stream()
+                                                           .map(MapperUtils.withIntCounter())
+                                                           .map(cellAndIndex -> ParentLocationAndComponent.of(this.createCellLocation(parentLocation,
+                                                                                                                                      rowAndIndex,
+                                                                                                                                      cellAndIndex),
+                                                                                                              cellAndIndex.getFirst()
+                                                                                                                          .getContent())));
     }
 }

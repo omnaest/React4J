@@ -55,6 +55,29 @@ public class TableImpl extends AbstractUIComponentWithSubComponents<Table> imple
     }
 
     @Override
+    public Table withDisabledResponsiveness()
+    {
+        return this.withResponsiveness(false);
+    }
+
+    @Override
+    public Table withResponsiveness(boolean responsive)
+    {
+        this.data.responsive(responsive);
+        return this;
+    }
+
+    @Override
+    public Table withSize(TableSize tableSize)
+    {
+        if (tableSize != null)
+        {
+            this.data.size(tableSize.getIdentifier());
+        }
+        return this;
+    }
+
+    @Override
     public Table withColumnTitles(String... titles)
     {
         return this.withColumnTitles(Arrays.asList(titles));

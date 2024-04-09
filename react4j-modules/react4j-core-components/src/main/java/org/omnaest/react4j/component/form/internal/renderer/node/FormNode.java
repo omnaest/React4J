@@ -24,6 +24,9 @@ import org.omnaest.react4j.service.internal.nodes.AbstractNode;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.Getter;
+
+@Getter
 public class FormNode extends AbstractNode implements Node
 {
     @JsonProperty
@@ -32,20 +35,24 @@ public class FormNode extends AbstractNode implements Node
     @JsonProperty
     private List<FormElementNode> elements = new ArrayList<>();
 
+    @JsonProperty
+    private boolean responsive;
+
     @Override
     public String getType()
     {
         return this.type;
     }
 
-    public List<FormElementNode> getElements()
-    {
-        return this.elements;
-    }
-
     public FormNode setElements(List<FormElementNode> elements)
     {
         this.elements = elements;
+        return this;
+    }
+
+    public FormNode setResponsive(boolean responsive)
+    {
+        this.responsive = responsive;
         return this;
     }
 

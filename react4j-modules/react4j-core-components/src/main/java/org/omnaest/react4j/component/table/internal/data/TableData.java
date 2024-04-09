@@ -20,4 +20,10 @@ public class TableData
 
     @Singular("addRow")
     private List<RowImpl> rows;
+
+    @Default
+    private boolean responsive = true;
+
+    @Default
+    private String size = "";
 }

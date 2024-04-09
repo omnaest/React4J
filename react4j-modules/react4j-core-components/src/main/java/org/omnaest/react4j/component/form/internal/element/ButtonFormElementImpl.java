@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.omnaest.react4j.component.form.Form.ButtonFormElement;
 import org.omnaest.react4j.component.form.Form.ValidationMessageType;
+import org.omnaest.react4j.component.form.internal.renderer.node.element.FormButtonNode;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNode;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.validation.ValidationFeedbackNode;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.validation.ValidationMessageNode;
@@ -37,6 +38,11 @@ public class ButtonFormElementImpl extends AbstractFormElementImpl<ButtonFormEle
     private I18nText         text;
     private DataEventHandler eventHandler;
     private int              index;
+    private boolean          outline  = false;
+    private boolean          disabled = false;
+    private String           size     = Size.REGULAR.getIdentifier();
+    private String           variant  = Variant.PRIMARY.getIdentifier();
+    private ColumnSpan       columnSpan;
 
     public ButtonFormElementImpl(Function<Class<?>, String> identityProvider, LocalizedTextResolverService textResolver,
                                  Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry,
@@ -53,10 +59,17 @@ public class ButtonFormElementImpl extends AbstractFormElementImpl<ButtonFormEle
         Location buttonLocation = location.and("button[" + this.index + "]");
         Target target = Target.from(buttonLocation);
         this.eventHandlerRegistry.registerDataEventHandler(target, this.eventHandler);
-        node.setType("BUTTON")
-            .setText(this.textResolver.apply(this.text, location))
-            .setOnClick(new ServerHandler(target).setContextId(dataContext.getId(location)));
-        return node;
+        return node.toBuilder()
+                   .type("BUTTON")
+                   .button(FormButtonNode.builder()
+                                         .text(this.textResolver.apply(this.text, location))
+                                         .outline(this.outline)
+                                         .size(this.size)
+                                         .variant(this.variant)
+                                         .onClick(new ServerHandler(target).setContextId(dataContext.getId(location)))
+                                         .build())
+                   .disabled(this.disabled)
+                   .build();
     }
 
     @Override
@@ -188,4 +201,38 @@ public class ButtonFormElementImpl extends AbstractFormElementImpl<ButtonFormEle
         }
 
     }
+
+    @Override
+    public ButtonFormElement withVariant(Variant variant)
+    {
+        if (variant != null)
+        {
+            this.variant = variant.getIdentifier();
+        }
+        return this;
+    }
+
+    @Override
+    public ButtonFormElement withSize(Size size)
+    {
+        if (size != null)
+        {
+            this.size = size.getIdentifier();
+        }
+        return this;
+    }
+
+    @Override
+    public ButtonFormElement withOutline(boolean outline)
+    {
+        this.outline = outline;
+        return this;
+    }
+
+    @Override
+    public ButtonFormElement withOutline()
+    {
+        return this.withOutline(true);
+    }
+
 }

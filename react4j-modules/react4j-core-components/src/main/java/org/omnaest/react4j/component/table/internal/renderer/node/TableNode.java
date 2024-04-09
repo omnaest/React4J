@@ -23,16 +23,39 @@ import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.Data;
+import lombok.Getter;
+
+@Getter
+@Builder
 public class TableNode extends AbstractNode
 {
     @JsonProperty
-    private String type = "TABLE";
+    private final String type = "TABLE";
 
     @JsonProperty
     private List<I18nTextValue> columnTitles;
 
     @JsonProperty
     private List<RowNode> rows;
+
+    @JsonProperty
+    private OptionsNode options;
+
+    @Data
+    @Builder
+    public static class OptionsNode
+    {
+        @JsonProperty
+        @Default
+        private String size = "";
+
+        @JsonProperty
+        @Default
+        private boolean responsive = true;
+    }
 
     public static class RowNode extends AbstractNode
     {

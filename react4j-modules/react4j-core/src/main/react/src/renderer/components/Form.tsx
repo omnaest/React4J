@@ -14,6 +14,7 @@ import { RerenderingHelper } from "../support/RerenderingHelper";
 
 export interface FormNode extends Node {
     elements: FormElement[];
+    responsive: boolean;
 }
 
 export interface FormElement {
@@ -24,9 +25,12 @@ export interface FormElement {
     placeholder: I18nTextValue;
     description: I18nTextValue;
     disabled: boolean;
+    readonly: boolean;
     required: boolean;
     range?: RangeFormElement;
+    button?: ButtonFormElement;
     validationFeedback: ValidationFeedback;
+    colspan?: string;
 }
 
 export interface ValidationFeedback {
@@ -39,9 +43,12 @@ export interface ValidationMessage {
     text: I18nTextValue;
 }
 
-export interface ButtonFormElement extends FormElement {
+export interface ButtonFormElement {
     text: I18nTextValue;
     onClick?: Handler;
+    outline?: boolean;
+    variant?: "" | "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "light" | "dark" | "link"
+    size: "" | "sm" | "lg";
 }
 
 export interface RangeFormElement {
@@ -98,14 +105,20 @@ export class Form extends React.Component<Props, State> {
                         );
                     }
                     else if (element.type === "BUTTON") {
-                        const buttonElement = element as ButtonFormElement;
+                        const buttonElement = element.button as ButtonFormElement;
                         const uiContext = renderingSupport?.uiContextAccessor?.getUIContextById(element.contextId);
+                        const buttonClassPrefix = buttonElement.outline ? " btn-outline-" : " btn-";
+                        const buttonVariantClassName = buttonElement.variant ? buttonClassPrefix + buttonElement.variant : "";
+                        const buttonSizeClassName = buttonElement.size ? " btn-" + buttonElement.size : "";
+                        const fullWidthClassName = element.colspan ? "w-100 " : "";
                         return (
                             <>
+                                <label htmlFor={htmlId}>{I18nRenderer.render(element.label)}&nbsp;</label>
                                 <button
                                     id={htmlId}
                                     type="button"
-                                    className="btn btn-primary"
+                                    disabled={element.disabled === true}
+                                    className={fullWidthClassName + "mt-0 btn" + buttonVariantClassName + buttonSizeClassName}
                                     aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, element.validationFeedback)}
                                     onClick={HandlerFactory.onClick(buttonElement.onClick as Handler, renderingSupport?.uiContextAccessor, renderingSupport?.nodeContextAccessor)}
                                 >{I18nRenderer.render(buttonElement.text)}</button>
@@ -146,13 +159,17 @@ export class Form extends React.Component<Props, State> {
     }
 
     public render(): JSX.Element {
+        const useLayout = this.props.node.elements?.map((element) => !!element.colspan).reduce((l, r) => l || r);
+        const defaultColSpan = useLayout ? "col-12" : "";
+        const responseSegment = this.props.node.responsive !== false ? "md-" : "";
         return (
-            <form noValidate>
+            <form className={useLayout ? "row g-3" : ""} noValidate>
                 {
                     this.props.node.elements.map((element) => {
                         const htmlId = element?.field;
+                        const colSpan = element.colspan ? "col-" + responseSegment + element.colspan : defaultColSpan;
                         return (
-                            <div className="form-group" key={element.field}>
+                            <div className={colSpan} key={element.field}>
                                 {this.renderElement(htmlId, element)}
                             </div>
                         );

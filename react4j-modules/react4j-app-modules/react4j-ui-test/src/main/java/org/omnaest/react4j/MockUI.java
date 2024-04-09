@@ -21,6 +21,7 @@ import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.omnaest.react4j.component.form.Form;
+import org.omnaest.react4j.component.form.Form.FormElement.ColumnSpan;
 import org.omnaest.react4j.component.form.Form.ValidationMessageType;
 import org.omnaest.react4j.domain.UIComponent.UIContextAndDataConsumer;
 import org.omnaest.react4j.domain.context.data.Value;
@@ -119,11 +120,14 @@ public class MockUI
             initialData.setFieldValue(rangefield, 1);
 
             form.addInputField(input -> input.attachToField(nameField)
+                                             .withColumnSpan(4)
                                              .withLabel("Name:"))
                 .addInputField(input -> input.attachToField(descriptionField)
+                                             .withColumnSpan(8)
                                              .withLabel("Description:"))
                 .addInputField(input -> input.withLabel("Category:"))
                 .addRange(range -> range.attachToField(rangefield)
+                                        .withColumnSpan(ColumnSpan.TWELVE_COLUMNS)
                                         .withInitialValue(1)
                                         .withLabel("Range:")
                                         .withMax(4)
@@ -131,6 +135,7 @@ public class MockUI
                                         .withDisabled(false))
                 .addDropDown(dropDown -> dropDown.attachToField(dropDownfield)
                                                  .withLabel("Select:")
+                                                 .withColumnSpan(12 - 3)
                                                  //                                                 .withMultiselectSupport()
                                                  .withOptions(options -> options.addOption("1", "label 1")
                                                                                 .addOption("2", "label 2")
@@ -141,6 +146,7 @@ public class MockUI
                                                                                                                                (a, b) -> a,
                                                                                                                                LinkedHashMap::new)))))
                 .addButton(button -> button.withText("Save")
+                                           .withColumnSpan(3)
                                            .onClick((data, messaging, context1) ->
                                            {
                                                data.getFieldValue(nameField)
@@ -166,7 +172,9 @@ public class MockUI
                                                    });
 
                                                return data;
-                                           }));
+                                           }))
+                .addInputField(input -> input.withLabel("Another category:")
+                                             .withColumnSpan(6));
         };
     }
 }

@@ -25,9 +25,10 @@ public abstract class AbstractFormElementImpl<FE extends FormElement<?>> impleme
     protected Document              document;
     protected Supplier<DataContext> parentDataContext;
 
-    private I18nText label;
-    private I18nText description;
-    private String   id;
+    private I18nText             label;
+    private I18nText             description;
+    private Optional<ColumnSpan> columnSpan = Optional.empty();
+    private String               id;
 
     @SuppressWarnings("unchecked")
     protected AbstractFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver,
@@ -53,6 +54,10 @@ public abstract class AbstractFormElementImpl<FE extends FormElement<?>> impleme
                                               .contextId(context.getId(location))
                                               .label(this.textResolver.apply(this.label, location))
                                               .description(this.textResolver.apply(this.description, location))
+                                              .colspan(this.columnSpan.map(ColumnSpan::ordinal)
+                                                                      .map(value -> value + 1)
+                                                                      .map(String::valueOf)
+                                                                      .orElse(null))
                                               .build(),
                                location);
     }
@@ -87,6 +92,28 @@ public abstract class AbstractFormElementImpl<FE extends FormElement<?>> impleme
     {
         this.description = this.i18nTextMapper.apply(description);
         return (FE) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public FE withColumnSpan(ColumnSpan columnSpan)
+    {
+        this.columnSpan = Optional.ofNullable(columnSpan);
+        return (FE) this;
+    }
+
+    @Override
+    public FE withColumnSpan(int columnSpan)
+    {
+        if (columnSpan < 1)
+        {
+            throw new IllegalArgumentException("columnSpan must be greater then or at least 1");
+        }
+        else if (columnSpan > 12)
+        {
+            throw new IllegalArgumentException("columnSpan must be smaller then or exactly 12");
+        }
+        return this.withColumnSpan(ColumnSpan.values()[columnSpan - 1]);
     }
 
 }

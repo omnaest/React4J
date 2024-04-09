@@ -24,6 +24,9 @@ import java.util.stream.Stream;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.support.UIContentHolder;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 public interface Table extends UIComponent<Table>
 {
     public Table withColumnTitles(String... titles);
@@ -60,9 +63,24 @@ public interface Table extends UIComponent<Table>
 
     }
 
+    @Getter
+    @RequiredArgsConstructor
+    public static enum TableSize
+    {
+        REGULAR(""), SMALL("sm"), MEDIUM("md"), LARGE("lg"), EXTRA_LARGE("xl"), EXTRA_EXTRA_LARGE("xxl");
+
+        private final String identifier;
+    }
+
     public Table fromCSVResource(String resourcePath);
 
     public Table fromCSV(String csv);
+
+    public Table withSize(TableSize tableSize);
+
+    public Table withResponsiveness(boolean responsive);
+
+    public Table withDisabledResponsiveness();
 
     public Table fromDataTable(org.omnaest.utils.table.Table table);
 
