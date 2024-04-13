@@ -64,3 +64,4 @@ react4j-modules/react4j-app-modules/react4j-ui-test/target/
 react4j-modules/react4j-app-modules/target/
 react4j-modules/react4j-app-modules/react4j-app-starter-parent/target/
 *.versionsBackup
+react4j-modules/react4j-app-modules/react4j-ui-test/content-configuration.json
