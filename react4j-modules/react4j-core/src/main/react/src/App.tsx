@@ -3,6 +3,7 @@ import './App.css';
 import { Renderer, Node } from './renderer/Renderer';
 import { Backend } from './backend/Backend';
 import { AxiosHelper } from './utils/AxiosHelper';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 class App extends React.Component<{}, { node: Node }> {
   constructor() {

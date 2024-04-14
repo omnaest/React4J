@@ -50,7 +50,9 @@ public interface Form extends UIComponent<Form>
 
     public Form addRange(Consumer<RangeFormElement> range);
 
-    public Form addDropDown(Consumer<DropDownFormElement> dropDown);
+    public Form addDropdown(Consumer<DropDownFormElement> dropdown);
+
+    public Form addCheckbox(Consumer<CheckboxFormElement> checkbox);
 
     public static interface FormElement<FE extends FormElement<?>>
     {
@@ -210,6 +212,24 @@ public interface Form extends UIComponent<Form>
 
     }
 
+    public static interface CheckboxFormElement extends FormFieldElement<CheckboxFormElement>
+    {
+        @Override
+        public CheckboxFormElement withLabel(String label);
+
+        public CheckboxFormElement withInitialValue(boolean initialValue);
+
+        public CheckboxFormElement withDisabled(boolean disabled);
+
+        public CheckboxFormElement withType(CheckboxType checkboxType);
+
+        public static enum CheckboxType
+        {
+            REGULAR, SWITCH
+        }
+
+    }
+
     public static enum ValidationMessageType
     {
         VALID, INVALID
@@ -223,6 +243,9 @@ public interface Form extends UIComponent<Form>
 
         public RangeFormElement newRange();
 
-        public DropDownFormElement newDropDown();
+        public DropDownFormElement newDropdown();
+
+        public CheckboxFormElement newCheckbox();
     }
+
 }

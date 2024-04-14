@@ -56,7 +56,7 @@ export class DropDown extends React.Component<Props, State> {
         const uiContext = this.props.renderingSupport?.uiContextAccessor?.getUIContextById(element.contextId);
         const htmlId = this.props.id;
         const validClassName = ValidationMessageHelper.determineFormControlClassName(uiContext, element.field);
-        const ariaDescribedByValidation = ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, this.props.element?.validationFeedback);
+        const ariaDescribedByValidation = ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, uiContext, element.field);
         const value = DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor);
         return (
             <>

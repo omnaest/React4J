@@ -83,7 +83,8 @@ export class DataContextManager {
     public static getFieldValue(contextId: string, field: string, uiContextAccessor: UIContextAccessor | undefined): string | string[] {
         if (uiContextAccessor && contextId && field) {
             const uiContext = uiContextAccessor.getUIContextById(contextId);
-            return uiContext?.data[field];
+            const result = uiContext?.data[field];
+            return result ? new String(result).toString() : "";
         }
         else {
             return "";

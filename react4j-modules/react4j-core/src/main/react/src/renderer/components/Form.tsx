@@ -11,6 +11,7 @@ import { RenderingSupportHelper } from "../support/RenderingSupportHelper";
 import RerenderingContainer from "./RerenderingContainer";
 import LocalRerenderingContainer from "./LocalRerenderingContainer";
 import { RerenderingHelper } from "../support/RerenderingHelper";
+import { FormCheckbox, FormCheckboxFormElement } from "./form/FormCheckbox";
 
 export interface FormNode extends Node {
     elements: FormElement[];
@@ -29,7 +30,6 @@ export interface FormElement {
     required: boolean;
     range?: RangeFormElement;
     button?: ButtonFormElement;
-    validationFeedback: ValidationFeedback;
     colspan?: string;
 }
 
@@ -104,6 +104,17 @@ export class Form extends React.Component<Props, State> {
                             />
                         );
                     }
+                    else if (element.type === FormCheckbox.TYPE) {
+                        return (
+                            <FormCheckbox
+                                id={htmlId}
+                                element={element as FormCheckboxFormElement}
+                                onUpdate={(element, value) => this.handleInputChange(element, value, renderingSupport)}
+                                updateCounter={this.state?.updateCounter}
+                                renderingSupport={renderingSupport}
+                            />
+                        );
+                    }
                     else if (element.type === "BUTTON") {
                         const buttonElement = element.button as ButtonFormElement;
                         const uiContext = renderingSupport?.uiContextAccessor?.getUIContextById(element.contextId);
@@ -119,7 +130,7 @@ export class Form extends React.Component<Props, State> {
                                     type="button"
                                     disabled={element.disabled === true}
                                     className={fullWidthClassName + "mt-0 btn" + buttonVariantClassName + buttonSizeClassName}
-                                    aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, element.validationFeedback)}
+                                    aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, uiContext, element.field)}
                                     onClick={HandlerFactory.onClick(buttonElement.onClick as Handler, renderingSupport?.uiContextAccessor, renderingSupport?.nodeContextAccessor)}
                                 >{I18nRenderer.render(buttonElement.text)}</button>
                                 {FormDescriptionHelper.renderDescription(htmlId, element.description)}
@@ -137,7 +148,7 @@ export class Form extends React.Component<Props, State> {
                                 <input type="range"
                                     id={htmlId}
                                     className={"form-control form-range " + validClassName}
-                                    aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, element.validationFeedback)}
+                                    aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, uiContext, element.field)}
                                     value={DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor)}
                                     min={rangeElement?.min || 0}
                                     max={rangeElement?.max || 100}

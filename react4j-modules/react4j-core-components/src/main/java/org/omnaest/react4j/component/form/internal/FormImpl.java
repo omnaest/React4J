@@ -22,7 +22,8 @@ import java.util.function.Function;
 import org.omnaest.react4j.component.form.Form;
 import org.omnaest.react4j.component.form.internal.data.FormData;
 import org.omnaest.react4j.component.form.internal.element.ButtonFormElementImpl;
-import org.omnaest.react4j.component.form.internal.element.DropDownFormElementImpl;
+import org.omnaest.react4j.component.form.internal.element.CheckboxFormElementImpl;
+import org.omnaest.react4j.component.form.internal.element.DropdownFormElementImpl;
 import org.omnaest.react4j.component.form.internal.element.InputFormElementImpl;
 import org.omnaest.react4j.component.form.internal.element.RangeFormElementImpl;
 import org.omnaest.react4j.component.form.internal.renderer.FormRendererImpl;
@@ -94,9 +95,16 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             }
 
             @Override
-            public DropDownFormElement newDropDown()
+            public DropDownFormElement newDropdown()
             {
-                return new DropDownFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext);
+                return new DropdownFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext);
+            }
+
+            @Override
+            public CheckboxFormElement newCheckbox()
+            {
+                return new CheckboxFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext,
+                                                   uiContextManager);
             }
 
         });
@@ -144,13 +152,24 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
     }
 
     @Override
-    public Form addDropDown(Consumer<DropDownFormElement> formElementConsumer)
+    public Form addDropdown(Consumer<DropDownFormElement> formElementConsumer)
     {
         return this.add(factory ->
         {
-            DropDownFormElement dropDown = factory.newDropDown();
+            DropDownFormElement dropDown = factory.newDropdown();
             formElementConsumer.accept(dropDown);
             return dropDown;
+        });
+    }
+
+    @Override
+    public Form addCheckbox(Consumer<CheckboxFormElement> checkboxConsumer)
+    {
+        return this.add(factory ->
+        {
+            CheckboxFormElement checkbox = factory.newCheckbox();
+            checkboxConsumer.accept(checkbox);
+            return checkbox;
         });
     }
 

@@ -21,6 +21,7 @@ import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.omnaest.react4j.component.form.Form;
+import org.omnaest.react4j.component.form.Form.CheckboxFormElement.CheckboxType;
 import org.omnaest.react4j.component.form.Form.FormElement.ColumnSpan;
 import org.omnaest.react4j.component.form.Form.ValidationMessageType;
 import org.omnaest.react4j.domain.UIComponent.UIContextAndDataConsumer;
@@ -115,6 +116,7 @@ public class MockUI
             Field descriptionField = document.getField("descriptionField");
             Field rangefield = document.getField("rangeField");
             Field dropDownfield = document.getField("dropDownField");
+            Field switchField = document.getField("switchField");
 
             initialData.setFieldValue(descriptionField, "Hello there!!!");
             initialData.setFieldValue(rangefield, 1);
@@ -126,6 +128,11 @@ public class MockUI
                                              .withColumnSpan(8)
                                              .withLabel("Description:"))
                 .addInputField(input -> input.withLabel("Category:"))
+                .addCheckbox(checkbox -> checkbox.attachToField(switchField)
+                                                 .withType(CheckboxType.SWITCH)
+                                                 .withLabel("Toggle:")
+                                                 .withInitialValue(true)
+                                                 .withDisabled(false))
                 .addRange(range -> range.attachToField(rangefield)
                                         .withColumnSpan(ColumnSpan.TWELVE_COLUMNS)
                                         .withInitialValue(1)
@@ -133,7 +140,7 @@ public class MockUI
                                         .withMax(4)
                                         .withStep(1)
                                         .withDisabled(false))
-                .addDropDown(dropDown -> dropDown.attachToField(dropDownfield)
+                .addDropdown(dropDown -> dropDown.attachToField(dropDownfield)
                                                  .withLabel("Select:")
                                                  .withColumnSpan(12 - 3)
                                                  //                                                 .withMultiselectSupport()
@@ -162,6 +169,9 @@ public class MockUI
                                                        data.setFieldValue(nameField, "Something!!");
                                                    });
                                                messaging.addValidationMessage(descriptionField, ValidationMessageType.VALID, "Yes!");
+
+                                               messaging.addValidationMessage(switchField, ValidationMessageType.VALID, "Yes1!!")
+                                                        .addValidationMessage(switchField, ValidationMessageType.VALID, "Yes2!!");
 
                                                data.getFieldValue(dropDownfield)
                                                    .map(Value::asStringList)

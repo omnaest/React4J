@@ -31,7 +31,7 @@ export class Input extends React.Component<Props> {
         const htmlId = this.props.id;
         const validClassName = ValidationMessageHelper.determineFormControlClassName(uiContext, element.field);
         const readonlyClassName = element.readonly ? " form-control-plaintext" : ""
-        const ariaDescribedByValidation = ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, element.validationFeedback);
+        const ariaDescribedByValidation = ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, uiContext, element.field);
         return (
             <>
                 {FormLabelHelper.renderLabel(htmlId, element.label)}

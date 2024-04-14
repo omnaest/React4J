@@ -8,7 +8,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.omnaest.react4j.component.form.Form.DropDownFormElement;
-import org.omnaest.react4j.component.form.internal.element.DropDownFormElementImpl.DropDownData.DropDownDataBuilder;
+import org.omnaest.react4j.component.form.internal.element.DropdownFormElementImpl.DropDownData.DropDownDataBuilder;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormDropDownNode;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormDropDownNode.DropDownOptionNode;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNode;
@@ -25,11 +25,11 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.Singular;
 
-public class DropDownFormElementImpl extends AbstractFormElementImpl<DropDownFormElement> implements DropDownFormElement
+public class DropdownFormElementImpl extends AbstractFormElementImpl<DropDownFormElement> implements DropDownFormElement
 {
     private DropDownDataBuilder data = DropDownData.builder();
 
-    public DropDownFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver,
+    public DropdownFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver,
                                    Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry,
                                    Supplier<? extends DataContext> parentDataContext)
     {

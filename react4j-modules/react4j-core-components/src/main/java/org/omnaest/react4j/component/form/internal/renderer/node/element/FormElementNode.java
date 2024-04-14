@@ -47,6 +47,17 @@ public class FormElementNode
     @JsonProperty
     private FormButtonNode button;
 
+    @JsonProperty
+    private FormCheckboxNode checkbox;
+
+    @Data
+    @Builder
+    public static class FormCheckboxNode
+    {
+        @JsonProperty
+        private String checkboxType;
+    }
+
     public String getType()
     {
         return this.type;
