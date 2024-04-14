@@ -3,7 +3,7 @@ import { Node, RenderingSupport } from "../Renderer";
 import { DataContextManager } from "../data/DataContextManager";
 import { Handler, HandlerFactory } from "../handler/Handler";
 import { I18nRenderer, I18nTextValue } from "./I18nText";
-import { Input } from "./form/Input";
+import { Input, InputFormElement } from "./form/Input";
 import { ValidationMessageHelper } from "./form/helper/ValidationMessageHelper";
 import { FormDescriptionHelper } from "./form/helper/FormDescriptionHelper";
 import { DropDown, DropDownFormElement } from "./form/DropDown";
@@ -23,7 +23,6 @@ export interface FormElement {
     contextId: string;
     type: string;
     label: I18nTextValue;
-    placeholder: I18nTextValue;
     description: I18nTextValue;
     disabled: boolean;
     readonly: boolean;
@@ -86,7 +85,7 @@ export class Form extends React.Component<Props, State> {
                         return (
                             <Input
                                 id={htmlId}
-                                element={element}
+                                element={element as InputFormElement}
                                 onUpdate={(element, value) => this.handleInputChange(element, value, renderingSupport)}
                                 updateCounter={this.state?.updateCounter}
                                 renderingSupport={renderingSupport}

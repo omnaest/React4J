@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.omnaest.react4j.component.form.Form;
 import org.omnaest.react4j.component.form.Form.CheckboxFormElement.CheckboxType;
 import org.omnaest.react4j.component.form.Form.FormElement.ColumnSpan;
+import org.omnaest.react4j.component.form.Form.InputFormElement.InputType;
 import org.omnaest.react4j.component.form.Form.ValidationMessageType;
 import org.omnaest.react4j.domain.UIComponent.UIContextAndDataConsumer;
 import org.omnaest.react4j.domain.context.data.Value;
@@ -114,6 +115,7 @@ public class MockUI
             Document document = context.getFirstDocument();
             Field nameField = document.getField("nameField");
             Field descriptionField = document.getField("descriptionField");
+            Field passwordField = document.getField("passwordField");
             Field rangefield = document.getField("rangeField");
             Field dropDownfield = document.getField("dropDownField");
             Field switchField = document.getField("switchField");
@@ -125,8 +127,13 @@ public class MockUI
                                              .withColumnSpan(4)
                                              .withLabel("Name:"))
                 .addInputField(input -> input.attachToField(descriptionField)
+                                             .withType(InputType.TEXT)
                                              .withColumnSpan(8)
                                              .withLabel("Description:"))
+                .addInputField(input -> input.attachToField(passwordField)
+                                             .withType(InputType.PASSWORD)
+                                             .withColumnSpan(8)
+                                             .withLabel("Password:"))
                 .addInputField(input -> input.withLabel("Category:"))
                 .addCheckbox(checkbox -> checkbox.attachToField(switchField)
                                                  .withType(CheckboxType.SWITCH)

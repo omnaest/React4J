@@ -24,9 +24,6 @@ public class FormElementNode
     private I18nTextValue label;
 
     @JsonProperty
-    private I18nTextValue placeholder;
-
-    @JsonProperty
     private I18nTextValue description;
 
     @JsonProperty
@@ -50,12 +47,26 @@ public class FormElementNode
     @JsonProperty
     private FormCheckboxNode checkbox;
 
+    @JsonProperty
+    private FormInputNode input;
+
     @Data
     @Builder
     public static class FormCheckboxNode
     {
         @JsonProperty
         private String checkboxType;
+    }
+
+    @Data
+    @Builder
+    public static class FormInputNode
+    {
+        @JsonProperty
+        private I18nTextValue placeholder;
+
+        @JsonProperty
+        private String type;
     }
 
     public String getType()
@@ -88,17 +99,6 @@ public class FormElementNode
     public FormElementNode setLabel(I18nTextValue label)
     {
         this.label = label;
-        return this;
-    }
-
-    public I18nTextValue getPlaceholder()
-    {
-        return this.placeholder;
-    }
-
-    public FormElementNode setPlaceholder(I18nTextValue placeholder)
-    {
-        this.placeholder = placeholder;
         return this;
     }
 

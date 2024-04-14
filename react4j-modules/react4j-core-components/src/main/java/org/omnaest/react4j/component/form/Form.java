@@ -92,6 +92,13 @@ public interface Form extends UIComponent<Form>
     {
         public InputFormElement withPlaceholder(String placeholder);
 
+        public InputFormElement withType(InputType inputType);
+
+        public static enum InputType
+        {
+            TEXT, PASSWORD
+        }
+
     }
 
     public static interface DropDownFormElement extends FormFieldElement<DropDownFormElement>
