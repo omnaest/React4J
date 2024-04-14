@@ -84,7 +84,7 @@ export class DataContextManager {
         if (uiContextAccessor && contextId && field) {
             const uiContext = uiContextAccessor.getUIContextById(contextId);
             const result = uiContext?.data[field];
-            return result ? new String(result).toString() : "";
+            return result ? String(result) : "";
         }
         else {
             return "";
