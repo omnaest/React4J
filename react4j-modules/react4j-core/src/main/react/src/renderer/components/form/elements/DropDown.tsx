@@ -1,11 +1,11 @@
 import React from "react";
 import { FormElement } from "../Form";
-import { DataContextManager } from "../../data/DataContextManager";
-import { I18nRenderer, I18nTextValue } from "../I18nText";
-import { RenderingSupport } from "../../Renderer";
-import { ValidationMessageHelper } from "./helper/ValidationMessageHelper";
-import { FormDescriptionHelper } from "./helper/FormDescriptionHelper";
-import { FormLabelHelper } from "./helper/FormLabelHelper";
+import { DataContextManager } from "../../../data/DataContextManager";
+import { I18nRenderer, I18nTextValue } from "../../I18nText";
+import { RenderingSupport } from "../../../Renderer";
+import { ValidationMessageHelper } from "../helper/ValidationMessageHelper";
+import { FormDescriptionHelper } from "../helper/FormDescriptionHelper";
+import { FormLabelHelper } from "../helper/FormLabelHelper";
 
 export interface DropDownFormElement extends FormElement {
     dropDown: DropDownNode;

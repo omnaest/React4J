@@ -1,17 +1,17 @@
 import React from "react";
-import { Node, RenderingSupport } from "../Renderer";
-import { DataContextManager } from "../data/DataContextManager";
-import { Handler, HandlerFactory } from "../handler/Handler";
-import { I18nRenderer, I18nTextValue } from "./I18nText";
-import { Input, InputFormElement } from "./form/Input";
-import { ValidationMessageHelper } from "./form/helper/ValidationMessageHelper";
-import { FormDescriptionHelper } from "./form/helper/FormDescriptionHelper";
-import { DropDown, DropDownFormElement } from "./form/DropDown";
-import { RenderingSupportHelper } from "../support/RenderingSupportHelper";
-import RerenderingContainer from "./RerenderingContainer";
-import LocalRerenderingContainer from "./LocalRerenderingContainer";
-import { RerenderingHelper } from "../support/RerenderingHelper";
-import { FormCheckbox, FormCheckboxFormElement } from "./form/FormCheckbox";
+import { Node, RenderingSupport } from "../../Renderer";
+import { DataContextManager } from "../../data/DataContextManager";
+import { Handler, HandlerFactory } from "../../handler/Handler";
+import { I18nRenderer, I18nTextValue } from "../I18nText";
+import { Input, InputFormElement } from "./elements/Input";
+import { ValidationMessageHelper } from "./helper/ValidationMessageHelper";
+import { FormDescriptionHelper } from "./helper/FormDescriptionHelper";
+import { DropDown, DropDownFormElement } from "./elements/DropDown";
+import { RenderingSupportHelper } from "../../support/RenderingSupportHelper";
+import RerenderingContainer from "../RerenderingContainer";
+import LocalRerenderingContainer from "../LocalRerenderingContainer";
+import { RerenderingHelper } from "../../support/RerenderingHelper";
+import { FormCheckbox, FormCheckboxFormElement } from "./elements/FormCheckbox";
 
 export interface FormNode extends Node {
     elements: FormElement[];

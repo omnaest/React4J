@@ -17,7 +17,7 @@ import { Table, TableNode } from "./components/Table";
 import { Anker, AnkerNode } from "./components/Anker";
 import { VerticalContentSwitcher, VerticalContentSwitcherNode } from "./components/VerticalContentSwitcher";
 import { HomePage, HomePageNode } from "./components/HomePage";
-import { Form, FormNode } from "./components/Form";
+import { Form, FormNode } from "./components/form/Form";
 import { Text, TextNode } from "./components/Text";
 import { ScrollbarContainerNode, ScrollbarContainer } from "./components/ScrollbarContainer";
 import { AnkerButton, AnkerButtonNode } from "./components/AnkerButton";

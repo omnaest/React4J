@@ -1,5 +1,5 @@
 import React from "react";
-import { ValidationFeedback } from "../../Form";
+import { ValidationFeedback } from "../Form";
 import { I18nRenderer } from "../../I18nText";
 import { UIContext } from "../../../data/DataContextManager";
 import { ElementMap } from "../../../../utils/Utils";

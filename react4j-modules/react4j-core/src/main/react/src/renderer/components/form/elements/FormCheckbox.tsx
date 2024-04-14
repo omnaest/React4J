@@ -1,11 +1,11 @@
 import React from "react";
-import { I18nRenderer, I18nTextValue } from "../I18nText";
-import { FormLabelHelper } from "./helper/FormLabelHelper";
+import { I18nRenderer, I18nTextValue } from "../../I18nText";
+import { FormLabelHelper } from "../helper/FormLabelHelper";
 import { FormElement } from "../Form";
-import { RenderingSupport } from "../../Renderer";
-import { ValidationMessageHelper } from "./helper/ValidationMessageHelper";
-import { FormDescriptionHelper } from "./helper/FormDescriptionHelper";
-import { DataContextManager } from "../../data/DataContextManager";
+import { RenderingSupport } from "../../../Renderer";
+import { ValidationMessageHelper } from "../helper/ValidationMessageHelper";
+import { FormDescriptionHelper } from "../helper/FormDescriptionHelper";
+import { DataContextManager } from "../../../data/DataContextManager";
 import { Form, FormCheck } from "react-bootstrap";
 import Feedback from "react-bootstrap/esm/Feedback";
 
