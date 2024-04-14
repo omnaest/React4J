@@ -146,7 +146,7 @@ export class Form extends React.Component<Props, State> {
                                 <label htmlFor={htmlId}>{I18nRenderer.render(element.label)}</label>
                                 <input type="range"
                                     id={htmlId}
-                                    className={"form-control form-range " + validClassName}
+                                    className={"form-range " + validClassName}
                                     aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, uiContext, element.field)}
                                     value={DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor)}
                                     min={rangeElement?.min || 0}
