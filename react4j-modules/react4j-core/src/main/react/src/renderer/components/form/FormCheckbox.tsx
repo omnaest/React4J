@@ -52,7 +52,7 @@ export class FormCheckbox extends React.Component<Props, {}> {
                     {...ValidationMessageHelper.determineFormControlValidationProperties(htmlId, uiContext, element.field)}
                     aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, uiContext, element.field)}
                 />
-                {FormDescriptionHelper.renderDescription2(htmlId, element.description)}
+                {FormDescriptionHelper.renderDescription(htmlId, element.description)}
             </>
         );
     }

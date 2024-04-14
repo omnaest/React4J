@@ -6,6 +6,7 @@ import { RenderingSupport } from "../../Renderer";
 import { ValidationMessageHelper } from "./helper/ValidationMessageHelper";
 import { FormDescriptionHelper } from "./helper/FormDescriptionHelper";
 import { FormLabelHelper } from "./helper/FormLabelHelper";
+import { Form } from "react-bootstrap";
 
 export interface InputFormElement extends FormElement {
 }
@@ -29,22 +30,21 @@ export class Input extends React.Component<Props> {
         const element = this.props.element;
         const uiContext = this.props.renderingSupport?.uiContextAccessor?.getUIContextById(element.contextId);
         const htmlId = this.props.id;
-        const validClassName = ValidationMessageHelper.determineFormControlClassName(uiContext, element.field);
-        const readonlyClassName = element.readonly ? " form-control-plaintext" : ""
         const ariaDescribedByValidation = ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, uiContext, element.field);
         return (
             <>
                 {FormLabelHelper.renderLabel(htmlId, element.label)}
-                <input
+                <Form.Control
                     id={htmlId}
-                    className={"form-control " + validClassName + readonlyClassName}
-                    aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ariaDescribedByValidation}
+                    type="text"
                     placeholder={I18nRenderer.render(element.placeholder)}
-                    aria-label={I18nRenderer.render(element.placeholder)}
-                    required={element.required === true}
-                    readOnly={element.readonly === true}
                     value={DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor)}
                     onChange={(event) => this.handleInputChange(element, event.target.value)}
+                    required={element.required === true}
+                    readOnly={element.readonly === true}
+                    {...ValidationMessageHelper.determineFormControlValidationProperties(htmlId, uiContext, element.field)}
+                    aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ariaDescribedByValidation}
+                    aria-label={I18nRenderer.render(element.placeholder)}
                 />
                 {FormDescriptionHelper.renderDescription(htmlId, element.description)}
                 {ValidationMessageHelper.renderValidationFeedback(htmlId, uiContext, element.field)}

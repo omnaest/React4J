@@ -52,7 +52,7 @@ export class ValidationMessageHelper {
         return {
             isValid: this.determineFormControlIsValid(uiContext, fieldName),
             isInvalid: this.determineFormControlIsInValid(uiContext, fieldName),
-            feedback: this.renderValidationFeedback2(htmlId, uiContext, fieldName),
+            feedback: this.renderInlineValidationFeedback(htmlId, uiContext, fieldName),
             feedbackType: (isValid ? "valid" : "invalid") as FeedbackType
         }
     }
@@ -95,7 +95,7 @@ export class ValidationMessageHelper {
             >{I18nRenderer.render(message.text)}</Form.Control.Feedback>));
     }
 
-    public static renderValidationFeedback2(htmlId: string, uiContext: UIContext | undefined, fieldName: string): React.ReactNode {
+    private static renderInlineValidationFeedback(htmlId: string, uiContext: UIContext | undefined, fieldName: string): React.ReactNode {
         const validationFeedback: ValidationFeedback = ValidationMessageHelper.determineValidationFeedback(uiContext, fieldName);
         return validationFeedback?.messages?.map((message, index) =>
         (
@@ -103,5 +103,7 @@ export class ValidationMessageHelper {
                 id={ValidationMessageHelper.determineValidationMessageId(htmlId, index)}
             >{I18nRenderer.render(message.text)}</div>));
     }
+
+
 
 }

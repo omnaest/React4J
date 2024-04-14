@@ -60,7 +60,7 @@ export class DropDown extends React.Component<Props, State> {
         const value = DataContextManager.getFieldValue(element.contextId, element.field, this.props.renderingSupport?.uiContextAccessor);
         return (
             <>
-                {FormLabelHelper.renderLabel(htmlId, element.label)}
+                {FormLabelHelper.renderLabelLegacy(htmlId, element.label)}
                 <select
                     className={"form-control form-select " + validClassName}
                     id={htmlId}
