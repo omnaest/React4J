@@ -48,6 +48,8 @@ public class MockUI
         {
 
             reactUI.addNewComponent(factory -> factory.newCard()
+                                                      .withTitle("Form")
+                                                      .withSubTitle("Subtitle")
                                                       .withContent(factory.newForm()
                                                                           .withUIContext(this.newForm())));
             //            .withNavigationBar(navigationBar -> navigationBar.addEntry(entry -> entry.withText("News")
@@ -137,7 +139,7 @@ public class MockUI
                 .addInputField(input -> input.withLabel("Category:"))
                 .addCheckbox(checkbox -> checkbox.attachToField(switchField)
                                                  .withType(CheckboxType.SWITCH)
-                                                 .withLabel("Toggle:")
+                                                 .withLabel("On/Off")
                                                  .withDescription("Description")
                                                  .withInitialValue(true)
                                                  .withDisabled(false))

@@ -45,7 +45,6 @@ export interface Node {
     type: string;
 }
 
-
 export interface Target extends Array<string> {
 }
 
