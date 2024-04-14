@@ -6,7 +6,8 @@ import { RenderingSupport } from "../../Renderer";
 import { ValidationMessageHelper } from "./helper/ValidationMessageHelper";
 import { FormDescriptionHelper } from "./helper/FormDescriptionHelper";
 import { DataContextManager } from "../../data/DataContextManager";
-import { Form } from "react-bootstrap";
+import { Form, FormCheck } from "react-bootstrap";
+import Feedback from "react-bootstrap/esm/Feedback";
 
 export interface FormCheckboxFormElement extends FormElement {
     checkbox: FromCheckboxNode;
@@ -51,8 +52,7 @@ export class FormCheckbox extends React.Component<Props, {}> {
                     {...ValidationMessageHelper.determineFormControlValidationProperties(htmlId, uiContext, element.field)}
                     aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, uiContext, element.field)}
                 />
-                {FormDescriptionHelper.renderDescription(htmlId, element.description)}
-                {ValidationMessageHelper.renderValidationFeedback(htmlId, uiContext, element.field)}
+                {FormDescriptionHelper.renderDescription2(htmlId, element.description)}
             </>
         );
     }

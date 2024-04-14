@@ -131,6 +131,7 @@ public class MockUI
                 .addCheckbox(checkbox -> checkbox.attachToField(switchField)
                                                  .withType(CheckboxType.SWITCH)
                                                  .withLabel("Toggle:")
+                                                 .withDescription("Description")
                                                  .withInitialValue(true)
                                                  .withDisabled(false))
                 .addRange(range -> range.attachToField(rangefield)
