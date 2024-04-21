@@ -30,10 +30,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -65,14 +65,14 @@ public class ReactUIController
     //        return this.resolverService.resolveNodeHierarchy(contextPath);
     //    }
 
-    @RequestMapping(method = RequestMethod.GET, path = { "/ui", "{languageTag}/ui" }, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = { "/ui", "{languageTag}/ui" }, produces = MediaType.APPLICATION_JSON_VALUE)
     public NodeHierarchy getNodeHierarchy(@PathVariable(name = "languageTag", required = false) String languageTag)
     {
         this.localeService.setExplicitRequestLocaleByLanguageTag(languageTag);
         return this.eventHandlerService.executeTransactionalAndPublishStagingHandlers(this.resolverService::resolveDefaultNodeHierarchy);
     }
 
-    @RequestMapping(method = RequestMethod.POST, path = { "/ui", "{languageTag}/ui" }, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = { "/ui", "{languageTag}/ui" }, produces = MediaType.APPLICATION_JSON_VALUE)
     public Optional<TargetNode> getSubNodeHierarchy(@RequestBody SubNodeRerenderingContext context,
                                                     @PathVariable(name = "languageTag", required = false) String languageTag)
     {
@@ -99,8 +99,7 @@ public class ReactUIController
 
     }
 
-    @RequestMapping(method = RequestMethod.POST, path = { "/ui/event",
-                                                          "{languageTag}/ui/event" }, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = { "/ui/event", "{languageTag}/ui/event" }, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public Optional<ResponseBody> acceptEvent(@RequestBody EventBody eventBody, @PathVariable(name = "languageTag", required = false) String languageTag)
     {
         this.localeService.setExplicitRequestLocaleByLanguageTag(languageTag);
