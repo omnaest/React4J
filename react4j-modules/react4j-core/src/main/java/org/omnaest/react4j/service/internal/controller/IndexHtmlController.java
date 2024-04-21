@@ -50,9 +50,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -98,9 +97,7 @@ public class IndexHtmlController
                                                                                .orElseThrow(() -> new IllegalStateException("Could not load index.html from classpath")))
                                                            .asDurationLimitedCachedElement(TimeDuration.of(5, TimeUnit.SECONDS));
 
-    @RequestMapping(method = RequestMethod.GET, path = { "/index.html",
-                                                         "{languageTag:[a-zA-Z\\-]+}",
-                                                         "{languageTag}/index.html" }, produces = MediaType.TEXT_HTML_VALUE)
+    @GetMapping(path = { "/", "/index.html", "{languageTag:[a-zA-Z\\-]+}", "{languageTag}/index.html", "{languageTag}/" }, produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> getLanguageSpecific(@PathVariable(name = "languageTag", required = false) String languageTag)
     {
         if (this.languageRedirectEnabled && StringUtils.isBlank(languageTag) && !this.localeService.isRequestLocaleEqualToDefaultLocale())
@@ -116,7 +113,7 @@ public class IndexHtmlController
         }
     }
 
-    @RequestMapping(method = RequestMethod.GET, path = { "/sitemap.xml" }, produces = MediaType.APPLICATION_XML_VALUE)
+    @GetMapping(path = { "/sitemap.xml" }, produces = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<String> getSitemap()
     {
         Date lastModified = Date.from(Instant.now());

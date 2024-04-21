@@ -16,6 +16,7 @@
 package org.omnaest.react4j.service.internal.domain;
 
 import org.omnaest.react4j.domain.ReactUI;
+import org.omnaest.react4j.domain.context.data.source.registry.DataSourceRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.nodes.NodeHierarchy;
@@ -27,5 +28,7 @@ public interface ReactUIInternal extends ReactUI
     public ReactUIInternal collectNodeRenderers(NodeRendererRegistry registry);
 
     public ReactUIInternal collectEventHandlers(EventHandlerRegistry registry);
+
+    public ReactUIInternal collectDataSources(DataSourceRegistry registry);
 
 }

@@ -16,6 +16,7 @@
 package org.omnaest.react4j.component.listview.internal.renderer.node;
 
 import org.omnaest.react4j.domain.raw.Node;
+import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.AbstractNode;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -29,6 +30,9 @@ public class ListViewNode extends AbstractNode implements Node
 {
     @JsonProperty
     private final String type = "LISTVIEW";
+
+    @JsonProperty
+    private Target target;
 
     @JsonProperty
     private Node element;

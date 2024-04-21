@@ -31,6 +31,8 @@ import org.omnaest.react4j.domain.ReactUI;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.configuration.HomePageConfiguration;
+import org.omnaest.react4j.domain.context.data.source.DataSource;
+import org.omnaest.react4j.domain.context.data.source.registry.DataSourceRegistry;
 import org.omnaest.react4j.domain.i18n.UILocale;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.RenderableUIComponent;
@@ -55,6 +57,7 @@ import org.omnaest.react4j.service.internal.nodes.service.RootNodeResolverServic
 import org.omnaest.react4j.service.internal.rerenderer.RerenderingNodeProviderRegistry;
 import org.omnaest.react4j.service.internal.rerenderer.RerenderingNodeProviderRegistry.RerenderedNodeProvider;
 import org.omnaest.react4j.service.internal.service.ContentService;
+import org.omnaest.react4j.service.internal.service.DataService;
 import org.omnaest.react4j.service.internal.service.HomePageConfigurationService;
 import org.omnaest.react4j.service.internal.service.MarkdownService;
 import org.omnaest.react4j.service.internal.service.NodeHierarchyStaticRenderer;
@@ -77,6 +80,9 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
 
     @Autowired
     protected EventHandlerRegistry eventHandlerRegistry;
+
+    @Autowired
+    protected DataService dataService;
 
     @Autowired
     protected RerenderingNodeProviderRegistry rerenderingNodeProviderRegistry;
@@ -301,6 +307,36 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                 return this;
             }
 
+            @Override
+            @SuppressWarnings("rawtypes")
+            public ReactUIInternal collectDataSources(DataSourceRegistry registry)
+            {
+                FilterMapper<UIComponent<?>, RenderableUIComponent<?>> filterMapper = StreamUtils.filterMapper(iComponent -> iComponent instanceof RenderableUIComponent,
+                                                                                                               iComponent -> (RenderableUIComponent<?>) iComponent);
+                StreamUtils.recursiveFlattened(Stream.concat(Stream.of(this.navigationBar), this.components.stream())
+                                                     .filter(filterMapper)
+                                                     .map(filterMapper)
+                                                     .map(component -> BiElement.of((RenderableUIComponent) component, component.asRenderer()
+                                                                                                                                .getLocation(new LocationSupportImpl(Location.empty())))),
+                                               parentComponentAndLocation -> parentComponentAndLocation.getFirst()
+                                                                                                       .asRenderer()
+                                                                                                       .getSubComponents(parentComponentAndLocation.getSecond())
+                                                                                                       .filter(locationAndComponent -> filterMapper.test(locationAndComponent.getComponent()))
+                                                                                                       .map(locationAndComponent -> locationAndComponent.applyToComponent(filterMapper))
+                                                                                                       .map(locationAndComponent -> BiElement.of(locationAndComponent.getSecond(),
+                                                                                                                                                 locationAndComponent.getSecond()
+                                                                                                                                                                     .asRenderer()
+                                                                                                                                                                     .getLocation(new LocationSupportImpl(locationAndComponent.getFirst())))))
+                           .forEach(componentAndLocation ->
+                           {
+                               Location location = componentAndLocation.getSecond();
+                               RenderableUIComponent component = componentAndLocation.getFirst();
+                               component.asRenderer()
+                                        .manageDataSources(registry, location);
+                           });
+                return this;
+            }
+
             private RenderingProcessor createRenderingProcessor()
             {
                 return new RenderingProcessorImpl(this.componentFactory());
@@ -319,8 +355,10 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
     public NodeHierarchy resolveNodeHierarchy(String contextPath)
     {
         return this.uiManager.get(contextPath)
-                             .map(ReactUIInternal::asNodeHierarchy)
-                             .orElseThrow(() -> new IllegalArgumentException("No UI defined for context path: " + contextPath));
+                             .orElseThrow(() -> new IllegalArgumentException("No UI defined for context path: " + contextPath))
+                             .collectEventHandlers(this.eventHandlerRegistry)
+                             .collectDataSources(this.createDataSourceRegistry())
+                             .asNodeHierarchy();
     }
 
     @Override
@@ -341,9 +379,25 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
         this.uiManager.get(contextPath)
                       .orElseThrow(() -> new IllegalArgumentException("No UI defined for context path: " + contextPath))
                       .collectNodeRenderers(nodeRenderingProcessor)
-                      .collectEventHandlers(this.eventHandlerRegistry);
+                      .collectEventHandlers(this.eventHandlerRegistry)
+                      .collectDataSources(this.createDataSourceRegistry());
 
         return nodeRenderingProcessor.render(this.resolveNodeHierarchy(contextPath), nodeRenderType);
+    }
+
+    private DataSourceRegistry createDataSourceRegistry()
+    {
+        return new DataSourceRegistry()
+        {
+            @Override
+            public void register(Location location, DataSource dataSource)
+            {
+                if (dataSource != null && location != null)
+                {
+                    ReactUIServiceImpl.this.dataService.registerDataSource(Target.from(location), dataSource);
+                }
+            }
+        };
     }
 
     @Override

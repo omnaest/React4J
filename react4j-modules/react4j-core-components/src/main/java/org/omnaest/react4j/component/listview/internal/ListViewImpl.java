@@ -23,6 +23,7 @@ import org.omnaest.react4j.component.listview.internal.data.ListViewElementData;
 import org.omnaest.react4j.component.listview.internal.renderer.ListViewElementRenderer;
 import org.omnaest.react4j.component.listview.internal.renderer.ListViewRenderer;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.context.data.source.DataSource;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.component.AbstractUIComponent;
@@ -57,9 +58,9 @@ public class ListViewImpl extends AbstractUIComponent<ListView> implements ListV
     }
 
     @Override
-    public ListView withSource(DataSource source)
+    public ListView withDataSource(DataSource source)
     {
-        // TODO Auto-generated method stub
+        this.data.dataSource(source);
         return this;
     }
 

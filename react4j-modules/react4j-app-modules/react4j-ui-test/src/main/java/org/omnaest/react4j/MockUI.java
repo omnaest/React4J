@@ -26,7 +26,10 @@ import org.omnaest.react4j.component.form.Form.CheckboxFormElement.CheckboxType;
 import org.omnaest.react4j.component.form.Form.FormElement.ColumnSpan;
 import org.omnaest.react4j.component.form.Form.InputFormElement.InputType;
 import org.omnaest.react4j.component.form.Form.ValidationMessageType;
+import org.omnaest.react4j.component.listview.ListView;
 import org.omnaest.react4j.domain.UIComponent.UIContextAndDataConsumer;
+import org.omnaest.react4j.domain.UIComponent.UIContextConsumer;
+import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.context.data.Value;
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.document.Document.Field;
@@ -55,19 +58,7 @@ public class MockUI
                                   container.withColumnSpan(5)
                                            .withContent(factory.newCard()
                                                                .withContent(factory.newListView()
-                                                                                   .withUIContext((listView, uiContext2) ->
-                                                                                   {
-                                                                                       Field titleField = uiContext2.getField("title");
-                                                                                       listView.withSource((pageIndex,
-                                                                                                            pageContent) -> Stream.of("Title 1", "Title 2")
-                                                                                                                                  .forEach(title -> pageContent.addNewElementAndGet(title.toLowerCase())
-                                                                                                                                                               .add(titleField,
-                                                                                                                                                                    title)))
-                                                                                               .withElement(element -> element.withContent(factory.newCard()
-                                                                                                                                                  .withTitle(titleField)
-                                                                                                                                                  .withContent(factory.newButton()
-                                                                                                                                                                      .withName("Button"))));
-                                                                                   })));
+                                                                                   .withUIContext(this.createMasterListViewContent(factory))));
                               })
                               .withDetailsContainer((container, uiContext) -> container.withColumnSpan(7)
                                                                                        .withContent(factory.newCard()
@@ -136,6 +127,22 @@ public class MockUI
             //                                                      )
             ;
         });
+    }
+
+    private UIContextConsumer<ListView> createMasterListViewContent(UIComponentFactory factory)
+    {
+        return (listView, uiContext) ->
+        {
+            Field titleField = uiContext.getField("title");
+            listView.withDataSource((pageIndex, pageContent) -> Stream.of("Title 1", "Title 2", "Title3")
+                                                                      .forEach(title -> pageContent.addNewElementAndGet(title.toLowerCase())
+                                                                                                   .add(titleField, title)))
+                    .withElement(element -> element.withContent(factory.newPaddingContainer()
+                                                                       .withContent(factory.newCard()
+                                                                                           .withTitle(titleField)
+                                                                                           .withContent(factory.newButton()
+                                                                                                               .withName("Button")))));
+        };
     }
 
     private UIContextAndDataConsumer<Form> newForm()

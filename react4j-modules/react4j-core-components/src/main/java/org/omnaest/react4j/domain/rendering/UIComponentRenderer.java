@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.context.data.Data;
+import org.omnaest.react4j.domain.context.data.source.registry.DataSourceRegistry;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
@@ -80,7 +81,15 @@ public interface UIComponentRenderer
      * 
      * @param eventHandlerRegistrationSupport
      */
-    public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport);
+    public default void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
+    {
+        // do nothing by default
+    }
+
+    public default void manageDataSources(DataSourceRegistry registry, Location location)
+    {
+        // do nothing by default
+    }
 
     public static interface EventHandlerRegistrationSupport
     {

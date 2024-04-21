@@ -96,8 +96,6 @@ public class ButtonImpl extends AbstractUIComponent<Button> implements Button
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
-
             }
 
             @Override
