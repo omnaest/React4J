@@ -23,6 +23,10 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.omnaest.react4j.component.value.field.TextFieldSource;
+import org.omnaest.react4j.component.value.i18n.I18nTextValueSource;
+import org.omnaest.react4j.component.value.i18n.internal.I18nTextValueSourceImpl;
+import org.omnaest.react4j.component.value.internal.TextFieldSourceImpl;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Locations;
 import org.omnaest.react4j.domain.RerenderingContainer;
@@ -30,6 +34,7 @@ import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.context.data.DefineableDataContext;
 import org.omnaest.react4j.domain.context.data.TypedDataContext;
+import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.react4j.domain.context.ui.UIContext;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.i18n.UILocale;
@@ -38,6 +43,7 @@ import org.omnaest.react4j.service.internal.component.uicontext.UIContextManager
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.service.ContextFactory;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
+import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService.LocationAwareTextResolver;
 import org.omnaest.utils.ConsumerUtils;
 import org.omnaest.utils.element.cached.CachedElement;
 
@@ -124,6 +130,16 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
         return I18nText.of(this.getLocations(), text, this.getDefaultLocale());
     }
 
+    protected I18nTextValueSource toI18nTextValueSource(String text)
+    {
+        return I18nTextValueSourceImpl.of(this.toI18nText(text));
+    }
+
+    protected TextFieldSource toTextFieldSource(Field field)
+    {
+        return TextFieldSourceImpl.of(field);
+    }
+
     protected I18nText toNonTranslatableI18nText(String text)
     {
         return I18nText.of(this.getLocations(), text, this.getDefaultLocale(), true);
@@ -137,6 +153,12 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
     protected UILocale getDefaultLocale()
     {
         return this.context.getDefaultLocale();
+    }
+
+    protected LocationAwareTextResolver getLocationAwareTextResolver(Location location)
+    {
+        return this.getTextResolver()
+                   .apply(location);
     }
 
     protected LocalizedTextResolverService getTextResolver()

@@ -17,7 +17,7 @@ package org.omnaest.react4j.component.anker.internal;
 
 import org.omnaest.react4j.component.anker.Anker;
 import org.omnaest.react4j.component.anker.internal.data.AnkerData.AnkerDataBuilder;
-import org.omnaest.react4j.component.anker.internal.renderer.AnkerRendererImpl;
+import org.omnaest.react4j.component.anker.internal.renderer.AnkerRenderer;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
@@ -42,7 +42,7 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new AnkerRendererImpl(this.getTextResolver(), this.data.build(), this::getId);
+        return new AnkerRenderer(this.getTextResolver(), this.data.build(), this::getId);
     }
 
     @Override

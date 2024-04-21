@@ -1,0 +1,187 @@
+.donate-button {
+	margin-top: 4px;
+	vertical-align: middle;
+}
+
+.card-header {
+	color: white;
+	background-color: blue;
+}
+
+.page-title {
+	padding: 10px;
+}
+
+h1 {
+	padding: 2px;
+}
+
+p {
+	max-width: calc(100vw - 70px);
+}
+
+.page-navigation {
+	background-color: white;
+	padding: 10px;
+	padding: 10px;
+	flex-wrap: nowrap;
+}
+
+.nav-item, .nav-link {
+	flex-wrap: nowrap;
+	white-space: nowrap;
+}
+
+.body-top {
+	height: 90px;
+	width: 100%;
+	overflow-x: auto;
+	overflow-y: hidden;
+	display: flex;
+}
+
+.body-bottom {
+	height: calc(100% - 90px);
+	overflow-y: auto;
+}
+
+.body-bottom-top-padding {
+	height: 30px;
+	width: 100%;
+}
+
+.body-full {
+	height: 100%;
+	overflow-y: auto;
+}
+
+.image-logo {
+	width: 100%;
+}
+
+li {
+	text-align: left;
+}
+
+.unlimited-columns >.row {
+	flex-wrap: nowrap;
+}
+
+@media(max-width:768px)
+{
+	.unlimited-columns >.row {
+		width: min-content;
+	}
+
+	.unlimited-columns >.row > .column {
+		width: calc(100vw - 70px);
+	}
+}
+
+.row {
+    margin-top:15px;
+}
+
+.jumbotron {
+	margin-bottom: 0px !important;
+}
+
+.card-body {
+	overflow-x: auto;
+}
+
+.width-max-content {	
+	width: max-content;
+}
+
+.vertical-content-switcher {
+	display: flex;
+	width: 100%;
+}
+
+.vertical-content-switcher-navigation {
+	margin-top: 12px;
+	margin-right: 12px;
+	width: min-content;
+}
+
+.vertical-content-switcher-navigation > .nav > .nav-item {
+	margin-bottom:6px;
+}
+
+.vertical-content-switcher-body {
+	width:calc(100% - 160px)
+}
+
+.scrollbar-container.full-viewport-height, 
+.scrollbar-container.half-viewport-height, 
+.scrollbar-container.full-viewport-height-without-header,
+.scrollbar-container.full-parent-height {
+	overflow-y:auto;
+}
+
+.scrollbar-container.full-viewport-height {
+	height:100vh;
+}
+
+.scrollbar-container.half-viewport-height {
+	height:50vh;
+}
+
+.scrollbar-container.full-viewport-height-without-header {
+	height:calc( 100vh - 80px );
+}
+
+.scrollbar-container.full-parent-height {
+	height:100%;
+}
+
+.scrollbar-container.full-viewport-width,
+.scrollbar-container.full-parent-width,
+.scrollbar-container.full-content-width
+{
+	overflow-x:auto;
+}
+
+.scrollbar-container.full-viewport-width {
+	width:100vw;
+}
+
+.scrollbar-container.full-parent-width,
+.scrollbar-container.full-content-width
+ {
+	width:100%;
+}
+
+.scrollbar-container-content.full-content-width
+{
+	width:max-content;
+}
+
+.toast-location 
+{
+	position: fixed; 
+	bottom: 0;
+}
+
+.toast
+{
+	max-width: 100vw !important;
+	width: 100%;
+}
+
+.navbar-menu-icon-container {
+	position: absolute;
+	top: 10px;
+	left: 0px;
+	z-index: 1;
+}
+
+.navbar-menu-icon-container > nav {
+    background-color: rgba(255, 255, 255, 0.0) !important;
+}
+
+.ratio, .iframe-container {
+	height:100%;
+	width: 100%;
+}

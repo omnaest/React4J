@@ -17,6 +17,7 @@ package org.omnaest.react4j.service.internal.service;
 
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.omnaest.react4j.domain.Location;
@@ -30,7 +31,17 @@ public interface LocalizedTextResolverService extends BiFunction<I18nText, Locat
     public default List<I18nTextValue> apply(List<I18nText> texts, Location location)
     {
         return texts.stream()
-                    .map(text -> apply(text, location))
+                    .map(text -> this.apply(text, location))
                     .collect(Collectors.toList());
+    }
+
+    public default LocationAwareTextResolver apply(Location location)
+    {
+        return i18nText -> this.apply(i18nText, location);
+    }
+
+    public static interface LocationAwareTextResolver extends Function<I18nText, I18nTextValue>
+    {
+
     }
 }

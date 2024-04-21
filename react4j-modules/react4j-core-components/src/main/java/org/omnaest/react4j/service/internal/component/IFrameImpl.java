@@ -18,6 +18,7 @@ package org.omnaest.react4j.service.internal.component;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.omnaest.react4j.component.anker.internal.renderer.node.AnkerNode;
 import org.omnaest.react4j.domain.IFrame;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.context.data.Data;
@@ -31,7 +32,6 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
-import org.omnaest.react4j.service.internal.nodes.AnkerNode;
 import org.omnaest.react4j.service.internal.nodes.IFrameContainerNode;
 import org.omnaest.utils.template.TemplateUtils;
 

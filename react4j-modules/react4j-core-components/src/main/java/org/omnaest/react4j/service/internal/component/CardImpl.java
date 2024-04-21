@@ -19,11 +19,13 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.omnaest.react4j.component.value.TextValueSource;
 import org.omnaest.react4j.domain.Card;
 import org.omnaest.react4j.domain.Image;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.context.data.Data;
+import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -36,12 +38,13 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.CardNode;
 import org.omnaest.react4j.service.internal.nodes.ImageNode;
+import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService.LocationAwareTextResolver;
 import org.omnaest.utils.template.TemplateUtils;
 
 public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implements Card
 {
-    private I18nText        featuredTitle;
-    private I18nText        title;
+    private TextValueSource featuredTitle;
+    private TextValueSource title;
     private I18nText        subTitle;
     private Optional<Image> image  = Optional.empty();
     private String          locator;
@@ -53,7 +56,7 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
         super(context);
     }
 
-    public CardImpl(ComponentContext context, I18nText featuredTitle, I18nText title, I18nText subTitle, Optional<Image> image, String locator,
+    public CardImpl(ComponentContext context, TextValueSource featuredTitle, TextValueSource title, I18nText subTitle, Optional<Image> image, String locator,
                     UIComponent<?> content, boolean adjust)
     {
         super(context);
@@ -80,13 +83,12 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
             @Override
             public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
+                LocationAwareTextResolver locationAwareTextResolver = CardImpl.this.getLocationAwareTextResolver(location);
                 return new CardNode().setFeaturedTitle(Optional.ofNullable(CardImpl.this.featuredTitle)
-                                                               .map(featuredTitle -> CardImpl.this.getTextResolver()
-                                                                                                  .apply(featuredTitle, location))
+                                                               .map(featuredTitle -> featuredTitle.asNode(location, locationAwareTextResolver))
                                                                .orElse(null))
                                      .setTitle(Optional.ofNullable(CardImpl.this.title)
-                                                       .map(title -> CardImpl.this.getTextResolver()
-                                                                                  .apply(title, location))
+                                                       .map(title -> title.asNode(location, locationAwareTextResolver))
                                                        .orElse(null))
                                      .setSubTitle(Optional.ofNullable(CardImpl.this.subTitle)
                                                           .map(subTitle -> CardImpl.this.getTextResolver()
@@ -139,18 +141,35 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
     @Override
     public Card withTitle(String title)
     {
-        if (title != null)
+        Optional.ofNullable(title)
+                .map(this::toI18nTextValueSource)
+                .ifPresent(this.createTitleApplier());
+        return this;
+    }
+
+    @Override
+    public Card withTitle(Field title)
+    {
+        Optional.ofNullable(title)
+                .map(this::toTextFieldSource)
+                .ifPresent(this.createTitleApplier());
+        return this;
+    }
+
+    private Consumer<TextValueSource> createTitleApplier()
+    {
+        return source ->
         {
             if (this.image.isPresent())
             {
-                this.title = this.toI18nText(title);
+                this.title = source;
             }
             else
             {
-                this.featuredTitle = this.toI18nText(title);
+                this.featuredTitle = source;
             }
-        }
-        return this;
+
+        };
     }
 
     @Override

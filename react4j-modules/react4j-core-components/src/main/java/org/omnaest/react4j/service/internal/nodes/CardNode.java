@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.nodes;
 
+import org.omnaest.react4j.component.value.node.ValueNode;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
@@ -26,10 +27,10 @@ public class CardNode extends AbstractNode implements Node
     private String type = "CARD";
 
     @JsonProperty
-    private I18nTextValue featuredTitle;
+    private ValueNode featuredTitle;
 
     @JsonProperty
-    private I18nTextValue title;
+    private ValueNode title;
 
     @JsonProperty
     private I18nTextValue subTitle;
@@ -52,12 +53,12 @@ public class CardNode extends AbstractNode implements Node
         return this.type;
     }
 
-    public I18nTextValue getTitle()
+    public ValueNode getTitle()
     {
         return this.title;
     }
 
-    public CardNode setTitle(I18nTextValue title)
+    public CardNode setTitle(ValueNode title)
     {
         this.title = title;
         return this;
@@ -96,12 +97,12 @@ public class CardNode extends AbstractNode implements Node
         return this;
     }
 
-    public I18nTextValue getFeaturedTitle()
+    public ValueNode getFeaturedTitle()
     {
         return this.featuredTitle;
     }
 
-    public CardNode setFeaturedTitle(I18nTextValue featuredTitle)
+    public CardNode setFeaturedTitle(ValueNode featuredTitle)
     {
         this.featuredTitle = featuredTitle;
         return this;

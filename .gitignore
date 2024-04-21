@@ -65,3 +65,6 @@ react4j-modules/react4j-app-modules/target/
 react4j-modules/react4j-app-modules/react4j-app-starter-parent/target/
 *.versionsBackup
 react4j-modules/react4j-app-modules/react4j-ui-test/content-configuration.json
+react4j-modules/react4j-core-ui/src/main/react/node_modules/
+react4j-modules/react4j-core-ui/target/
+react4j-modules/react4j-core-ui/src/main/react/build/

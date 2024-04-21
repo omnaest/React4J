@@ -5,6 +5,10 @@ import java.util.List;
 import org.omnaest.react4j.component.anker.Anker;
 import org.omnaest.react4j.component.ankerbutton.AnkerButton;
 import org.omnaest.react4j.component.form.Form;
+import org.omnaest.react4j.component.listview.ListView;
+import org.omnaest.react4j.component.listview.internal.ListViewImpl;
+import org.omnaest.react4j.component.master.MasterDetails;
+import org.omnaest.react4j.component.master.internal.MasterDetailsImpl;
 import org.omnaest.react4j.component.table.Table;
 import org.omnaest.react4j.domain.BlockQuote;
 import org.omnaest.react4j.domain.Button;
@@ -410,6 +414,19 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         {
             return new SizedContainerImpl(this.context);
         }
+
+        @Override
+        public MasterDetails newMasterDetails()
+        {
+            return new MasterDetailsImpl(this.context);
+        }
+
+        @Override
+        public ListView newListView()
+        {
+            return new ListViewImpl(this.context);
+        }
+
     }
 
     protected static abstract class AbstractMarkdownComponentFactory<U> implements MarkdownComponentFactory<U>

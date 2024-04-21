@@ -18,6 +18,7 @@ package org.omnaest.react4j;
 import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.omnaest.react4j.component.form.Form;
@@ -46,12 +47,39 @@ public class MockUI
     {
         this.uiService.getOrCreateDefaultRoot(reactUI ->
         {
+            reactUI.addNewComponent(factory ->
+            {
+                return factory.newMasterDetails()
+                              .withMasterContainer((container, uiContext) ->
+                              {
+                                  container.withColumnSpan(5)
+                                           .withContent(factory.newCard()
+                                                               .withContent(factory.newListView()
+                                                                                   .withUIContext((listView, uiContext2) ->
+                                                                                   {
+                                                                                       Field titleField = uiContext2.getField("title");
+                                                                                       listView.withSource((pageIndex,
+                                                                                                            pageContent) -> Stream.of("Title 1", "Title 2")
+                                                                                                                                  .forEach(title -> pageContent.addNewElementAndGet(title.toLowerCase())
+                                                                                                                                                               .add(titleField,
+                                                                                                                                                                    title)))
+                                                                                               .withElement(element -> element.withContent(factory.newCard()
+                                                                                                                                                  .withTitle(titleField)
+                                                                                                                                                  .withContent(factory.newButton()
+                                                                                                                                                                      .withName("Button"))));
+                                                                                   })));
+                              })
+                              .withDetailsContainer((container, uiContext) -> container.withColumnSpan(7)
+                                                                                       .withContent(factory.newCard()
+                                                                                                           //                                                      .withTitle("Form")
+                                                                                                           //                                                      .withSubTitle("Subtitle")
+                                                                                                           .withContent(factory.newForm()
+                                                                                                                               .withUIContext(this.newForm()))));
 
-            reactUI.addNewComponent(factory -> factory.newCard()
-                                                      .withTitle("Form")
-                                                      .withSubTitle("Subtitle")
-                                                      .withContent(factory.newForm()
-                                                                          .withUIContext(this.newForm())));
+            });
+            //            .addNewComponent(factory -> factory.newButton()
+            //                                                      .withName("Button")
+            //                                                      .withStyle(Style.DANGER))
             //            .withNavigationBar(navigationBar -> navigationBar.addEntry(entry -> entry.withText("News")
             //                                                                                            .withLinkedLocator("news")))
             //                   .addNewComponent(factory -> factory.newParagraph()

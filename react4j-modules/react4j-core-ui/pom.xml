@@ -1,0 +1,125 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.omnaest.react</groupId>
+        <artifactId>react4j-modules</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>react4j-core-ui</artifactId>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <!-- Use the latest released version:
+                https://repo1.maven.org/maven2/com/github/eirslett/frontend-maven-plugin/ -->
+                <version>1.15.0</version>
+                <configuration>
+                    <nodeVersion>v21.5.0</nodeVersion>
+                    <workingDirectory>src/main/react</workingDirectory>
+                    <installDirectory>target</installDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install node and npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>npm install</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <!-- Optional configuration which provides for running
+                        any npm command -->
+                        <configuration>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm run build</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                    <!-- 
+                    <execution>
+                        <id>webpack build</id>
+                        <goals>
+                            <goal>webpack</goal>
+                        </goals>
+
+                        optional: the default phase is "generate-resources"
+                        <phase>generate-resources</phase>
+
+                        <configuration>
+                            optional: if not specified, it will run webpack's default build 
+                                (and you can remove this whole <configuration> section.)
+                            <arguments>-p</arguments>
+                        </configuration>
+                    </execution> -->
+
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${basedir}/src/main/resources/public</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>
+                                ${basedir}/src/main/resources/public</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/react/build</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-resources-to-target</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>
+                                ${basedir}/target/classes/public</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/react/build</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -16,6 +16,7 @@
 package org.omnaest.react4j.domain.context.ui;
 
 import org.omnaest.react4j.domain.context.Context;
+import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.react4j.domain.context.document.DocumentList;
 
 /**
@@ -25,6 +26,8 @@ import org.omnaest.react4j.domain.context.document.DocumentList;
  */
 public interface UIContext extends Context, DocumentList
 {
+
+    public Field getField(String fieldName);
 
     public UIContext withId(String id);
 

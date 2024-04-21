@@ -17,7 +17,7 @@ package org.omnaest.react4j.component.ankerbutton.internal;
 
 import org.omnaest.react4j.component.ankerbutton.AnkerButton;
 import org.omnaest.react4j.component.ankerbutton.internal.data.AnkerButtonData;
-import org.omnaest.react4j.component.ankerbutton.internal.renderer.UIComponentRendererImpl;
+import org.omnaest.react4j.component.ankerbutton.internal.renderer.AnkerButtonRenderer;
 import org.omnaest.react4j.domain.Button.Style;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -43,7 +43,7 @@ public class AnkerButtonImpl extends AbstractUIComponent<AnkerButton> implements
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRendererImpl(this.data.build(), AnkerButtonImpl.this.getTextResolver(), this::getId);
+        return new AnkerButtonRenderer(this.data.build(), AnkerButtonImpl.this.getTextResolver(), this::getId);
     }
 
     @Override

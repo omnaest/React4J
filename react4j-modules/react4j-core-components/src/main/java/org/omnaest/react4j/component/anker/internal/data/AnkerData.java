@@ -4,8 +4,9 @@ import org.omnaest.react4j.domain.i18n.I18nText;
 
 import lombok.Builder;
 import lombok.Builder.Default;
+import lombok.Data;
 
-@lombok.Data
+@Data
 @Builder
 public class AnkerData
 {

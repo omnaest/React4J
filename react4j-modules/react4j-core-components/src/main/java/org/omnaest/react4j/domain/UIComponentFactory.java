@@ -20,6 +20,8 @@ import java.util.List;
 import org.omnaest.react4j.component.anker.Anker;
 import org.omnaest.react4j.component.ankerbutton.AnkerButton;
 import org.omnaest.react4j.component.form.Form;
+import org.omnaest.react4j.component.listview.ListView;
+import org.omnaest.react4j.component.master.MasterDetails;
 import org.omnaest.react4j.component.table.Table;
 
 /**
@@ -156,4 +158,8 @@ public interface UIComponentFactory
     public SVGContainer newSVGContainer();
 
     public SizedContainer newSizedContainer();
+
+    public MasterDetails newMasterDetails();
+
+    public ListView newListView();
 }

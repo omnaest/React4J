@@ -20,6 +20,7 @@
         <module>react4j-i18n</module>
         <module>react4j-i18n-deepl</module>
         <module>react4j-app-modules</module>
+        <module>react4j-core-ui</module>
     </modules>
 
     <parent>

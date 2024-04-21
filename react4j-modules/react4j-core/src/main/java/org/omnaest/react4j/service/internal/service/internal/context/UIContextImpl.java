@@ -26,6 +26,7 @@ import org.omnaest.react4j.domain.Locations;
 import org.omnaest.react4j.domain.context.Context;
 import org.omnaest.react4j.domain.context.data.DataContext;
 import org.omnaest.react4j.domain.context.document.Document;
+import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.react4j.domain.context.ui.UIContext;
 import org.omnaest.utils.EncoderUtils.TextEncoderAndDecoderFactory;
 import org.omnaest.utils.ListUtils;
@@ -83,6 +84,13 @@ public class UIContextImpl implements UIContext
     {
         return ListUtils.ensureSize(this.documents, index + 1, elementIndex -> new DocumentImpl(elementIndex, this))
                         .get(index);
+    }
+
+    @Override
+    public Field getField(String fieldName)
+    {
+        return this.getFirstDocument()
+                   .getField(fieldName);
     }
 
     @Override

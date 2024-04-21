@@ -24,6 +24,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.text.StringEscapeUtils;
+import org.omnaest.react4j.component.value.i18n.internal.node.I18nTextNode;
+import org.omnaest.react4j.component.value.node.ValueNode;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
@@ -47,7 +49,7 @@ public class NodeHierarchyStaticRenderer
     public NodeHierarchyRenderingProcessor newNodeRenderingProcessor()
     {
         return new NodeHierarchyRenderingProcessorImpl( /* this.localeService.getRequestLocaleKey() */
-                                                        LocalizedTextResolverService.DEFAULT_LOCALE_KEY);
+                                                       LocalizedTextResolverService.DEFAULT_LOCALE_KEY);
     }
 
     private static class NodeHierarchyRenderingProcessorImpl implements NodeHierarchyRenderingProcessor
@@ -98,6 +100,19 @@ public class NodeHierarchyStaticRenderer
                                                                  .map(I18nTextValue::getLocaleToText)
                                                                  .map(localeToText -> localeToText.get(NodeHierarchyRenderingProcessorImpl.this.locale))
                                                                  .orElse(""));
+                }
+
+                @Override
+                public String render(ValueNode value)
+                {
+                    if (value instanceof I18nTextNode)
+                    {
+                        return this.render(((I18nTextNode) value).getValue());
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 }
 
                 @Override
