@@ -46,7 +46,7 @@ public class MasterDetailsImpl extends AbstractUIComponentWithSubComponents<Mast
     }
 
     @SuppressWarnings("rawtypes")
-    private static class AbstractContainerImpl<RT> implements Container<RT>, UIComponentProvider<UIComponent>
+    private static class AbstractContainerImpl<RT> implements Container<RT>, UIComponentProvider<UIComponent<?>>
     {
         private UIComponent<?> content;
         private int            columnSpan = 6;
