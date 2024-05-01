@@ -5,8 +5,8 @@
     <artifactId>react4j</artifactId>
     <parent>
         <groupId>org.omnaest.react</groupId>
-        <artifactId>react4j-parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <artifactId>react4j-modules</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
     <dependencies>
