@@ -245,6 +245,24 @@ public class GridContainerImpl extends AbstractUIComponentWithSubComponents<Grid
         }
 
         @Override
+        public Row addCellContent(UIComponentFactoryFunction factory)
+        {
+            return this.addCell(cell -> cell.withContent(factory));
+        }
+
+        @Override
+        public Row addCellContent(UIComponent<?> component)
+        {
+            return this.addCell(cell -> cell.withContent(component));
+        }
+
+        @Override
+        public Row addCellContent(UIComponentProvider<?> componentProvider)
+        {
+            return this.addCell(cell -> cell.withContent(componentProvider));
+        }
+
+        @Override
         public <E> Row addCells(Stream<E> elements, BiConsumer<Cell, E> cellConsumer)
         {
             ListUtils.of(elements)

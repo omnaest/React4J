@@ -32,6 +32,7 @@ import org.omnaest.react4j.component.table.internal.renderer.TableRendererImpl;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
+import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.component.AbstractUIComponentWithSubComponents;
 import org.omnaest.react4j.service.internal.component.AbstractUIContentHolder;
@@ -198,6 +199,12 @@ public class TableImpl extends AbstractUIComponentWithSubComponents<Table> imple
             cellConsumer.accept(cell);
             this.cells.add(cell);
             return this;
+        }
+
+        @Override
+        public Row addCellContent(UIComponentFactoryFunction factory)
+        {
+            return this.addCell(cell -> cell.withContent(factory));
         }
 
         @Override

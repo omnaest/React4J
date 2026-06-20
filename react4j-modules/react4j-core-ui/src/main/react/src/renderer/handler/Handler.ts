@@ -14,17 +14,19 @@ export interface ServerHandler extends Handler {
 
 export class HandlerFactory {
     public static onClick(handler: Handler, uiContextAccessor?: UIContextAccessor, nodeContextAccessor?: NodeContextAccessor) {
+        return (event: React.MouseEvent) => {
+            event.preventDefault();
+            HandlerFactory.handleEvent(handler, uiContextAccessor, nodeContextAccessor);
+        };
+    }
+
+    public static handleEvent(handler: Handler, uiContextAccessor?: UIContextAccessor, nodeContextAccessor?: NodeContextAccessor) {
         if (handler && handler.type === "SERVER") {
             const serverHandler = (handler as ServerHandler);
-            return (event: React.MouseEvent) => {
-                event.preventDefault();
-                Backend.sendEvent(serverHandler.target, serverHandler.contextId, uiContextAccessor, nodeContextAccessor);
-            };
+            Backend.sendEvent(serverHandler.target, serverHandler.contextId, uiContextAccessor, nodeContextAccessor);
         }
         else {
-            return () => {
-                throw new Error("Handler type " + handler.type + " not supported");
-            }
+            throw new Error("Handler type " + handler.type + " not supported");
         }
     }
 }

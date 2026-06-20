@@ -54,6 +54,10 @@ public interface Form extends UIComponent<Form>
 
     public Form addCheckbox(Consumer<CheckboxFormElement> checkbox);
 
+    Form attachTo(Document document);
+
+    Form onChange(FormOnChangeEventHandler eventHandler);
+
     public static interface FormElement<FE extends FormElement<?>>
     {
         public FE withLabel(String label);
@@ -255,4 +259,7 @@ public interface Form extends UIComponent<Form>
         public CheckboxFormElement newCheckbox();
     }
 
+    public static interface FormOnChangeEventHandler extends BiFunction<Data, Context, Data>
+    {
+    }
 }

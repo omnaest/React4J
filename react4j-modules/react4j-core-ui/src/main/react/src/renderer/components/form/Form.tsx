@@ -16,6 +16,7 @@ import { FormCheckbox, FormCheckboxFormElement } from "./elements/FormCheckbox";
 export interface FormNode extends Node {
     elements: FormElement[];
     responsive: boolean;
+    onChange?: Handler;
 }
 
 export interface FormElement {
@@ -75,6 +76,8 @@ export class Form extends React.Component<Props, State> {
     private handleInputChange(element: FormElement, value: string | string[], renderingSupport?: RenderingSupport) {
         const updateCounter = DataContextManager.updateFieldByContext(element.contextId, element.field, value, renderingSupport?.uiContextAccessor);
         this.setState({ updateCounter: updateCounter });
+
+        HandlerFactory.handleEvent(this.props.node?.onChange as Handler, renderingSupport?.uiContextAccessor, renderingSupport?.nodeContextAccessor);
     }
 
     private renderElement(htmlId: string, element: FormElement): React.ReactNode {

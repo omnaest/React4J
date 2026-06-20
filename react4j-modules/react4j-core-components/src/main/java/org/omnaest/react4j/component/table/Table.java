@@ -22,6 +22,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
 import org.omnaest.react4j.domain.support.UIContentHolder;
 
 import lombok.Getter;
@@ -54,6 +55,8 @@ public interface Table extends UIComponent<Table>
     public static interface Row
     {
         public Row addCell(Consumer<Cell> cellConsumer);
+
+        public Row addCellContent(UIComponentFactoryFunction factory);
 
         public <E> Row addCells(Stream<E> elements, BiConsumer<Cell, E> cellAndElementConsumer);
     }

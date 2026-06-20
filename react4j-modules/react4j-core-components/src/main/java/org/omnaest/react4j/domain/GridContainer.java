@@ -47,6 +47,12 @@ public interface GridContainer extends UIComponent<GridContainer>
     {
         public Row addCell(Consumer<Cell> cellConsumer);
 
+        public Row addCellContent(UIComponentFactoryFunction factory);
+
+        public Row addCellContent(UIComponent<?> component);
+
+        public Row addCellContent(UIComponentProvider<?> componentProvider);
+
         /**
          * Adds a new {@link Cell} for each element in the given {@link Stream} and provides the element together with the {@link Cell} to the
          * {@link BiConsumer}

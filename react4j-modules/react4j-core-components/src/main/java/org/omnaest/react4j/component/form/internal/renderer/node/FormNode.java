@@ -21,6 +21,7 @@ import java.util.List;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNode;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.service.internal.nodes.AbstractNode;
+import org.omnaest.react4j.service.internal.nodes.handler.Handler;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -38,6 +39,9 @@ public class FormNode extends AbstractNode implements Node
     @JsonProperty
     private boolean responsive;
 
+    @JsonProperty
+    private Handler onChange;
+
     @Override
     public String getType()
     {
@@ -53,6 +57,12 @@ public class FormNode extends AbstractNode implements Node
     public FormNode setResponsive(boolean responsive)
     {
         this.responsive = responsive;
+        return this;
+    }
+
+    public FormNode setOnChange(Handler onChange)
+    {
+        this.onChange = onChange;
         return this;
     }
 

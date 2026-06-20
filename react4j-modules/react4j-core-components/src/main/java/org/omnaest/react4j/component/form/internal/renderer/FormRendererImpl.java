@@ -7,12 +7,17 @@ import java.util.stream.Stream;
 import org.omnaest.react4j.component.form.internal.data.FormData;
 import org.omnaest.react4j.component.form.internal.renderer.node.FormNode;
 import org.omnaest.react4j.domain.Location;
+import org.omnaest.react4j.domain.context.Context;
 import org.omnaest.react4j.domain.context.data.Data;
+import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
+import org.omnaest.react4j.service.internal.handler.domain.Target;
+import org.omnaest.react4j.service.internal.nodes.handler.ServerHandler;
 import org.omnaest.utils.functional.Provider;
 
 import lombok.RequiredArgsConstructor;
@@ -20,8 +25,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FormRendererImpl implements UIComponentRenderer
 {
-    private final FormData         formData;
-    private final Provider<String> idProvider;
+    private final FormData             formData;
+    private final Provider<String>     idProvider;
+    private final EventHandlerRegistry eventHandlerRegistry;
 
     @Override
     public Location getLocation(LocationSupport locationSupport)
@@ -32,11 +38,22 @@ public class FormRendererImpl implements UIComponentRenderer
     @Override
     public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
     {
+        Context dataContext = this.getEffectiveContext();
+        Target target = Target.from(location);
+        this.eventHandlerRegistry.registerDataEventHandler(target, this.formData.getEventHandler());
         return new FormNode().setResponsive(this.formData.isResponsive())
                              .setElements(this.formData.getElements()
                                                        .stream()
                                                        .map(element -> element.render(location))
-                                                       .collect(Collectors.toList()));
+                                                       .collect(Collectors.toList()))
+                             .setOnChange(new ServerHandler(target).setContextId(dataContext.getId(location)));
+    }
+
+    protected Context getEffectiveContext()
+    {
+        return Optional.ofNullable(this.formData.getDocument())
+                       .map(Document::getContext)
+                       .orElse(null);
     }
 
     @Override

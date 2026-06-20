@@ -3,6 +3,8 @@ package org.omnaest.react4j.component.form.internal.data;
 import java.util.List;
 
 import org.omnaest.react4j.component.form.Form.FormElement;
+import org.omnaest.react4j.domain.context.document.Document;
+import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -18,4 +20,8 @@ public class FormData
 
     @Default
     private boolean responsive = true;
+
+    private Document document;
+
+    private DataEventHandler eventHandler;
 }

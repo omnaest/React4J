@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.component.form.internal;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -27,7 +28,10 @@ import org.omnaest.react4j.component.form.internal.element.DropdownFormElementIm
 import org.omnaest.react4j.component.form.internal.element.InputFormElementImpl;
 import org.omnaest.react4j.component.form.internal.element.RangeFormElementImpl;
 import org.omnaest.react4j.component.form.internal.renderer.FormRendererImpl;
+import org.omnaest.react4j.domain.context.Context;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.context.data.DataContext;
+import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
@@ -35,6 +39,7 @@ import org.omnaest.react4j.service.internal.component.AbstractUIComponent;
 import org.omnaest.react4j.service.internal.component.ComponentContext;
 import org.omnaest.react4j.service.internal.component.uicontext.UIContextManager;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
+import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler.MappedData;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 import org.omnaest.utils.element.cached.CachedElement;
 
@@ -56,7 +61,7 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new FormRendererImpl(this.data.build(), this::getId);
+        return new FormRendererImpl(this.data.build(), this::getId, this.getEventHandlerRegistry());
     }
 
     @Override
@@ -193,4 +198,33 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         return this.withResponsiveness(false);
     }
 
+    @Override
+    public Form onChange(FormOnChangeEventHandler eventHandler)
+    {
+        this.data.eventHandler((previousData, previousInternalData) ->
+        {
+            Data data = eventHandler.apply(previousData, this.getEffectiveContext());
+            Data internalData = previousInternalData.clone();
+            return MappedData.builder()
+                             .data(data)
+                             .internalData(internalData)
+                             .build();
+        });
+        return this;
+    }
+
+    @Override
+    public Form attachTo(Document document)
+    {
+        this.data.document(document);
+        return this;
+    }
+
+    protected Context getEffectiveContext()
+    {
+        return Optional.ofNullable(this.data.build()
+                                            .getDocument())
+                       .map(Document::getContext)
+                       .orElseGet(this.dataContextProvider);
+    }
 }
