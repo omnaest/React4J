@@ -43,8 +43,7 @@ public class TextAlignmentContainerImpl extends AbstractUIComponentAndContentHol
         super(context);
     }
 
-    public TextAlignmentContainerImpl(ComponentContext context, UIComponentProvider<?> content, boolean ellipsis, boolean nowrap,
-                                      HorizontalAlignment horizontalAlignment, VerticalAlignment verticalAlignment)
+    public TextAlignmentContainerImpl(ComponentContext context, UIComponentProvider<?> content, boolean ellipsis, boolean nowrap, HorizontalAlignment horizontalAlignment, VerticalAlignment verticalAlignment)
     {
         super(context);
         this.content = content;
@@ -85,8 +84,7 @@ public class TextAlignmentContainerImpl extends AbstractUIComponentAndContentHol
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
 
             @Override
             public Location getLocation(LocationSupport locationSupport)

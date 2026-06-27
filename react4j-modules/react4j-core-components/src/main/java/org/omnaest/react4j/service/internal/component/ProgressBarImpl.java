@@ -82,8 +82,7 @@ public class ProgressBarImpl extends AbstractUIComponent<ProgressBar> implements
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
             @Override
             public Location getLocation(LocationSupport locationSupport)
             {
@@ -103,8 +102,7 @@ public class ProgressBarImpl extends AbstractUIComponent<ProgressBar> implements
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(ProgressBarNode.class, NodeRenderType.HTML, new NodeRenderer<ProgressBarNode>()
-                {
+                registry.register(ProgressBarNode.class, NodeRenderType.HTML, new NodeRenderer<ProgressBarNode>() {
                     @Override
                     public String render(ProgressBarNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {

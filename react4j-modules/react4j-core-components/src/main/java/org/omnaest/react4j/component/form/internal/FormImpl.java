@@ -75,8 +75,7 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         int numberOfFormElements = this.data.build()
                                             .getElements()
                                             .size();
-        FormElement<?> formElement = formElementFactoryConsumer.apply(new FormElementFactory()
-        {
+        FormElement<?> formElement = formElementFactoryConsumer.apply(new FormElementFactory() {
             private AtomicInteger buttonCounter = new AtomicInteger(numberOfFormElements);
 
             @Override

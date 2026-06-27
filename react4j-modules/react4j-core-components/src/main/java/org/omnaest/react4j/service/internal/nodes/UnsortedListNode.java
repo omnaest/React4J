@@ -24,13 +24,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class UnsortedListNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "UNORDEREDLIST";
+    private String     type = "UNORDEREDLIST";
 
     @JsonProperty
     private List<Node> elements;
 
     @JsonProperty
-    private boolean enableBulletPoints;
+    private boolean    enableBulletPoints;
 
     @Override
     public String getType()

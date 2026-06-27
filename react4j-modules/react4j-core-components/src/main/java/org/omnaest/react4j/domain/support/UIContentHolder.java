@@ -56,16 +56,16 @@ public interface UIContentHolder<R>
     {
         FULL_VIEWPORT_SIZE(f -> f.newScrollbarContainer()
                                  .withVerticalBox(VerticalBoxMode.FULL_VIEWPORT_HEIGHT)
-                                 .withHorizontalBox(HorizontalBoxMode.FULL_VIEWPORT_WIDTH)),
-        FULL_PARENT_SIZE(f -> f.newScrollbarContainer()
-                               .withVerticalBox(VerticalBoxMode.FULL_PARENT_HEIGHT)
-                               .withHorizontalBox(HorizontalBoxMode.FULL_PARENT_WIDTH)),
-        FULL_VIEWPORT_HEIGHT(f -> f.newScrollbarContainer()
-                                   .withVerticalBox(VerticalBoxMode.FULL_VIEWPORT_HEIGHT)),
-        HALF_VIEWPORT_HEIGHT(f -> f.newScrollbarContainer()
-                                   .withVerticalBox(VerticalBoxMode.HALF_VIEWPORT_HEIGHT)),
-        FULL_CONTENT_WIDTH(f -> f.newScrollbarContainer()
-                                 .withHorizontalBox(HorizontalBoxMode.FULL_CONTENT_WIDTH));
+                                 .withHorizontalBox(HorizontalBoxMode.FULL_VIEWPORT_WIDTH)), FULL_PARENT_SIZE(
+                                         f -> f.newScrollbarContainer()
+                                               .withVerticalBox(VerticalBoxMode.FULL_PARENT_HEIGHT)
+                                               .withHorizontalBox(HorizontalBoxMode.FULL_PARENT_WIDTH)), FULL_VIEWPORT_HEIGHT(
+                                                       f -> f.newScrollbarContainer()
+                                                             .withVerticalBox(VerticalBoxMode.FULL_VIEWPORT_HEIGHT)), HALF_VIEWPORT_HEIGHT(
+                                                                     f -> f.newScrollbarContainer()
+                                                                           .withVerticalBox(VerticalBoxMode.HALF_VIEWPORT_HEIGHT)), FULL_CONTENT_WIDTH(
+                                                                                   f -> f.newScrollbarContainer()
+                                                                                         .withHorizontalBox(HorizontalBoxMode.FULL_CONTENT_WIDTH));
 
         private LayoutProvider layoutProvider;
 

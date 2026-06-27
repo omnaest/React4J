@@ -25,7 +25,7 @@ public interface DataService
         private Target target;
 
         @JsonProperty
-        private int pageIndex;
+        private int    pageIndex;
     }
 
     @lombok.Data

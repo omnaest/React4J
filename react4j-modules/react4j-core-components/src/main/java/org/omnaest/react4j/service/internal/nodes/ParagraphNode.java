@@ -25,16 +25,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ParagraphNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String id;
+    private String     id;
 
     @JsonProperty
-    private String type = "PARAGRAPH";
+    private String     type     = "PARAGRAPH";
 
     @JsonProperty
     private List<Node> elements = new ArrayList<>();
 
     @JsonProperty
-    private boolean bold;
+    private boolean    bold;
 
     public String getId()
     {

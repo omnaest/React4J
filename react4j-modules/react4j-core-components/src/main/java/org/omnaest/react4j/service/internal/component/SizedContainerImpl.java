@@ -59,8 +59,7 @@ public class SizedContainerImpl extends AbstractUIComponentAndContentHolder<Size
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
 
             @Override
             public Location getLocation(LocationSupport locationSupport)
@@ -79,8 +78,7 @@ public class SizedContainerImpl extends AbstractUIComponentAndContentHolder<Size
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(JumbotronNode.class, NodeRenderType.HTML, new NodeRenderer<JumbotronNode>()
-                {
+                registry.register(JumbotronNode.class, NodeRenderType.HTML, new NodeRenderer<JumbotronNode>() {
                     @Override
                     public String render(JumbotronNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
@@ -173,7 +171,7 @@ public class SizedContainerImpl extends AbstractUIComponentAndContentHolder<Size
                                                       .asPercentage()
                                                       .format(ratio),
                                            "%")
-                + "vw";
+                     + "vw";
         return this;
     }
 
@@ -184,7 +182,7 @@ public class SizedContainerImpl extends AbstractUIComponentAndContentHolder<Size
                                                        .asPercentage()
                                                        .format(ratio),
                                             "%")
-                + "vh";
+                      + "vh";
         return this;
     }
 

@@ -30,14 +30,14 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class ContentServiceImpl implements ContentService, ContentUploadService
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ContentServiceImpl.class);
+    private static final Logger         LOG                   = LoggerFactory.getLogger(ContentServiceImpl.class);
 
     @Autowired
     private ContentConfigurationService contentConfigurationService;
 
-    private Map<String, File> imageNameToFile       = new ConcurrentHashMap<>();
-    private Map<String, File> attachmentNameToFile  = new ConcurrentHashMap<>();
-    private Map<String, File> contentFileNameToFile = new ConcurrentHashMap<>();
+    private Map<String, File>           imageNameToFile       = new ConcurrentHashMap<>();
+    private Map<String, File>           attachmentNameToFile  = new ConcurrentHashMap<>();
+    private Map<String, File>           contentFileNameToFile = new ConcurrentHashMap<>();
 
     @Scheduled(initialDelay = 1000, fixedDelay = 5 * 1000)
     public void synchronizeFolderContent()
@@ -97,8 +97,7 @@ public class ContentServiceImpl implements ContentService, ContentUploadService
     public Optional<ContentImage> findImage(String imageName)
     {
         return Optional.ofNullable(this.imageNameToFile.get(imageName))
-                       .map(file -> new ContentImage()
-                       {
+                       .map(file -> new ContentImage() {
                            @Override
                            public byte[] get()
                            {
@@ -165,8 +164,7 @@ public class ContentServiceImpl implements ContentService, ContentUploadService
         return Optional.ofNullable(identifier)
                        .map(id -> id + "." + suffix)
                        .map(fileName -> this.contentFileNameToFile.get(fileName))
-                       .map(file -> new ContentFile()
-                       {
+                       .map(file -> new ContentFile() {
                            @Override
                            public String asString()
                            {
@@ -188,8 +186,7 @@ public class ContentServiceImpl implements ContentService, ContentUploadService
         return Optional.ofNullable(name)
                        .map(n -> BiElement.of(n, this.attachmentNameToFile.get(n)))
                        .filter(BiElement::hasNoNullValue)
-                       .map(fileNameAndFile -> new ContentAttachement()
-                       {
+                       .map(fileNameAndFile -> new ContentAttachement() {
 
                            @Override
                            public byte[] get()
@@ -231,8 +228,7 @@ public class ContentServiceImpl implements ContentService, ContentUploadService
                                                                .map(expectedToken -> StringUtils.equals(token, expectedToken))
                                                                .orElse(false);
 
-        return new ValidatedStorageAccess()
-        {
+        return new ValidatedStorageAccess() {
             @Override
             public ValidatedStorageAccess ifValidConsume(MultipartFile file)
             {

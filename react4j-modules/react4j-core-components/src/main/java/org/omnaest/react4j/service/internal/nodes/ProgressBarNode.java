@@ -23,19 +23,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ProgressBarNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "PROGRESSBAR";
+    private String        type = "PROGRESSBAR";
 
     @JsonProperty
     private I18nTextValue text;
 
     @JsonProperty
-    private double value;
+    private double        value;
 
     @JsonProperty
-    private double min;
+    private double        min;
 
     @JsonProperty
-    private double max;
+    private double        max;
 
     public I18nTextValue getText()
     {

@@ -25,13 +25,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class BlockQuoteNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "BLOCKQUOTE";
+    private String              type = "BLOCKQUOTE";
 
     @JsonProperty
     private List<I18nTextValue> texts;
 
     @JsonProperty
-    private I18nTextValue footer;
+    private I18nTextValue       footer;
 
     @Override
     public String getType()

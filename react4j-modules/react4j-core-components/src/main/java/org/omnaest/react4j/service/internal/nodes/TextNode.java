@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class TextNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "TEXT";
+    private String              type = "TEXT";
 
     @JsonProperty
     private List<I18nTextValue> texts;

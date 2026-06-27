@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class VerticalContentSwitcherNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "VERTICALCONTENTSWITCHER";
+    private String               type = "VERTICALCONTENTSWITCHER";
 
     @JsonProperty
     private List<ContentElement> elements;
@@ -56,13 +56,13 @@ public class VerticalContentSwitcherNode extends AbstractNode implements Node
         private I18nTextValue title;
 
         @JsonProperty
-        private boolean disabled;
+        private boolean       disabled;
 
         @JsonProperty
-        private boolean active;
+        private boolean       active;
 
         @JsonProperty
-        private Node content;
+        private Node          content;
 
         public I18nTextValue getTitle()
         {

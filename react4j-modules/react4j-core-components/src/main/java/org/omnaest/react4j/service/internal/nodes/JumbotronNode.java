@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class JumbotronNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "JUMBOTRON";
+    private String        type = "JUMBOTRON";
 
     @JsonProperty
     private I18nTextValue title;
@@ -32,10 +32,10 @@ public class JumbotronNode extends AbstractNode implements Node
     private I18nTextValue subTitle;
 
     @JsonProperty
-    private Node content;
+    private Node          content;
 
     @JsonProperty
-    private boolean fullWidth;
+    private boolean       fullWidth;
 
     @Override
     public String getType()

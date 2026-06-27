@@ -52,8 +52,7 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
 
             @Override
             public Location getLocation(LocationSupport locationSupport)

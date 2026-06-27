@@ -25,10 +25,10 @@ public class HomePageNode extends AbstractNode
     private String type = "HOMEPAGE";
 
     @JsonProperty
-    private Node navigation;
+    private Node   navigation;
 
     @JsonProperty
-    private Node body;
+    private Node   body;
 
     @Override
     public String getType()

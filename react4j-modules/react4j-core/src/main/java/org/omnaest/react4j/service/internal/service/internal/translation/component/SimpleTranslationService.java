@@ -17,7 +17,7 @@ public class SimpleTranslationService
     private TranslationService translationService;
 
     @Autowired
-    private LocaleService localeService;
+    private LocaleService      localeService;
 
     public Optional<String> translate(String key, String text)
     {

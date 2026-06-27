@@ -52,7 +52,7 @@ class I18nHashBased implements I18nText
                                                                                                  .stream()
                                                                                                  .map(token -> token.replaceAll("[^a-zA-Z0-9]", "_"))
                                                                                                  .collect(Collectors.joining("."))
-                                     + "." + Math.abs(this.text.hashCode())));
+                                                                                         + "." + Math.abs(this.text.hashCode())));
     }
 
     @Override
@@ -78,13 +78,13 @@ class I18nHashBased implements I18nText
     {
         return this.getKeys()
                    .getOrDefault(location, "")
-                + "_" + Optional.ofNullable(this.getDefaultText())
-                                .map(text -> StringUtils.left(text, 30))
-                                .map(text -> StringUtils.lowerCase(text))
-                                .map(text -> text.replaceAll("[^a-z]+", "_"))
-                                .orElse("")
-                + "_" + Math.abs(this.getDefaultText()
-                                     .hashCode());
+               + "_" + Optional.ofNullable(this.getDefaultText())
+                               .map(text -> StringUtils.left(text, 30))
+                               .map(text -> StringUtils.lowerCase(text))
+                               .map(text -> text.replaceAll("[^a-z]+", "_"))
+                               .orElse("")
+               + "_" + Math.abs(this.getDefaultText()
+                                    .hashCode());
     }
 
     @Override

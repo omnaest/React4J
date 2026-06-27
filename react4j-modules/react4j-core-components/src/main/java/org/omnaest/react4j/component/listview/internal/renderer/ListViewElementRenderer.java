@@ -43,8 +43,7 @@ public class ListViewElementRenderer implements UIComponentRenderer
     @Override
     public void manageNodeRenderers(NodeRendererRegistry registry)
     {
-        registry.register(ListViewElementNode.class, NodeRenderType.HTML, new NodeRenderer<ListViewElementNode>()
-        {
+        registry.register(ListViewElementNode.class, NodeRenderType.HTML, new NodeRenderer<ListViewElementNode>() {
             @Override
             public String render(ListViewElementNode node, NodeRenderingProcessor nodeRenderingProcessor)
             {

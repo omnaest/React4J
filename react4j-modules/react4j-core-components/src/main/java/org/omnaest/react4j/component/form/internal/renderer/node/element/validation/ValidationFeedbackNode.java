@@ -13,7 +13,7 @@ import lombok.Singular;
 public class ValidationFeedbackNode
 {
     @JsonProperty("valid")
-    private boolean valid;
+    private boolean                     valid;
 
     @Singular("addMessage")
     @JsonProperty

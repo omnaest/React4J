@@ -66,8 +66,7 @@ public class SiteMapGenerator
         private List<AlternativeLocalizedUrlLocation> alternativeLocalizedLocations;
         private List<CanonicalUrlLocation>            canonicalLocations;
 
-        public SiteUrlLocation(String url, Date lastModified, double priority, List<AlternativeLocalizedUrlLocation> alternativeLocalizedLocations,
-                               List<CanonicalUrlLocation> canonicalLocations)
+        public SiteUrlLocation(String url, Date lastModified, double priority, List<AlternativeLocalizedUrlLocation> alternativeLocalizedLocations, List<CanonicalUrlLocation> canonicalLocations)
         {
             super();
             this.url = url;
@@ -153,9 +152,7 @@ public class SiteMapGenerator
         private List<NativeAlternativeLocalizedUrlLocation> alternativeLocalizedLocations;
         private List<NativeCanonicalUrlLocation>            canonicalLocations;
 
-        public NativeSiteUrlLocation(String url, String lastModified, String priority,
-                                     List<NativeAlternativeLocalizedUrlLocation> alternativeLocalizedLocations,
-                                     List<NativeCanonicalUrlLocation> canonicalLocations)
+        public NativeSiteUrlLocation(String url, String lastModified, String priority, List<NativeAlternativeLocalizedUrlLocation> alternativeLocalizedLocations, List<NativeCanonicalUrlLocation> canonicalLocations)
         {
             super();
             this.url = url;

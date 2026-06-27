@@ -50,8 +50,7 @@ public class MarkdownServiceImpl implements MarkdownService
     {
         ContentService contentService = this.contentService;
 
-        return new FactoryLoadedMarkdownInterpreter()
-        {
+        return new FactoryLoadedMarkdownInterpreter() {
             @Override
             public List<Card> newMarkdownCards(String markdown)
             {
@@ -400,7 +399,7 @@ public class MarkdownServiceImpl implements MarkdownService
                                                                 .ifContainsRegEx("\\[\\?\\]", match ->
                                                                 {
                                                                     paragraph.addLink(anker -> anker.withText("[" + referenceLinkCounter.getAndIncrement()
-                                                                            + "]")
+                                                                                                              + "]")
                                                                                                     .withLink(link.getLink()));
                                                                 })
                                                                 .orElse(() ->

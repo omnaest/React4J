@@ -24,7 +24,8 @@ import org.omnaest.react4j.domain.support.UIComponentWithContent;
 import org.omnaest.react4j.domain.support.UIContentHolder;
 
 public abstract class AbstractUIComponentAndContentHolder<UIC extends UIComponentWithContent<?>> extends AbstractUIComponentWithSubComponents<UIC>
-        implements UIContentHolder<UIC>
+        implements
+            UIContentHolder<UIC>
 {
 
     public AbstractUIComponentAndContentHolder(ComponentContext context)

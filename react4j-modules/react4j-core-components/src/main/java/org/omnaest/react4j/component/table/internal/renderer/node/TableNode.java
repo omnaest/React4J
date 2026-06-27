@@ -33,16 +33,16 @@ import lombok.Getter;
 public class TableNode extends AbstractNode
 {
     @JsonProperty
-    private final String type = "TABLE";
+    private final String        type = "TABLE";
 
     @JsonProperty
     private List<I18nTextValue> columnTitles;
 
     @JsonProperty
-    private List<RowNode> rows;
+    private List<RowNode>       rows;
 
     @JsonProperty
-    private OptionsNode options;
+    private OptionsNode         options;
 
     @Data
     @Builder
@@ -50,7 +50,7 @@ public class TableNode extends AbstractNode
     {
         @JsonProperty
         @Default
-        private String size = "";
+        private String  size       = "";
 
         @JsonProperty
         @Default
@@ -60,7 +60,7 @@ public class TableNode extends AbstractNode
     public static class RowNode extends AbstractNode
     {
         @JsonProperty
-        private String type = "ROW";
+        private String         type = "ROW";
 
         @JsonProperty
         private List<CellNode> cells;
@@ -90,7 +90,7 @@ public class TableNode extends AbstractNode
         private String type = "CELL";
 
         @JsonProperty
-        private Node content;
+        private Node   content;
 
         @Override
         public String getType()

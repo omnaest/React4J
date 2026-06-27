@@ -39,7 +39,7 @@ public class LocalizedTextResolverServiceImpl implements LocalizedTextResolverSe
     private TranslationService translationService;
 
     @Autowired
-    private LocaleService localeService;
+    private LocaleService      localeService;
 
     @Override
     public I18nTextValue apply(I18nText i18nText, Location location)

@@ -13,11 +13,11 @@ public class AnkerButtonData
 {
     private I18nText text;
 
-    private String link;
+    private String   link;
 
     @Default
-    private Style style = Style.PRIMARY;
+    private Style    style      = Style.PRIMARY;
 
     @Default
-    private boolean isSamePage = false;
+    private boolean  isSamePage = false;
 }

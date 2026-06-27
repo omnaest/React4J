@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ImageIndexNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "IMAGEINDEX";
+    private String      type = "IMAGEINDEX";
 
     @JsonProperty
     private List<Entry> entries;
@@ -53,10 +53,10 @@ public class ImageIndexNode extends AbstractNode implements Node
         private I18nTextValue title;
 
         @JsonProperty
-        private String id;
+        private String        id;
 
         @JsonProperty
-        private String image;
+        private String        image;
 
         public I18nTextValue getTitle()
         {

@@ -65,8 +65,7 @@ public class TableRendererImpl implements UIComponentRenderer
                         .build();
     }
 
-    private Function<BiElement<CellImpl, Integer>, CellNode> createCellRenderer(RenderingProcessor renderingProcessor, Location location,
-                                                                                BiElement<RowImpl, Integer> rowAndIndex)
+    private Function<BiElement<CellImpl, Integer>, CellNode> createCellRenderer(RenderingProcessor renderingProcessor, Location location, BiElement<RowImpl, Integer> rowAndIndex)
     {
         return cellAndIndex ->
         {
@@ -89,8 +88,7 @@ public class TableRendererImpl implements UIComponentRenderer
     @Override
     public void manageNodeRenderers(NodeRendererRegistry registry)
     {
-        registry.register(TableNode.class, NodeRenderType.HTML, new NodeRenderer<TableNode>()
-        {
+        registry.register(TableNode.class, NodeRenderType.HTML, new NodeRenderer<TableNode>() {
             @Override
             public String render(TableNode node, NodeRenderingProcessor nodeRenderingProcessor)
             {

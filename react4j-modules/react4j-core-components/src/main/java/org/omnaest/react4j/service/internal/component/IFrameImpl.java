@@ -57,8 +57,7 @@ public class IFrameImpl extends AbstractUIComponent<IFrame> implements IFrame
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
             @Override
             public Location getLocation(LocationSupport locationSupport)
             {
@@ -77,8 +76,7 @@ public class IFrameImpl extends AbstractUIComponent<IFrame> implements IFrame
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(AnkerNode.class, NodeRenderType.HTML, new NodeRenderer<AnkerNode>()
-                {
+                registry.register(AnkerNode.class, NodeRenderType.HTML, new NodeRenderer<AnkerNode>() {
                     @Override
                     public String render(AnkerNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {

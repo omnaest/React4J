@@ -13,7 +13,7 @@ import lombok.Getter;
 public class I18nTextNode implements ValueNode
 {
     @JsonProperty
-    private final String type = "I18NTEXT";
+    private final String  type = "I18NTEXT";
 
     @JsonProperty
     private I18nTextValue value;

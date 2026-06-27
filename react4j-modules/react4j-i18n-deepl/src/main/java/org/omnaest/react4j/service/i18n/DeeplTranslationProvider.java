@@ -19,10 +19,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class DeeplTranslationProvider implements TranslationProvider
 {
-    private static Logger LOG = LoggerFactory.getLogger(DeeplTranslationProvider.class);
+    private static Logger    LOG = LoggerFactory.getLogger(DeeplTranslationProvider.class);
 
     @Value("${react4j.deepl.api_key}")
-    private String authorizationKey;
+    private String           authorizationKey;
 
     @Value("${react4j.deepl.license}")
     private Optional<String> license;
@@ -30,8 +30,7 @@ public class DeeplTranslationProvider implements TranslationProvider
     @Override
     public Optional<Translator> getTranslator(Locale sourceLocale, Locale targetLocale)
     {
-        return Optional.of(new Translator()
-        {
+        return Optional.of(new Translator() {
             @Override
             public Optional<String> apply(String key, String text)
             {
@@ -57,7 +56,7 @@ public class DeeplTranslationProvider implements TranslationProvider
                                                           .map(Translation::getText);
 
                         LOG.info("Resolved translation from Deepl: " + key + " " + sourceLanguage + "->" + targetLanguage + " " + text + " -> "
-                                + result.orElse(""));
+                                 + result.orElse(""));
 
                         this.resolveAndLogUsedDeeplCapacity(license);
 
@@ -78,7 +77,7 @@ public class DeeplTranslationProvider implements TranslationProvider
                 LOG.info("Already used translation capacity of Deepl: " + NumberUtils.formatter()
                                                                                      .asPercentage()
                                                                                      .format(alreadyUsedCapacity)
-                        + "% ( " + usage.getCharacterCount() + "/" + usage.getCharacterLimit() + " )");
+                         + "% ( " + usage.getCharacterCount() + "/" + usage.getCharacterLimit() + " )");
             }
         });
     }

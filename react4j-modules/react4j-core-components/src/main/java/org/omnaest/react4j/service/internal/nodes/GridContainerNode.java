@@ -24,21 +24,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class GridContainerNode extends AbstractNode
 {
     @JsonProperty
-    private String type = "CONTAINER";
+    private String        type = "CONTAINER";
 
     @JsonProperty
-    private String locator;
+    private String        locator;
 
     @JsonProperty
     private List<RowNode> rows;
 
     @JsonProperty
-    private boolean unlimitedColumns;
+    private boolean       unlimitedColumns;
 
     public static class RowNode extends AbstractNode
     {
         @JsonProperty
-        private String type = "ROW";
+        private String         type = "ROW";
 
         @JsonProperty
         private List<CellNode> cells;
@@ -65,13 +65,13 @@ public class GridContainerNode extends AbstractNode
     public static class CellNode extends AbstractNode
     {
         @JsonProperty
-        private String type = "CELL";
+        private String type    = "CELL";
 
         @JsonProperty
-        private int colspan = 1;
+        private int    colspan = 1;
 
         @JsonProperty
-        private Node content;
+        private Node   content;
 
         @Override
         public String getType()

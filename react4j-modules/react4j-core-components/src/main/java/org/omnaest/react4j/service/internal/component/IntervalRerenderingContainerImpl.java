@@ -53,8 +53,7 @@ public class IntervalRerenderingContainerImpl extends AbstractUIComponentWithSub
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
             @Override
             public Location getLocation(LocationSupport locationSupport)
             {
@@ -116,8 +115,7 @@ public class IntervalRerenderingContainerImpl extends AbstractUIComponentWithSub
     @Override
     public IntervalRerenderingContainer withRefreshedContent(UIComponentGenericFactoryFunction<ActiveRefreshStateControl> uiComponentFactory)
     {
-        this.content = () -> uiComponentFactory.apply(new ActiveRefreshStateControl()
-        {
+        this.content = () -> uiComponentFactory.apply(new ActiveRefreshStateControl() {
             @Override
             public ActiveRefreshStateControl disable()
             {

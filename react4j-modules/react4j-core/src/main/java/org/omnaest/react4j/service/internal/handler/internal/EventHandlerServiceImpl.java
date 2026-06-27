@@ -45,7 +45,7 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
     private TransactionalElement<Map<Target, List<DataEventHandler>>> handlers = this.createTransactionalHandlerMap();
 
     @Autowired
-    protected RerenderingService rerenderingService;
+    protected RerenderingService                                      rerenderingService;
 
     private TransactionalElement<Map<Target, List<DataEventHandler>>> createTransactionalHandlerMap()
     {

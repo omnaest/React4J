@@ -11,8 +11,7 @@ import org.omnaest.utils.FileUtils;
 
 public class TranslationFileServiceTest
 {
-    private TranslationFileService translationFileService = new TranslationFileService()
-    {
+    private TranslationFileService translationFileService = new TranslationFileService() {
         {
             this.translationFolder = FileUtils.createRandomTempDirectoryQuietly()
                                               .get()

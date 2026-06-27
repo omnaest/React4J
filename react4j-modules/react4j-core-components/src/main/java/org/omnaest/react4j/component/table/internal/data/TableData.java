@@ -19,11 +19,11 @@ public class TableData
     private List<I18nText> columnTitles = Collections.emptyList();
 
     @Singular("addRow")
-    private List<RowImpl> rows;
+    private List<RowImpl>  rows;
 
     @Default
-    private boolean responsive = true;
+    private boolean        responsive   = true;
 
     @Default
-    private String size = "";
+    private String         size         = "";
 }

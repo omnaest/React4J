@@ -57,47 +57,48 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class IndexHtmlController
 {
-    private static final Logger LOG = LoggerFactory.getLogger(IndexHtmlController.class);
+    private static final Logger            LOG            = LoggerFactory.getLogger(IndexHtmlController.class);
 
     @Autowired
     protected HomePageConfigurationService homePageConfigurationService;
 
     @Autowired
-    private RootNodeResolverService resolverService;
+    private RootNodeResolverService        resolverService;
 
     @Autowired
-    private LocaleService localeService;
+    private LocaleService                  localeService;
 
     @Autowired
-    private ContextService contextService;
+    private ContextService                 contextService;
 
     @Autowired
-    private SiteMapGenerator siteMapGenerator;
+    private SiteMapGenerator               siteMapGenerator;
 
     @Value("${react4j.language-redirect:false}")
-    private boolean languageRedirectEnabled;
+    private boolean                        languageRedirectEnabled;
 
-    private Counter pageHitCounter = Counter.fromZero();
+    private Counter                        pageHitCounter = Counter.fromZero();
 
-    private CachedElement<String> indexHtml = CachedElement.of(() -> ClassUtils.loadResource(this, "/public/index.html")
-                                                                               .map(Resource::asString)
-                                                                               .map(content -> MatcherUtils.replacer()
-                                                                                                           .addExactMatchReplacement("$RANDOM_NUMBER$", ""
-                                                                                                                   + Math.abs(("" + Math.random()).hashCode()))
-                                                                                                           .addExactMatchReplacements(this.homePageConfigurationService.getConfigurations())
-                                                                                                           .addExactMatchReplacement("$STATIC_HTML_CONTENT$",
-                                                                                                                                     this.resolverService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML))
-                                                                                                           .addExactMatchReplacement("%LOCALE%",
-                                                                                                                                     this.localeService.getRequestLocale()
-                                                                                                                                                       .orElse(Locale.US)
-                                                                                                                                                       .toLanguageTag())
-                                                                                                           .addExactMatchReplacement("<hreflang/>",
-                                                                                                                                     this.generateHrefLangRelatedLinkTags())
-                                                                                                           .findAndReplaceAllIn(content))
-                                                                               .orElseThrow(() -> new IllegalStateException("Could not load index.html from classpath")))
-                                                           .asDurationLimitedCachedElement(TimeDuration.of(5, TimeUnit.SECONDS));
+    private CachedElement<String>          indexHtml      = CachedElement.of(() -> ClassUtils.loadResource(this, "/public/index.html")
+                                                                                             .map(Resource::asString)
+                                                                                             .map(content -> MatcherUtils.replacer()
+                                                                                                                         .addExactMatchReplacement("$RANDOM_NUMBER$", ""
+                                                                                                                                                                      + Math.abs((""
+                                                                                                                                                                                  + Math.random()).hashCode()))
+                                                                                                                         .addExactMatchReplacements(this.homePageConfigurationService.getConfigurations())
+                                                                                                                         .addExactMatchReplacement("$STATIC_HTML_CONTENT$",
+                                                                                                                                                   this.resolverService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML))
+                                                                                                                         .addExactMatchReplacement("%LOCALE%",
+                                                                                                                                                   this.localeService.getRequestLocale()
+                                                                                                                                                                     .orElse(Locale.US)
+                                                                                                                                                                     .toLanguageTag())
+                                                                                                                         .addExactMatchReplacement("<hreflang/>",
+                                                                                                                                                   this.generateHrefLangRelatedLinkTags())
+                                                                                                                         .findAndReplaceAllIn(content))
+                                                                                             .orElseThrow(() -> new IllegalStateException("Could not load index.html from classpath")))
+                                                                         .asDurationLimitedCachedElement(TimeDuration.of(5, TimeUnit.SECONDS));
 
-    @GetMapping(path = { "/", "/index.html", "{languageTag:[a-zA-Z\\-]+}", "{languageTag}/index.html", "{languageTag}/" }, produces = MediaType.TEXT_HTML_VALUE)
+    @GetMapping(path = {"/", "/index.html", "{languageTag:[a-zA-Z\\-]+}", "{languageTag}/index.html", "{languageTag}/"}, produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> getLanguageSpecific(@PathVariable(name = "languageTag", required = false) String languageTag)
     {
         if (this.languageRedirectEnabled && StringUtils.isBlank(languageTag) && !this.localeService.isRequestLocaleEqualToDefaultLocale())
@@ -113,7 +114,7 @@ public class IndexHtmlController
         }
     }
 
-    @GetMapping(path = { "/sitemap.xml" }, produces = MediaType.APPLICATION_XML_VALUE)
+    @GetMapping(path = {"/sitemap.xml"}, produces = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<String> getSitemap()
     {
         Date lastModified = Date.from(Instant.now());

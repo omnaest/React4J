@@ -16,8 +16,8 @@
 package org.omnaest.react4j.component.ankerbutton;
 
 import org.omnaest.react4j.domain.Button;
-import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.Button.Style;
+import org.omnaest.react4j.domain.UIComponent;
 
 public interface AnkerButton extends UIComponent<AnkerButton>
 {

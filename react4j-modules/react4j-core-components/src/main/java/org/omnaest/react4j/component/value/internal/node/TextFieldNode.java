@@ -15,8 +15,8 @@ public class TextFieldNode implements ValueNode
     private final String type = "TEXTFIELD";
 
     @JsonProperty
-    private String contextId;
+    private String       contextId;
 
     @JsonProperty
-    private String fieldName;
+    private String       fieldName;
 }

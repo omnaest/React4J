@@ -23,16 +23,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class IFrameContainerNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "IFRAMECONTAINER";
+    private String        type = "IFRAMECONTAINER";
 
     @JsonProperty
     private I18nTextValue title;
 
     @JsonProperty
-    private String sourceLink;
+    private String        sourceLink;
 
     @JsonProperty
-    private boolean allowFullScreen;
+    private boolean       allowFullScreen;
 
     public I18nTextValue getTitle()
     {
@@ -77,7 +77,7 @@ public class IFrameContainerNode extends AbstractNode implements Node
     public String toString()
     {
         return "IFrameContainerNode [type=" + this.type + ", title=" + this.title + ", sourceLink=" + this.sourceLink + ", allowFullScreen="
-                + this.allowFullScreen + "]";
+               + this.allowFullScreen + "]";
     }
 
 }

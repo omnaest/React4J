@@ -32,10 +32,10 @@ import lombok.Getter;
 public abstract class AbstractNode extends AbstractJSONSerializable implements Node
 {
     @JsonProperty
-    private Target target;
+    private Target                      target;
 
     @JsonProperty
-    private Set<String> uiContextIds = new LinkedHashSet<>();
+    private Set<String>                 uiContextIds  = new LinkedHashSet<>();
 
     @JsonProperty
     private Optional<UIContextDataNode> uiContextData = Optional.empty();

@@ -32,8 +32,8 @@ public class ListViewNode extends AbstractNode implements Node
     private final String type = "LISTVIEW";
 
     @JsonProperty
-    private Target target;
+    private Target       target;
 
     @JsonProperty
-    private Node element;
+    private Node         element;
 }

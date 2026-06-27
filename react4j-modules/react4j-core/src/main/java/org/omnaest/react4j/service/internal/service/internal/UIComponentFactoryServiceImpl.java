@@ -89,19 +89,19 @@ import lombok.RequiredArgsConstructor;
 public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
 {
     @Autowired
-    protected ContentService contentService;
+    protected ContentService                  contentService;
 
     @Autowired
-    protected MarkdownService markdownService;
+    protected MarkdownService                 markdownService;
 
     @Autowired
-    protected LocalizedTextResolverService textResolver;
+    protected LocalizedTextResolverService    textResolver;
 
     @Autowired
-    protected EventHandlerRegistry eventHandlerRegistry;
+    protected EventHandlerRegistry            eventHandlerRegistry;
 
     @Autowired
-    protected ContextFactory contextFactory;
+    protected ContextFactory                  contextFactory;
 
     @Autowired
     protected CustomUIComponentFactoryManager customUIComponentFactoryManager;
@@ -293,14 +293,12 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         public MarkdownComponentChoice newMarkdown()
         {
             ContentService contentService = this.contentService;
-            return new MarkdownComponentChoice()
-            {
+            return new MarkdownComponentChoice() {
 
                 @Override
                 public MarkdownComponentFactory<List<UIComponent<?>>> texts()
                 {
-                    return new AbstractMarkdownComponentFactory<List<UIComponent<?>>>(contentService)
-                    {
+                    return new AbstractMarkdownComponentFactory<List<UIComponent<?>>>(contentService) {
                         @Override
                         public List<UIComponent<?>> from(String markdown)
                         {
@@ -312,8 +310,7 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
                 @Override
                 public MarkdownComponentFactory<List<Card>> cards()
                 {
-                    return new AbstractMarkdownComponentFactory<List<Card>>(contentService)
-                    {
+                    return new AbstractMarkdownComponentFactory<List<Card>>(contentService) {
                         @Override
                         public List<Card> from(String markdown)
                         {
@@ -325,8 +322,7 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
                 @Override
                 public MarkdownComponentFactory<Card> card()
                 {
-                    return new AbstractMarkdownComponentFactory<Card>(contentService)
-                    {
+                    return new AbstractMarkdownComponentFactory<Card>(contentService) {
                         @Override
                         public Card from(String markdown)
                         {

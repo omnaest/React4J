@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class CompositeNode extends AbstractNode implements Node
 {
     @JsonProperty
-    protected String type;
+    protected String     type;
 
     @JsonProperty
     protected List<Node> elements;

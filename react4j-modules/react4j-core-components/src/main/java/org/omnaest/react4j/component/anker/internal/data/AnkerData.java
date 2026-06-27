@@ -14,8 +14,8 @@ public class AnkerData
 
     private I18nText title;
 
-    private String link;
+    private String   link;
 
     @Default
-    private boolean isSamePage = false;
+    private boolean  isSamePage = false;
 }

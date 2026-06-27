@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class TextAlignmentContainerNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "TEXTALIGNMENTCONTAINER";
+    private String  type = "TEXTALIGNMENTCONTAINER";
 
     @JsonProperty
     private boolean nowrap;
@@ -31,13 +31,13 @@ public class TextAlignmentContainerNode extends AbstractNode implements Node
     private boolean ellipsis;
 
     @JsonProperty
-    private String horizontalAlignment;
+    private String  horizontalAlignment;
 
     @JsonProperty
-    private String verticalAlignment;
+    private String  verticalAlignment;
 
     @JsonProperty
-    private Node content;
+    private Node    content;
 
     @Override
     public String getType()

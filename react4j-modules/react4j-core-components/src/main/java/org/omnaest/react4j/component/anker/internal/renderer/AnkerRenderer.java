@@ -47,8 +47,7 @@ public class AnkerRenderer implements UIComponentRenderer
     @Override
     public void manageNodeRenderers(NodeRendererRegistry registry)
     {
-        registry.register(AnkerNode.class, NodeRenderType.HTML, new NodeRenderer<AnkerNode>()
-        {
+        registry.register(AnkerNode.class, NodeRenderType.HTML, new NodeRenderer<AnkerNode>() {
             @Override
             public String render(AnkerNode node, NodeRenderingProcessor nodeRenderingProcessor)
             {

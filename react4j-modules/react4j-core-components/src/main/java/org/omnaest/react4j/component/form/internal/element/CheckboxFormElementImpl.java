@@ -25,11 +25,9 @@ public class CheckboxFormElementImpl extends AbstractFormElementImpl<CheckboxFor
 {
     private final UIContextManager uiContextManager;
 
-    private CheckboxDataBuilder data = CheckboxData.builder();
+    private CheckboxDataBuilder    data = CheckboxData.builder();
 
-    public CheckboxFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver,
-                                   Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry,
-                                   Supplier<? extends DataContext> parentDataContext, UIContextManager uiContextManager)
+    public CheckboxFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver, Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry, Supplier<? extends DataContext> parentDataContext, UIContextManager uiContextManager)
     {
         super(identitiyProvider, textResolver, i18nTextMapper, eventHandlerRegistry, parentDataContext);
         this.uiContextManager = uiContextManager;
@@ -64,10 +62,10 @@ public class CheckboxFormElementImpl extends AbstractFormElementImpl<CheckboxFor
     public static class CheckboxData
     {
         @Default
-        private CheckboxType type = CheckboxType.REGULAR;
+        private CheckboxType      type         = CheckboxType.REGULAR;
 
         @Default
-        private boolean disabled = false;
+        private boolean           disabled     = false;
 
         @Default
         private Optional<Boolean> initialValue = Optional.empty();

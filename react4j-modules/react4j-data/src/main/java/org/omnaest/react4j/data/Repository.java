@@ -28,8 +28,8 @@ import java.util.stream.Stream;
 
 import org.omnaest.react4j.data.Repository.DataEntry;
 import org.omnaest.react4j.data.Repository.Entry;
-import org.omnaest.react4j.data.Repository.EntryOperationResult;
 import org.omnaest.react4j.data.Repository.Entry.Type;
+import org.omnaest.react4j.data.Repository.EntryOperationResult;
 
 public interface Repository extends Iterable<DataEntry>, Function<Entry, EntryOperationResult>
 {
@@ -93,8 +93,7 @@ public interface Repository extends Iterable<DataEntry>, Function<Entry, EntryOp
 
         public static DataEntry of(String id, Map<String, Object> dataMap, Map<String, Object> metaMap)
         {
-            return new DataEntry()
-            {
+            return new DataEntry() {
                 @Override
                 public String getId()
                 {
@@ -127,8 +126,7 @@ public interface Repository extends Iterable<DataEntry>, Function<Entry, EntryOp
 
         public static PutEntry of(String id, Map<String, ? extends Object> dataMap, Map<String, ? extends Object> metaMap)
         {
-            return new PutEntry()
-            {
+            return new PutEntry() {
                 @Override
                 public String getId()
                 {
@@ -163,8 +161,7 @@ public interface Repository extends Iterable<DataEntry>, Function<Entry, EntryOp
     {
         public static AddEntry of(Map<String, ? extends Object> dataMap, Map<String, ? extends Object> metaMap)
         {
-            return new AddEntry()
-            {
+            return new AddEntry() {
                 @SuppressWarnings("unchecked")
                 @Override
                 public Map<String, Object> asDataMap()
@@ -201,8 +198,7 @@ public interface Repository extends Iterable<DataEntry>, Function<Entry, EntryOp
 
         public static RemoveEntry of(String id)
         {
-            return new RemoveEntry()
-            {
+            return new RemoveEntry() {
                 @Override
                 public String getId()
                 {
@@ -260,8 +256,7 @@ public interface Repository extends Iterable<DataEntry>, Function<Entry, EntryOp
 
         public static EntryOperationResult failure(Exception exception, Entry entry)
         {
-            return new EntryOperationResult()
-            {
+            return new EntryOperationResult() {
                 @Override
                 public boolean isSuccessful()
                 {
@@ -291,8 +286,7 @@ public interface Repository extends Iterable<DataEntry>, Function<Entry, EntryOp
 
         public static EntryOperationResult success(String entryId, Entry entry)
         {
-            return new EntryOperationResult()
-            {
+            return new EntryOperationResult() {
                 @Override
                 public boolean isSuccessful()
                 {

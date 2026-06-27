@@ -69,8 +69,7 @@ public class ButtonImpl extends AbstractUIComponent<Button> implements Button
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
             @Override
             public Location getLocation(LocationSupport locationSupport)
             {

@@ -31,16 +31,16 @@ import lombok.Getter;
 public class FormNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "FORM";
+    private String                type     = "FORM";
 
     @JsonProperty
     private List<FormElementNode> elements = new ArrayList<>();
 
     @JsonProperty
-    private boolean responsive;
+    private boolean               responsive;
 
     @JsonProperty
-    private Handler onChange;
+    private Handler               onChange;
 
     @Override
     public String getType()

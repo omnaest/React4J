@@ -19,20 +19,20 @@ public class FormDropDownNode
     private List<DropDownOptionNode> options;
 
     @JsonProperty
-    private boolean multiselect;
+    private boolean                  multiselect;
 
     @Data
     @Builder
     public static class DropDownOptionNode
     {
         @JsonProperty
-        private String key;
+        private String        key;
 
         @JsonProperty
         private I18nTextValue label;
 
         @JsonProperty
-        private boolean disabled;
+        private boolean       disabled;
     }
 
 }

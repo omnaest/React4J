@@ -45,10 +45,10 @@ import lombok.With;
 public class DataImpl implements Data
 {
     @JsonProperty
-    private String id;
+    private String                    id;
 
     @JsonProperty
-    private String contextId;
+    private String                    contextId;
 
     @JsonProperty
     private final Map<String, Object> fieldToValue;
@@ -60,8 +60,8 @@ public class DataImpl implements Data
     {
         this(null, contextId, Optional.ofNullable(fieldToValue)
                                       .orElse(new HashMap<>()),
-                new HashMap<>(Optional.ofNullable(fieldToValue)
-                                      .orElse(Collections.emptyMap())));
+             new HashMap<>(Optional.ofNullable(fieldToValue)
+                                   .orElse(Collections.emptyMap())));
     }
 
     @Override

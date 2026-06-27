@@ -19,15 +19,13 @@ public class RangeFormElementImpl extends AbstractFormElementImpl<RangeFormEleme
 {
     private final UIContextManager uiContextManager;
 
-    private int               min          = 0;
-    private int               max          = 100;
-    private int               step         = 1;
-    private boolean           disabled     = false;
-    private Optional<Integer> initialValue = Optional.empty();
+    private int                    min          = 0;
+    private int                    max          = 100;
+    private int                    step         = 1;
+    private boolean                disabled     = false;
+    private Optional<Integer>      initialValue = Optional.empty();
 
-    public RangeFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver,
-                                Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry,
-                                Supplier<? extends DataContext> parentDataContext, UIContextManager uiContextManager)
+    public RangeFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver, Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry, Supplier<? extends DataContext> parentDataContext, UIContextManager uiContextManager)
     {
         super(identitiyProvider, textResolver, i18nTextMapper, eventHandlerRegistry, parentDataContext);
         this.uiContextManager = uiContextManager;

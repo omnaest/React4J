@@ -94,8 +94,7 @@ public class RenderingProcessorImpl implements RenderingProcessor
         };
     }
 
-    private Function<RenderableUIComponent<?>, Node> createComponentRenderer(Location parentLocation, Optional<Data> data,
-                                                                             Set<UIComponent<?>> currentIgnoredComponents)
+    private Function<RenderableUIComponent<?>, Node> createComponentRenderer(Location parentLocation, Optional<Data> data, Set<UIComponent<?>> currentIgnoredComponents)
     {
         return component ->
         {
@@ -120,8 +119,7 @@ public class RenderingProcessorImpl implements RenderingProcessor
 
     private RenderingProcessor createFilteringRenderingProcessor(Set<UIComponent<?>> currentIgnoredComponents)
     {
-        return new RenderingProcessor()
-        {
+        return new RenderingProcessor() {
             @Override
             public Node process(UIComponent<?> component, Location parentLocation, Optional<Data> data)
             {

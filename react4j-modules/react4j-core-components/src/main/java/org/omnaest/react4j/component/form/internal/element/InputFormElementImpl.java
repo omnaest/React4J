@@ -21,9 +21,7 @@ public class InputFormElementImpl extends AbstractFormElementImpl<InputFormEleme
 {
     private InputData.InputDataBuilder data = InputData.builder();
 
-    public InputFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver,
-                                Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry,
-                                Supplier<? extends DataContext> parentDataContext)
+    public InputFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver, Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry, Supplier<? extends DataContext> parentDataContext)
     {
         super(identitiyProvider, textResolver, i18nTextMapper, eventHandlerRegistry, parentDataContext);
     }
@@ -75,7 +73,7 @@ public class InputFormElementImpl extends AbstractFormElementImpl<InputFormEleme
         @Default
         private InputType inputType = InputType.TEXT;
 
-        private I18nText placeholder;
+        private I18nText  placeholder;
     }
 
 }

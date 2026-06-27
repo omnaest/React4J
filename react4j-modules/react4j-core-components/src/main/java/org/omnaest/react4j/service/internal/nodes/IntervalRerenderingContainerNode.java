@@ -23,13 +23,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class IntervalRerenderingContainerNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "INTERVALRERENDERINGCONTAINER";
+    private String  type = "INTERVALRERENDERINGCONTAINER";
 
     @JsonProperty
-    private Node content;
+    private Node    content;
 
     @JsonProperty
-    private int intervalDuration;
+    private int     intervalDuration;
 
     @JsonProperty
     private boolean active;
@@ -84,7 +84,7 @@ public class IntervalRerenderingContainerNode extends AbstractNode implements No
     public String toString()
     {
         return "IntervalRerenderingContainerNode [type=" + this.type + ", content=" + this.content + ", intervalDuration=" + this.intervalDuration + ", active="
-                + this.active + "]";
+               + this.active + "]";
     }
 
 }

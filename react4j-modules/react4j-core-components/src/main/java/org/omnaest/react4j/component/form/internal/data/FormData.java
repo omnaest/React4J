@@ -19,9 +19,9 @@ public class FormData
     private List<FormElement<?>> elements;
 
     @Default
-    private boolean responsive = true;
+    private boolean              responsive = true;
 
-    private Document document;
+    private Document             document;
 
-    private DataEventHandler eventHandler;
+    private DataEventHandler     eventHandler;
 }

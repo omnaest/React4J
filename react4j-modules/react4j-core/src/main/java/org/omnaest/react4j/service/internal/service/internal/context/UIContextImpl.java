@@ -44,7 +44,7 @@ public class UIContextImpl implements UIContext
                                                                       .with(TextEncoderAndDecoderFactory::forAlphaNumericText);
     private Locations                  locations;
 
-    private List<Document> documents = new ArrayList<>();
+    private List<Document>             documents         = new ArrayList<>();
 
     public UIContextImpl(Locations locations)
     {
@@ -119,8 +119,7 @@ public class UIContextImpl implements UIContext
         @Override
         public Field getField(String fieldName)
         {
-            return new Field()
-            {
+            return new Field() {
                 @Override
                 public String getFieldName()
                 {

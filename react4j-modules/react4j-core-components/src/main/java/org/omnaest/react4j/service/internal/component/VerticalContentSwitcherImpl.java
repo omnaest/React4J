@@ -56,8 +56,7 @@ public class VerticalContentSwitcherImpl extends AbstractUIComponent<VerticalCon
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
 
             @Override
             public Location getLocation(LocationSupport locationSupport)
@@ -118,9 +117,9 @@ public class VerticalContentSwitcherImpl extends AbstractUIComponent<VerticalCon
     {
         private final Function<String, I18nText> i18nTextMapper;
 
-        private UIComponent<?> component;
-        private State          state;
-        private I18nText       title;
+        private UIComponent<?>                   component;
+        private State                            state;
+        private I18nText                         title;
 
         public VerticalContentImpl(UIComponentFactory uiComponentFactory, Function<String, I18nText> i18nTextMapper)
         {

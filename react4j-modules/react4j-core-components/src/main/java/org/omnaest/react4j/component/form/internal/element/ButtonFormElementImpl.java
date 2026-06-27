@@ -44,9 +44,7 @@ public class ButtonFormElementImpl extends AbstractFormElementImpl<ButtonFormEle
     private String           variant  = Variant.PRIMARY.getIdentifier();
     private ColumnSpan       columnSpan;
 
-    public ButtonFormElementImpl(Function<Class<?>, String> identityProvider, LocalizedTextResolverService textResolver,
-                                 Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry,
-                                 Supplier<? extends DataContext> parentDataContext, int index)
+    public ButtonFormElementImpl(Function<Class<?>, String> identityProvider, LocalizedTextResolverService textResolver, Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry, Supplier<? extends DataContext> parentDataContext, int index)
     {
         super(identityProvider, textResolver, i18nTextMapper, eventHandlerRegistry, parentDataContext);
         this.index = index;

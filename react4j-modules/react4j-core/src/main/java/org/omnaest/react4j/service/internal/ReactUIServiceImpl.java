@@ -79,37 +79,37 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
 {
 
     @Autowired
-    protected EventHandlerRegistry eventHandlerRegistry;
+    protected EventHandlerRegistry            eventHandlerRegistry;
 
     @Autowired
-    protected DataService dataService;
+    protected DataService                     dataService;
 
     @Autowired
     protected RerenderingNodeProviderRegistry rerenderingNodeProviderRegistry;
 
     @Autowired
-    protected HomePageConfigurationService homePageConfigurationService;
+    protected HomePageConfigurationService    homePageConfigurationService;
 
     @Autowired
-    protected NodeHierarchyStaticRenderer nodeHierarchyStaticRenderer;
+    protected NodeHierarchyStaticRenderer     nodeHierarchyStaticRenderer;
 
     @Autowired
-    protected ContentService contentService;
+    protected ContentService                  contentService;
 
     @Autowired
-    protected MarkdownService markdownService;
+    protected MarkdownService                 markdownService;
 
     @Autowired
-    protected UIComponentFactoryService uiComponentFactoryService;
+    protected UIComponentFactoryService       uiComponentFactoryService;
 
-    protected ReactUIContextManager uiManager = new ReactUIContextManager();
+    protected ReactUIContextManager           uiManager = new ReactUIContextManager();
 
     @Value("${ui.cache.duration:10}")
-    protected int cacheDurationInSeconds;
+    protected int                             cacheDurationInSeconds;
 
     @Autowired
     @UICacheEnabledFlag
-    protected boolean cachingEnabled;
+    protected boolean                         cachingEnabled;
 
     @Override
     public ReactUIService enableCaching(boolean active)
@@ -169,8 +169,7 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
 
     public ReactUIInternal createRootInternal(String contextPath)
     {
-        return new ReactUIInternal()
-        {
+        return new ReactUIInternal() {
             private UILocale             defaultLocale = UILocale.of(Locale.US);
             private List<UIComponent<?>> components    = new ArrayList<>();
             private NavigationBar        navigationBar = null;
@@ -387,8 +386,7 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
 
     private DataSourceRegistry createDataSourceRegistry()
     {
-        return new DataSourceRegistry()
-        {
+        return new DataSourceRegistry() {
             @Override
             public void register(Location location, DataSource dataSource)
             {
@@ -417,8 +415,7 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
         private final RenderingProcessor              renderingProcessor;
         private final RenderableUIComponent<?>        component;
 
-        private EventHandlerRegistrationSupportImpl(EventHandlerRegistry eventHandlerRegistry, RerenderingNodeProviderRegistry rerenderingNodeProviderRegistry,
-                                                    Location location, Target target, RenderingProcessor renderingProcessor, RenderableUIComponent<?> component)
+        private EventHandlerRegistrationSupportImpl(EventHandlerRegistry eventHandlerRegistry, RerenderingNodeProviderRegistry rerenderingNodeProviderRegistry, Location location, Target target, RenderingProcessor renderingProcessor, RenderableUIComponent<?> component)
         {
             this.eventHandlerRegistry = eventHandlerRegistry;
             this.rerenderingNodeProviderRegistry = rerenderingNodeProviderRegistry;

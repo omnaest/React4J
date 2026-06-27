@@ -30,8 +30,7 @@ public interface UILocale
 
     public static UILocale of(Locale locale)
     {
-        return new UILocale()
-        {
+        return new UILocale() {
             @Override
             public Locale asLocale()
             {

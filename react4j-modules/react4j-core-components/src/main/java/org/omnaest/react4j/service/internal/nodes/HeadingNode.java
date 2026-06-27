@@ -23,13 +23,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class HeadingNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "HEADING";
+    private String        type = "HEADING";
 
     @JsonProperty
     private I18nTextValue text;
 
     @JsonProperty
-    private int level;
+    private int           level;
 
     @Override
     public String getType()

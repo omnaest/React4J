@@ -23,10 +23,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ToasterNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "TOASTER";
+    private String        type = "TOASTER";
 
     @JsonProperty
-    private Node content;
+    private Node          content;
 
     @JsonProperty
     private I18nTextValue title;

@@ -60,8 +60,7 @@ public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implemen
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
             @Override
             public Location getLocation(LocationSupport locationSupport)
             {
@@ -80,8 +79,7 @@ public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implemen
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(UnsortedListNode.class, NodeRenderType.HTML, new NodeRenderer<UnsortedListNode>()
-                {
+                registry.register(UnsortedListNode.class, NodeRenderType.HTML, new NodeRenderer<UnsortedListNode>() {
                     @Override
                     public String render(UnsortedListNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {

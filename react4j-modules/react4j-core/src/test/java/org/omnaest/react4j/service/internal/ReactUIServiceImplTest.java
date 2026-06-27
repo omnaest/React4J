@@ -27,12 +27,10 @@ import org.omnaest.utils.MapUtils;
 
 public class ReactUIServiceImplTest
 {
-    private ReactUIServiceImpl uiService = new ReactUIServiceImpl()
-    {
+    private ReactUIServiceImpl uiService = new ReactUIServiceImpl() {
         {
             this.eventHandlerRegistry = Mockito.mock(EventHandlerRegistry.class);
-            this.uiComponentFactoryService = new UIComponentFactoryServiceImpl()
-            {
+            this.uiComponentFactoryService = new UIComponentFactoryServiceImpl() {
                 {
                     this.textResolver = (text, location) -> new I18nTextValue(MapUtils.builder()
                                                                                       .put(text.getDefaultLocale()

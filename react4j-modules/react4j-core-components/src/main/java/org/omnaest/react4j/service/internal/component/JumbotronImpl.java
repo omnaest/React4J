@@ -64,8 +64,7 @@ public class JumbotronImpl extends AbstractUIComponentAndContentHolder<Jumbotron
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
 
             @Override
             public Location getLocation(LocationSupport locationSupport)
@@ -87,8 +86,7 @@ public class JumbotronImpl extends AbstractUIComponentAndContentHolder<Jumbotron
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(JumbotronNode.class, NodeRenderType.HTML, new NodeRenderer<JumbotronNode>()
-                {
+                registry.register(JumbotronNode.class, NodeRenderType.HTML, new NodeRenderer<JumbotronNode>() {
                     @Override
                     public String render(JumbotronNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {

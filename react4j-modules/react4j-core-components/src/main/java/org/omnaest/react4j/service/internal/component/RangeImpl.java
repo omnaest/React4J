@@ -60,8 +60,7 @@ public class RangeImpl extends AbstractUIComponent<Range> implements Range
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
             @Override
             public Location getLocation(LocationSupport locationSupport)
             {
@@ -82,8 +81,7 @@ public class RangeImpl extends AbstractUIComponent<Range> implements Range
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(RangeNode.class, NodeRenderType.HTML, new NodeRenderer<RangeNode>()
-                {
+                registry.register(RangeNode.class, NodeRenderType.HTML, new NodeRenderer<RangeNode>() {
                     @Override
                     public String render(RangeNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {

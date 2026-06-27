@@ -40,10 +40,10 @@ import jakarta.annotation.PostConstruct;
 @ContentControllerBean
 public class ContentController
 {
-    private static Logger LOG = LoggerFactory.getLogger(ContentController.class);
+    private static Logger        LOG = LoggerFactory.getLogger(ContentController.class);
 
     @Autowired
-    private ContentService contentService;
+    private ContentService       contentService;
 
     @Autowired
     private ContentUploadService contentUploadService;
@@ -98,6 +98,6 @@ public class ContentController
     {
         LOG.info(this.getClass()
                      .getSimpleName()
-                + " enabled.");
+                 + " enabled.");
     }
 }

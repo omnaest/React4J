@@ -24,19 +24,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class AnkerButtonNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "ANKERBUTTON";
+    private String        type = "ANKERBUTTON";
 
     @JsonProperty
     private I18nTextValue text;
 
     @JsonProperty
-    private String link;
+    private String        link;
 
     @JsonProperty
-    private String style;
+    private String        style;
 
     @JsonProperty
-    private Page page;
+    private Page          page;
 
     public static enum Page
     {

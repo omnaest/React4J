@@ -23,8 +23,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
-@ComponentScan(basePackageClasses = ReactUIService.class, excludeFilters = @ComponentScan.Filter(classes = { ContentControllerBean.class }))
-@ComponentScan(basePackageClasses = ReactUIComponents.class, excludeFilters = @ComponentScan.Filter(classes = { ContentControllerBean.class }))
+@ComponentScan(basePackageClasses = ReactUIService.class, excludeFilters = @ComponentScan.Filter(classes = {ContentControllerBean.class}))
+@ComponentScan(basePackageClasses = ReactUIComponents.class, excludeFilters = @ComponentScan.Filter(classes = {ContentControllerBean.class}))
 @EnableScheduling
 public class ReactUIAutoConfiguration
 {

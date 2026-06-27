@@ -15,7 +15,7 @@ public class ValidationMessageNode
     private ValidationMessageType type;
 
     @JsonProperty
-    private I18nTextValue text;
+    private I18nTextValue         text;
 
     public static enum ValidationMessageType
     {

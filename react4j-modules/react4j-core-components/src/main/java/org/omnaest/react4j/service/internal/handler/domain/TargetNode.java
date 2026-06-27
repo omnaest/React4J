@@ -10,7 +10,7 @@ public class TargetNode
     private Target target;
 
     @JsonProperty
-    private Node node;
+    private Node   node;
 
     protected TargetNode()
     {

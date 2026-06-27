@@ -87,8 +87,8 @@ public class SVGContainerImpl extends AbstractUIComponent<SVGContainer> implemen
                                                                     .toString()
                                                                     .hashCode());
 
-        private String width;
-        private String height;
+        private String       width;
+        private String       height;
 
         @Override
         public CSSBuilder width(String width)

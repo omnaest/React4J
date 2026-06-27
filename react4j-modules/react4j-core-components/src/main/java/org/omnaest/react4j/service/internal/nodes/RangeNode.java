@@ -23,22 +23,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class RangeNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "RANGE";
+    private String        type = "RANGE";
 
     @JsonProperty
     private I18nTextValue label;
 
     @JsonProperty
-    private String min;
+    private String        min;
 
     @JsonProperty
-    private String max;
+    private String        max;
 
     @JsonProperty
-    private String step;
+    private String        step;
 
     @JsonProperty
-    private boolean disabled;
+    private boolean       disabled;
 
     public I18nTextValue getLabel()
     {

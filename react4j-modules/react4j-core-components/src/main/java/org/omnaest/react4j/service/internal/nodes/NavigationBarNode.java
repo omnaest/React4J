@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class NavigationBarNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "NAVIGATIONBAR";
+    private String      type = "NAVIGATIONBAR";
 
     @JsonProperty
     private List<Entry> entries;
@@ -53,16 +53,16 @@ public class NavigationBarNode extends AbstractNode implements Node
         private I18nTextValue text;
 
         @JsonProperty
-        private String link;
+        private String        link;
 
         @JsonProperty
-        private String linkedId;
+        private String        linkedId;
 
         @JsonProperty
-        private boolean active;
+        private boolean       active;
 
         @JsonProperty
-        private boolean disabled;
+        private boolean       disabled;
 
         public I18nTextValue getText()
         {

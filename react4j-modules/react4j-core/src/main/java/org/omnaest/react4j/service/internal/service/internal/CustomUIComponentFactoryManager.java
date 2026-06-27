@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class CustomUIComponentFactoryManager
 {
     @Autowired
-    protected List<CustomUIComponentFactory<?>> uiComponentFactories = new ArrayList<>();
+    protected List<CustomUIComponentFactory<?>>            uiComponentFactories                = new ArrayList<>();
 
     protected CachedElement<CustomUIComponentFactoryIndex> customUIComponentFactoryIndexHolder = CachedElement.of(this::newIndex);
 

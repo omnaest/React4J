@@ -34,9 +34,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class LocaleService
 {
-    private static final Logger LOG = LoggerFactory.getLogger(LocaleService.class);
+    private static final Logger    LOG                   = LoggerFactory.getLogger(LocaleService.class);
 
-    private ThreadLocal<Locale> explicitRequestLocale = new ThreadLocal<>();
+    private ThreadLocal<Locale>    explicitRequestLocale = new ThreadLocal<>();
 
     @Autowired
     private TranslationPersistence translationPersistence;

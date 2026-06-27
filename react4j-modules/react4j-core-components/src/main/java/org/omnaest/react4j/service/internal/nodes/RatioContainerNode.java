@@ -25,10 +25,10 @@ public class RatioContainerNode extends AbstractNode implements Node
     private String type = "RATIOCONTAINER";
 
     @JsonProperty
-    private Node content;
+    private Node   content;
 
     @JsonProperty
-    private Ratio ratio;
+    private Ratio  ratio;
 
     public static enum Ratio
     {

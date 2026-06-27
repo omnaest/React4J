@@ -24,28 +24,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class CardNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "CARD";
+    private String        type = "CARD";
 
     @JsonProperty
-    private ValueNode featuredTitle;
+    private ValueNode     featuredTitle;
 
     @JsonProperty
-    private ValueNode title;
+    private ValueNode     title;
 
     @JsonProperty
     private I18nTextValue subTitle;
 
     @JsonProperty
-    private String locator;
+    private String        locator;
 
     @JsonProperty
-    private Node content;
+    private Node          content;
 
     @JsonProperty
-    private ImageNode image;
+    private ImageNode     image;
 
     @JsonProperty
-    private boolean adjust;
+    private boolean       adjust;
 
     @Override
     public String getType()

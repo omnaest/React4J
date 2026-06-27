@@ -18,10 +18,10 @@ import org.springframework.stereotype.Service;
 public class ContextServiceImpl implements ContextService
 {
     @Autowired
-    private LocaleService localeService;
+    private LocaleService    localeService;
 
     @Autowired
-    private RequestProvider requestProvider;
+    private RequestProvider  requestProvider;
 
     @Value("${react4j.public-url:#{null}}")
     private Optional<String> publicUrl;

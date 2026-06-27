@@ -24,10 +24,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class RerenderingContainerNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "RERENDERINGCONTAINER";
+    private String  type = "RERENDERINGCONTAINER";
 
     @JsonProperty
-    private Node content;
+    private Node    content;
 
     @JsonProperty
     private boolean enableNodeReload;

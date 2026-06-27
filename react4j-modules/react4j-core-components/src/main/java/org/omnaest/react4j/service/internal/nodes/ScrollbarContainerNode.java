@@ -25,7 +25,7 @@ public class ScrollbarContainerNode extends AbstractNode implements Node
     private String type = "SCROLLBARCONTAINER";
 
     @JsonProperty
-    private Node content;
+    private Node   content;
 
     @JsonProperty
     private String verticalBoxMode;

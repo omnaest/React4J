@@ -231,8 +231,7 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
             @Override
             public Location getLocation(LocationSupport locationSupport)
             {
@@ -252,8 +251,7 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(ParagraphNode.class, NodeRenderType.HTML, new NodeRenderer<ParagraphNode>()
-                {
+                registry.register(ParagraphNode.class, NodeRenderType.HTML, new NodeRenderer<ParagraphNode>() {
                     @Override
                     public String render(ParagraphNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {

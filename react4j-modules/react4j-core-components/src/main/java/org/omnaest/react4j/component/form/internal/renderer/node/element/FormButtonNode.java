@@ -16,15 +16,15 @@ public class FormButtonNode
     private I18nTextValue text;
 
     @JsonProperty
-    private boolean outline;
+    private boolean       outline;
 
     @JsonProperty
-    private String variant;
+    private String        variant;
 
     @JsonProperty
-    private String size;
+    private String        size;
 
     @JsonProperty
-    private Handler onClick;
+    private Handler       onClick;
 
 }

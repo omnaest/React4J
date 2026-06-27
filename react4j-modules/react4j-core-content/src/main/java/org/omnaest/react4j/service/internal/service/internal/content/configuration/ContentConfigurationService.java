@@ -58,24 +58,24 @@ public class ContentConfigurationService
 
     public static class ContentConfiguration
     {
-        private static final String DEAFAULT_TOKEN = StringUtils.repeat(UUID.randomUUID()
-                                                                            .toString(),
-                                                                        4);
+        private static final String DEAFAULT_TOKEN          = StringUtils.repeat(UUID.randomUUID()
+                                                                                     .toString(),
+                                                                                 4);
 
         @JsonProperty
-        private String accessToken = DEAFAULT_TOKEN;
+        private String              accessToken             = DEAFAULT_TOKEN;
 
         @JsonProperty
-        private boolean enableFileUpload = false;
+        private boolean             enableFileUpload        = false;
 
         @JsonProperty
-        private String contentAttachmentFolder = "content/attachments";
+        private String              contentAttachmentFolder = "content/attachments";
 
         @JsonProperty
-        private String contentImagesFolder = "content/images";
+        private String              contentImagesFolder     = "content/images";
 
         @JsonProperty
-        private String contentFolder = "content";
+        private String              contentFolder           = "content";
 
         public String getAccessToken()
         {

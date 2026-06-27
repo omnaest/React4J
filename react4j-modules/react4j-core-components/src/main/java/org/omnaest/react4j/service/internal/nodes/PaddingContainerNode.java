@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class PaddingContainerNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "PADDINGCONTAINER";
+    private String  type = "PADDINGCONTAINER";
 
     @JsonProperty
     private boolean horizontal;
@@ -31,7 +31,7 @@ public class PaddingContainerNode extends AbstractNode implements Node
     private boolean vertical;
 
     @JsonProperty
-    private Node content;
+    private Node    content;
 
     @Override
     public String getType()

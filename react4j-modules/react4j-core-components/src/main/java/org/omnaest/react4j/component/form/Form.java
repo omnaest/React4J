@@ -72,18 +72,7 @@ public interface Form extends UIComponent<Form>
 
         public static enum ColumnSpan
         {
-            ONE_COLUMN,
-            TWO_COLUMNS,
-            THREE_COLUMNS,
-            FOUR_COLUMNS,
-            FIVE_COLUMNS,
-            SIX_COLUMNS,
-            SEVEN_COLUMNS,
-            EIGHT_COLUMNS,
-            NINE_COLUMNS,
-            TEN_COLUMNS,
-            ELEVEN_COLUMNS,
-            TWELVE_COLUMNS
+            ONE_COLUMN, TWO_COLUMNS, THREE_COLUMNS, FOUR_COLUMNS, FIVE_COLUMNS, SIX_COLUMNS, SEVEN_COLUMNS, EIGHT_COLUMNS, NINE_COLUMNS, TEN_COLUMNS, ELEVEN_COLUMNS, TWELVE_COLUMNS
         }
     }
 
@@ -179,16 +168,7 @@ public interface Form extends UIComponent<Form>
         @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
         public static enum Variant
         {
-            REGULAR(""),
-            PRIMARY("primary"),
-            SECONDARY("secondary"),
-            SUCCESS("success"),
-            DANGER("danger"),
-            WARNING("warning"),
-            INFO("info"),
-            LIGHT("light"),
-            DARK("dark"),
-            LINK("link");
+            REGULAR(""), PRIMARY("primary"), SECONDARY("secondary"), SUCCESS("success"), DANGER("danger"), WARNING("warning"), INFO("info"), LIGHT("light"), DARK("dark"), LINK("link");
 
             private final String identifier;
         }

@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class AnkerNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "ANKER";
+    private String        type = "ANKER";
 
     @JsonProperty
     private I18nTextValue text;
@@ -33,10 +33,10 @@ public class AnkerNode extends AbstractNode implements Node
     private I18nTextValue title;
 
     @JsonProperty
-    private String link;
+    private String        link;
 
     @JsonProperty
-    private Page page;
+    private Page          page;
 
     public static enum Page
     {

@@ -56,8 +56,7 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
         super(context);
     }
 
-    public CardImpl(ComponentContext context, TextValueSource featuredTitle, TextValueSource title, I18nText subTitle, Optional<Image> image, String locator,
-                    UIComponent<?> content, boolean adjust)
+    public CardImpl(ComponentContext context, TextValueSource featuredTitle, TextValueSource title, I18nText subTitle, Optional<Image> image, String locator, UIComponent<?> content, boolean adjust)
     {
         super(context);
         this.featuredTitle = featuredTitle;
@@ -72,8 +71,7 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
             @Override
             public Location getLocation(LocationSupport locationSupport)
             {
@@ -106,8 +104,7 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(CardNode.class, NodeRenderType.HTML, new NodeRenderer<CardNode>()
-                {
+                registry.register(CardNode.class, NodeRenderType.HTML, new NodeRenderer<CardNode>() {
                     @Override
                     public String render(CardNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {

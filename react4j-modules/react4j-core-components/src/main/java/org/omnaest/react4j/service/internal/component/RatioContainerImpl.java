@@ -56,8 +56,7 @@ public class RatioContainerImpl extends AbstractUIComponentAndContentHolder<Rati
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
 
             @Override
             public Location getLocation(LocationSupport locationSupport)
@@ -77,8 +76,7 @@ public class RatioContainerImpl extends AbstractUIComponentAndContentHolder<Rati
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(JumbotronNode.class, NodeRenderType.HTML, new NodeRenderer<JumbotronNode>()
-                {
+                registry.register(JumbotronNode.class, NodeRenderType.HTML, new NodeRenderer<JumbotronNode>() {
                     @Override
                     public String render(JumbotronNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {

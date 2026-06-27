@@ -23,13 +23,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ImageNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "IMAGE";
+    private String        type = "IMAGE";
 
     @JsonProperty
     private I18nTextValue name;
 
     @JsonProperty
-    private String image;
+    private String        image;
 
     @Override
     public String getType()

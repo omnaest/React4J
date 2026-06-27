@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class EventBody extends AbstractJSONSerializable
 {
     @JsonProperty
-    protected Target target;
+    protected Target          target;
 
     @JsonProperty
     protected DataWithContext dataWithContext;

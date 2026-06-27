@@ -31,13 +31,13 @@ import jakarta.annotation.PostConstruct;
 @Service
 public class ReactUIProviderInitializer
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ReactUIProviderInitializer.class);
+    private static final Logger   LOG = LoggerFactory.getLogger(ReactUIProviderInitializer.class);
 
     @Autowired(required = false)
     private List<ReactUIProvider> providers;
 
     @Autowired
-    private ReactUIService reactUIService;
+    private ReactUIService        reactUIService;
 
     @PostConstruct
     public void init()

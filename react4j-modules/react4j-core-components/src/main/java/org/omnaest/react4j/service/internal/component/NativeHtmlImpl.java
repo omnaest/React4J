@@ -64,8 +64,7 @@ public class NativeHtmlImpl extends AbstractUIComponent<NativeHtml> implements N
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
             @Override
             public Location getLocation(LocationSupport locationSupport)
             {
@@ -83,8 +82,7 @@ public class NativeHtmlImpl extends AbstractUIComponent<NativeHtml> implements N
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(NativeHtmlNode.class, NodeRenderType.HTML, new NodeRenderer<NativeHtmlNode>()
-                {
+                registry.register(NativeHtmlNode.class, NodeRenderType.HTML, new NodeRenderer<NativeHtmlNode>() {
                     @Override
                     public String render(NativeHtmlNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {

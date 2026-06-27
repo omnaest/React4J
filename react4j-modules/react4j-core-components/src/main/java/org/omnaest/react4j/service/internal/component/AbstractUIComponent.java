@@ -96,8 +96,7 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
     @Override
     public Locations getLocations()
     {
-        return new Locations()
-        {
+        return new Locations() {
             @Override
             public List<Location> get()
             {

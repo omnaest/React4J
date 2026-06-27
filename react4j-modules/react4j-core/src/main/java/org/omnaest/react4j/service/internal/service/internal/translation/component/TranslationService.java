@@ -22,16 +22,16 @@ import jakarta.annotation.PreDestroy;
 @Component
 public class TranslationService
 {
-    private static final Logger LOG = LoggerFactory.getLogger(TranslationService.class);
+    private static final Logger       LOG                                  = LoggerFactory.getLogger(TranslationService.class);
 
     @Autowired
     private List<TranslationProvider> translationProviders;
 
     @Autowired
-    private TranslationPersistence translationPersistence;
+    private TranslationPersistence    translationPersistence;
 
-    private ExecutorService translationExecutorService           = Executors.newSingleThreadExecutor();
-    private ExecutorService preemptiveTranslationExecutorService = Executors.newSingleThreadExecutor();
+    private ExecutorService           translationExecutorService           = Executors.newSingleThreadExecutor();
+    private ExecutorService           preemptiveTranslationExecutorService = Executors.newSingleThreadExecutor();
 
     @PreDestroy
     private void destroy()
@@ -54,12 +54,11 @@ public class TranslationService
 
         return translatedTextByCache.map(value -> Optional.ofNullable(leftPadding)
                                                           .orElse("")
-                + value + Optional.ofNullable(rightPadding)
-                                  .orElse(""));
+                                                  + value + Optional.ofNullable(rightPadding)
+                                                                    .orElse(""));
     }
 
-    private void startAlternativeLocaleTranslationIfNoCacheEntryAvailable(BiFunction<Locale, ExecutorService, Optional<String>> translationOperation,
-                                                                          Optional<String> translatedTextByCache, Set<Locale> ignoredLocales)
+    private void startAlternativeLocaleTranslationIfNoCacheEntryAvailable(BiFunction<Locale, ExecutorService, Optional<String>> translationOperation, Optional<String> translatedTextByCache, Set<Locale> ignoredLocales)
     {
         if (!translatedTextByCache.isPresent())
         {

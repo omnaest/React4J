@@ -46,8 +46,7 @@ public class EventHandlerServiceImplTest
 
     private EventHandlerServiceImpl createEventHandlerService()
     {
-        return new EventHandlerServiceImpl()
-        {
+        return new EventHandlerServiceImpl() {
             {
                 this.rerenderingService = Mockito.mock(RerenderingService.class);
                 Mockito.when(this.rerenderingService.rerenderTargetNode(any(), any()))

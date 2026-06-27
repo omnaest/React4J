@@ -31,13 +31,13 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.annotation.PostConstruct;
 
 @RestController
-@RequestMapping({ "/ui/data", "/ui/{languageTag}/data" })
+@RequestMapping({"/ui/data", "/ui/{languageTag}/data"})
 public class DataController
 {
     private static Logger LOG = LoggerFactory.getLogger(DataController.class);
 
     @Autowired
-    private DataService dataService;
+    private DataService   dataService;
 
     @PostMapping(path = "/query", produces = MediaType.APPLICATION_JSON_VALUE)
     public DataPage getData(@PathVariable(name = "languageTag", required = false) String languageTag, @RequestBody DataPageQuery query)
@@ -50,6 +50,6 @@ public class DataController
     {
         LOG.info(this.getClass()
                      .getSimpleName()
-                + " enabled.");
+                 + " enabled.");
     }
 }

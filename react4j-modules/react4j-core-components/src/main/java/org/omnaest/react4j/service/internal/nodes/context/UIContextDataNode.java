@@ -12,7 +12,7 @@ import lombok.Data;
 public class UIContextDataNode
 {
     @JsonProperty
-    private String contextId;
+    private String              contextId;
 
     @JsonProperty
     private Map<String, Object> data;

@@ -25,7 +25,7 @@ public class SizedContainerNode extends AbstractNode implements Node
     private String type = "SIZEDCONTAINER";
 
     @JsonProperty
-    private Node content;
+    private Node   content;
 
     @JsonProperty
     private String height;

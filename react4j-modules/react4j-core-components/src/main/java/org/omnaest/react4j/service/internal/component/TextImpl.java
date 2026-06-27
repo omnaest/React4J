@@ -54,8 +54,7 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
 
             @Override
             public Location getLocation(LocationSupport locationSupport)
@@ -75,8 +74,7 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                NodeRenderer<TextNode> nodeRenderer = new NodeRenderer<TextNode>()
-                {
+                NodeRenderer<TextNode> nodeRenderer = new NodeRenderer<TextNode>() {
                     @Override
                     public String render(TextNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {

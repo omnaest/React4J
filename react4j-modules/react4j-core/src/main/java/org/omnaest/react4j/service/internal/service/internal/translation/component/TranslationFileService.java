@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public class TranslationFileService implements TranslationProvider, TranslationPersistence
 {
     @Value("${i18n.folder:i18n}")
-    protected String translationFolder;
+    protected String                    translationFolder;
 
     private Map<Locale, KeyToTextStore> localeToKeyToTextStore = new ConcurrentHashMap<>();
 
@@ -92,8 +92,7 @@ public class TranslationFileService implements TranslationProvider, TranslationP
                                 KeyToTextStore sourceKeyToTextStore = this.localeToKeyToTextStore.get(sourceAndTargetLocale.getFirst());
                                 KeyToTextStore targetKeyToTextStore = this.localeToKeyToTextStore.get(sourceAndTargetLocale.getSecond());
 
-                                return new Translator()
-                                {
+                                return new Translator() {
                                     @Override
                                     public Optional<String> apply(String key, String text)
                                     {

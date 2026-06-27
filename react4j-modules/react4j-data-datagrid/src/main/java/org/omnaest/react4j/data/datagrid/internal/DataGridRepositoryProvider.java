@@ -41,7 +41,7 @@ public class DataGridRepositoryProvider implements RepositoryProvider
 {
     private static Logger LOG = LoggerFactory.getLogger(DataGridRepositoryProvider.class);
 
-    private DataGrid dataGrid;
+    private DataGrid      dataGrid;
 
     @PostConstruct
     public void init()
@@ -52,8 +52,7 @@ public class DataGridRepositoryProvider implements RepositoryProvider
     @Override
     public Tenant apply(Tenant.Id tenantId)
     {
-        return new Tenant()
-        {
+        return new Tenant() {
             @Override
             public Repository apply(Repository.Id repositoryId)
             {
@@ -62,8 +61,7 @@ public class DataGridRepositoryProvider implements RepositoryProvider
                                                                                                                                                                  String.class,
                                                                                                                                                                  Object.class);
 
-                return new Repository()
-                {
+                return new Repository() {
                     @Override
                     public Stream<DataEntry> stream()
                     {

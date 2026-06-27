@@ -54,8 +54,7 @@ public class ImageImpl extends AbstractUIComponent<Image> implements Image
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
             @Override
             public Location getLocation(LocationSupport locationSupport)
             {
@@ -73,8 +72,7 @@ public class ImageImpl extends AbstractUIComponent<Image> implements Image
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(ImageNode.class, NodeRenderType.HTML, new NodeRenderer<ImageNode>()
-                {
+                registry.register(ImageNode.class, NodeRenderType.HTML, new NodeRenderer<ImageNode>() {
                     @Override
                     public String render(ImageNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {

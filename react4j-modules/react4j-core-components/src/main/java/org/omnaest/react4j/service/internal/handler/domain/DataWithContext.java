@@ -34,7 +34,7 @@ import lombok.ToString;
 public class DataWithContext extends AbstractJSONSerializable
 {
     @JsonProperty
-    private String contextId;
+    private String              contextId;
 
     @JsonProperty
     private Map<String, Object> data;

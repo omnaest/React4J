@@ -38,8 +38,7 @@ public interface Locations extends Supplier<List<Location>>
 
     public static Locations of(Location location)
     {
-        return new Locations()
-        {
+        return new Locations() {
             @Override
             public List<Location> get()
             {

@@ -12,43 +12,43 @@ import lombok.Data;
 public class FormElementNode
 {
     @JsonProperty
-    private String field;
+    private String           field;
 
     @JsonProperty
-    private String contextId;
+    private String           contextId;
 
     @JsonProperty
-    private String type;
+    private String           type;
 
     @JsonProperty
-    private I18nTextValue label;
+    private I18nTextValue    label;
 
     @JsonProperty
-    private I18nTextValue description;
+    private I18nTextValue    description;
 
     @JsonProperty
-    private boolean disabled;
+    private boolean          disabled;
 
     @JsonProperty
-    private boolean readonly;
+    private boolean          readonly;
 
     @JsonProperty
-    private String colspan;
+    private String           colspan;
 
     @JsonProperty
-    private FormRangeNode range;
+    private FormRangeNode    range;
 
     @JsonProperty
     private FormDropDownNode dropDown;
 
     @JsonProperty
-    private FormButtonNode button;
+    private FormButtonNode   button;
 
     @JsonProperty
     private FormCheckboxNode checkbox;
 
     @JsonProperty
-    private FormInputNode input;
+    private FormInputNode    input;
 
     @Data
     @Builder
@@ -66,7 +66,7 @@ public class FormElementNode
         private I18nTextValue placeholder;
 
         @JsonProperty
-        private String type;
+        private String        type;
     }
 
     public String getType()

@@ -21,19 +21,17 @@ public abstract class AbstractFormElementImpl<FE extends FormElement<?>> impleme
     protected final Function<String, I18nText>   i18nTextMapper;
     protected final EventHandlerRegistry         eventHandlerRegistry;
 
-    protected Field                 field;
-    protected Document              document;
-    protected Supplier<DataContext> parentDataContext;
+    protected Field                              field;
+    protected Document                           document;
+    protected Supplier<DataContext>              parentDataContext;
 
-    private I18nText             label;
-    private I18nText             description;
-    private Optional<ColumnSpan> columnSpan = Optional.empty();
-    private String               id;
+    private I18nText                             label;
+    private I18nText                             description;
+    private Optional<ColumnSpan>                 columnSpan = Optional.empty();
+    private String                               id;
 
     @SuppressWarnings("unchecked")
-    protected AbstractFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver,
-                                      Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry,
-                                      Supplier<? extends DataContext> parentDataContext)
+    protected AbstractFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver, Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry, Supplier<? extends DataContext> parentDataContext)
     {
         this.id = identitiyProvider.apply(this.getClass());
         this.textResolver = textResolver;

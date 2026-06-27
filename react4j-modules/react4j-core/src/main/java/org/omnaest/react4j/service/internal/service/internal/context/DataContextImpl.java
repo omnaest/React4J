@@ -47,13 +47,13 @@ import org.omnaest.utils.element.cached.CachedElement;
 
 public class DataContextImpl<T> implements DefineableDataContext, TypedDataContext<T>
 {
-    private Function<Location, String> idFunction = location -> this.encodeLocation(location);
+    private Function<Location, String> idFunction        = location -> this.encodeLocation(location);
     private Locations                  locations;
 
-    private RepositoryProvider repositoryProvider;
+    private RepositoryProvider         repositoryProvider;
 
-    private StringEncoderAndDecoder encoderAndDecoder = StringUtils.encoder()
-                                                                   .with(TextEncoderAndDecoderFactory::forAlphaNumericText);
+    private StringEncoderAndDecoder    encoderAndDecoder = StringUtils.encoder()
+                                                                      .with(TextEncoderAndDecoderFactory::forAlphaNumericText);
 
     public DataContextImpl(Locations locations, RepositoryProvider repositoryProvider)
     {
@@ -118,8 +118,7 @@ public class DataContextImpl<T> implements DefineableDataContext, TypedDataConte
         EntryOperationResult result = repository.apply(entry);
         Data resultData = data.withId(result.getEntryId());
 
-        return new PersistResult()
-        {
+        return new PersistResult() {
             private Supplier<Data> dataSuccessSupplier = () -> resultData;
             private Supplier<Data> dataFailureSupplier = () -> resultData.getInitial();
 
@@ -174,8 +173,7 @@ public class DataContextImpl<T> implements DefineableDataContext, TypedDataConte
     @Override
     public Selector selector()
     {
-        return new Selector()
-        {
+        return new Selector() {
             private AtomicReference<String> selectedId                 = new AtomicReference<>();
             private Supplier<DataContext>   currentDataContextProvider = () -> DataContextImpl.this; // TODO this has to resolve the data context in the threadcontext also
 
@@ -189,8 +187,7 @@ public class DataContextImpl<T> implements DefineableDataContext, TypedDataConte
             @Override
             public Selection getCurrentSelection()
             {
-                return new Selection()
-                {
+                return new Selection() {
                     @Override
                     public DataContextDocument get(int index)
                     {
@@ -225,8 +222,7 @@ public class DataContextImpl<T> implements DefineableDataContext, TypedDataConte
     @Override
     public View view()
     {
-        return new View()
-        {
+        return new View() {
             @Override
             public Stream<Document> stream()
             {
@@ -275,8 +271,7 @@ public class DataContextImpl<T> implements DefineableDataContext, TypedDataConte
         @Override
         public DataContextField getField(String fieldName)
         {
-            return new DataContextField()
-            {
+            return new DataContextField() {
 
                 @Override
                 public String getFieldName()

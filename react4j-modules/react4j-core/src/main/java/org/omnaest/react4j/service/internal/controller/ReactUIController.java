@@ -43,19 +43,19 @@ import jakarta.annotation.PostConstruct;
 @RestController
 public class ReactUIController
 {
-    private static Logger LOG = LoggerFactory.getLogger(ReactUIController.class);
+    private static Logger           LOG = LoggerFactory.getLogger(ReactUIController.class);
 
     @Autowired
     private RootNodeResolverService resolverService;
 
     @Autowired
-    private EventHandlerService eventHandlerService;
+    private EventHandlerService     eventHandlerService;
 
     @Autowired
-    private RerenderingService rerenderingService;
+    private RerenderingService      rerenderingService;
 
     @Autowired
-    private LocaleService localeService;
+    private LocaleService           localeService;
 
     //    @RequestMapping(method = RequestMethod.GET, path = { "{contextPath}/ui", "{languageTag}/{contextPath}/ui" }, produces = MediaType.APPLICATION_JSON_VALUE)
     //    public NodeHierarchy getNodeHierarchy(@PathVariable(name = "languageTag", required = false) String languageTag,
@@ -65,16 +65,15 @@ public class ReactUIController
     //        return this.resolverService.resolveNodeHierarchy(contextPath);
     //    }
 
-    @GetMapping(path = { "/ui", "{languageTag}/ui" }, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = {"/ui", "{languageTag}/ui"}, produces = MediaType.APPLICATION_JSON_VALUE)
     public NodeHierarchy getNodeHierarchy(@PathVariable(name = "languageTag", required = false) String languageTag)
     {
         this.localeService.setExplicitRequestLocaleByLanguageTag(languageTag);
         return this.eventHandlerService.executeTransactionalAndPublishStagingHandlers(this.resolverService::resolveDefaultNodeHierarchy);
     }
 
-    @PostMapping(path = { "/ui", "{languageTag}/ui" }, produces = MediaType.APPLICATION_JSON_VALUE)
-    public Optional<TargetNode> getSubNodeHierarchy(@RequestBody SubNodeRerenderingContext context,
-                                                    @PathVariable(name = "languageTag", required = false) String languageTag)
+    @PostMapping(path = {"/ui", "{languageTag}/ui"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Optional<TargetNode> getSubNodeHierarchy(@RequestBody SubNodeRerenderingContext context, @PathVariable(name = "languageTag", required = false) String languageTag)
     {
         this.localeService.setExplicitRequestLocaleByLanguageTag(languageTag);
         return this.eventHandlerService.executeTransactionalAndPublishStagingHandlers(() -> this.rerenderingService.rerenderTargetNode(context.getTarget(),
@@ -99,7 +98,7 @@ public class ReactUIController
 
     }
 
-    @PostMapping(path = { "/ui/event", "{languageTag}/ui/event" }, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = {"/ui/event", "{languageTag}/ui/event"}, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public Optional<ResponseBody> acceptEvent(@RequestBody EventBody eventBody, @PathVariable(name = "languageTag", required = false) String languageTag)
     {
         this.localeService.setExplicitRequestLocaleByLanguageTag(languageTag);
@@ -111,6 +110,6 @@ public class ReactUIController
     {
         LOG.info(this.getClass()
                      .getSimpleName()
-                + " enabled.");
+                 + " enabled.");
     }
 }

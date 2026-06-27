@@ -53,8 +53,7 @@ public class ImageIndexImpl extends AbstractUIComponent<ImageIndex> implements I
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
 
             @Override
             public Location getLocation(LocationSupport locationSupport)

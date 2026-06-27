@@ -31,8 +31,7 @@ public class ComponentContext
     protected Supplier<UIComponentFactory> uiComponentFactory;
     protected ContextFactory               contextFactory;
 
-    public ComponentContext(UILocale defaultLocale, LocalizedTextResolverService textResolver, EventHandlerRegistry eventHandlerRegistry,
-                            Supplier<UIComponentFactory> uiComponentFactory, ContextFactory contextFactory)
+    public ComponentContext(UILocale defaultLocale, LocalizedTextResolverService textResolver, EventHandlerRegistry eventHandlerRegistry, Supplier<UIComponentFactory> uiComponentFactory, ContextFactory contextFactory)
     {
         super();
         this.defaultLocale = defaultLocale;
@@ -71,7 +70,7 @@ public class ComponentContext
     public String toString()
     {
         return "ComponentContext [defaultLocale=" + this.defaultLocale + ", textResolver=" + this.textResolver + ", eventHandlerRegistry="
-                + this.eventHandlerRegistry + ", uiComponentFactory=" + this.uiComponentFactory + ", dataContextFactory=" + this.contextFactory + "]";
+               + this.eventHandlerRegistry + ", uiComponentFactory=" + this.uiComponentFactory + ", dataContextFactory=" + this.contextFactory + "]";
     }
 
 }

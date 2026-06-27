@@ -29,9 +29,7 @@ public class DropdownFormElementImpl extends AbstractFormElementImpl<DropDownFor
 {
     private DropDownDataBuilder data = DropDownData.builder();
 
-    public DropdownFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver,
-                                   Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry,
-                                   Supplier<? extends DataContext> parentDataContext)
+    public DropdownFormElementImpl(Function<Class<?>, String> identitiyProvider, LocalizedTextResolverService textResolver, Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry, Supplier<? extends DataContext> parentDataContext)
     {
         super(identitiyProvider, textResolver, i18nTextMapper, eventHandlerRegistry, parentDataContext);
     }
@@ -86,7 +84,7 @@ public class DropdownFormElementImpl extends AbstractFormElementImpl<DropDownFor
         private final Map<String, DropDownEntry> options;
 
         @Default
-        private final boolean multiselect = false;
+        private final boolean                    multiselect = false;
     }
 
     @Data
@@ -96,7 +94,7 @@ public class DropdownFormElementImpl extends AbstractFormElementImpl<DropDownFor
         private I18nText label;
 
         @Default
-        private boolean disabled = false;
+        private boolean  disabled = false;
     }
 
     private static class DropDownOptionsImpl implements DropDownOptions

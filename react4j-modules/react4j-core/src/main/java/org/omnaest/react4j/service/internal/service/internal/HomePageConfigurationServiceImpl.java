@@ -28,13 +28,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class HomePageConfigurationServiceImpl implements HomePageConfigurationService
 {
-    private static final String PROPERTY_DESCRIPTION = "$DESCRIPTION$";
-    private static final String PROPERTY_TITLE       = "$TITLE$";
+    private static final String      PROPERTY_DESCRIPTION = "$DESCRIPTION$";
+    private static final String      PROPERTY_TITLE       = "$TITLE$";
 
-    private Map<String, String> configurations = new ConcurrentHashMap<>(MapUtils.builder()
-                                                                                 .put(PROPERTY_TITLE, "")
-                                                                                 .put(PROPERTY_DESCRIPTION, "")
-                                                                                 .build());
+    private Map<String, String>      configurations       = new ConcurrentHashMap<>(MapUtils.builder()
+                                                                                            .put(PROPERTY_TITLE, "")
+                                                                                            .put(PROPERTY_DESCRIPTION, "")
+                                                                                            .build());
 
     @Autowired
     private SimpleTranslationService translationService;

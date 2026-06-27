@@ -59,8 +59,7 @@ public class NavigationBarImpl extends AbstractUIComponent<NavigationBar> implem
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
             @Override
             public Location getLocation(LocationSupport locationSupport)
             {
@@ -84,8 +83,7 @@ public class NavigationBarImpl extends AbstractUIComponent<NavigationBar> implem
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(NavigationBarNode.class, NodeRenderType.HTML, new NodeRenderer<NavigationBarNode>()
-                {
+                registry.register(NavigationBarNode.class, NodeRenderType.HTML, new NodeRenderer<NavigationBarNode>() {
                     @Override
                     public String render(NavigationBarNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
@@ -133,12 +131,12 @@ public class NavigationBarImpl extends AbstractUIComponent<NavigationBar> implem
     {
         private Function<String, I18nText> i18nTextResolver;
 
-        private I18nText text;
-        private String   link;
-        private String   linkedId;
-        private boolean  active;
+        private I18nText                   text;
+        private String                     link;
+        private String                     linkedId;
+        private boolean                    active;
 
-        private boolean disabled;
+        private boolean                    disabled;
 
         public NavigationEntryImpl(Function<String, I18nText> i18nTextResolver)
         {
@@ -216,7 +214,7 @@ public class NavigationBarImpl extends AbstractUIComponent<NavigationBar> implem
         public String toString()
         {
             return "NavigationEntryImpl [i18nTextResolver=" + this.i18nTextResolver + ", text=" + this.text + ", link=" + this.link + ", linkedId="
-                    + this.linkedId + ", active=" + this.active + ", disabled=" + this.disabled + "]";
+                   + this.linkedId + ", active=" + this.active + ", disabled=" + this.disabled + "]";
         }
 
     }

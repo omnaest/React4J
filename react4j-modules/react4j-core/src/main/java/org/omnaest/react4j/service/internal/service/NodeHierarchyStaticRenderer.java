@@ -90,8 +90,7 @@ public class NodeHierarchyStaticRenderer
                                                       .map(Node::getType)
                                                       .map(nodeTypeToNodeRenderer::get)
                                                       .orElseGet(() -> new DefaultNodeRenderer());
-            NodeRenderingProcessor nodeRenderingProcessor = new NodeRenderingProcessor()
-            {
+            NodeRenderingProcessor nodeRenderingProcessor = new NodeRenderingProcessor() {
 
                 @Override
                 public String render(I18nTextValue text)

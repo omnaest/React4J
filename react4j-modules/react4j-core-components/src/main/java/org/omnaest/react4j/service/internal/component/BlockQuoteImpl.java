@@ -57,8 +57,7 @@ public class BlockQuoteImpl extends AbstractUIComponent<BlockQuote> implements B
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
             @Override
             public Location getLocation(LocationSupport locationSupport)
             {
@@ -77,8 +76,7 @@ public class BlockQuoteImpl extends AbstractUIComponent<BlockQuote> implements B
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(BlockQuoteNode.class, NodeRenderType.HTML, new NodeRenderer<BlockQuoteNode>()
-                {
+                registry.register(BlockQuoteNode.class, NodeRenderType.HTML, new NodeRenderer<BlockQuoteNode>() {
                     @Override
                     public String render(BlockQuoteNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {

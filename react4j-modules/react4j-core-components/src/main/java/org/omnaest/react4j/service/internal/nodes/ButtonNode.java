@@ -24,16 +24,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ButtonNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "BUTTON";
+    private String        type = "BUTTON";
 
     @JsonProperty
     private I18nTextValue name;
 
     @JsonProperty
-    private String style;
+    private String        style;
 
     @JsonProperty
-    private Handler onClick;
+    private Handler       onClick;
 
     @Override
     public String getType()

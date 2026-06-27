@@ -118,8 +118,7 @@ public class GridContainerImpl extends AbstractUIComponentWithSubComponents<Grid
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
 
             @Override
             public Location getLocation(LocationSupport locationSupport)
@@ -176,8 +175,7 @@ public class GridContainerImpl extends AbstractUIComponentWithSubComponents<Grid
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(GridContainerNode.class, NodeRenderType.HTML, new NodeRenderer<GridContainerNode>()
-                {
+                registry.register(GridContainerNode.class, NodeRenderType.HTML, new NodeRenderer<GridContainerNode>() {
                     @Override
                     public String render(GridContainerNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
@@ -351,7 +349,7 @@ public class GridContainerImpl extends AbstractUIComponentWithSubComponents<Grid
             return this;
         }
 
-        @SuppressWarnings({ "rawtypes" })
+        @SuppressWarnings({"rawtypes"})
         @Override
         public Cell withHorizontalAlignment(HorizontalAlignment horizontalAlignment)
         {

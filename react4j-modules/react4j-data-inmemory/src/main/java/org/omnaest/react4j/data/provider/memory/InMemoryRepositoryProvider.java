@@ -39,15 +39,13 @@ public class InMemoryRepositoryProvider implements RepositoryProvider
     @Override
     public Tenant apply(Tenant.Id tenantId)
     {
-        return new Tenant()
-        {
+        return new Tenant() {
             @Override
             public Repository apply(Repository.Id repositoryId)
             {
                 IndexElementRepository<Map<String, Object>> elementRepository = InMemoryRepositoryProvider.this.provider.get();
 
-                return new Repository()
-                {
+                return new Repository() {
                     @Override
                     public Stream<DataEntry> stream()
                     {

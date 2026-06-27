@@ -51,8 +51,7 @@ public class HeadingImpl extends AbstractUIComponent<Heading> implements Heading
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new UIComponentRenderer()
-        {
+        return new UIComponentRenderer() {
 
             @Override
             public Location getLocation(LocationSupport locationSupport)
