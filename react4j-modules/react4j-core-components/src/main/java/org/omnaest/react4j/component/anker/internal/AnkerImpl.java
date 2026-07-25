@@ -16,6 +16,7 @@
 package org.omnaest.react4j.component.anker.internal;
 
 import org.omnaest.react4j.component.anker.Anker;
+import org.omnaest.react4j.component.anker.internal.data.AnkerData;
 import org.omnaest.react4j.component.anker.internal.data.AnkerData.AnkerDataBuilder;
 import org.omnaest.react4j.component.anker.internal.renderer.AnkerRenderer;
 import org.omnaest.react4j.domain.i18n.I18nText;
@@ -30,7 +31,7 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
 
     public AnkerImpl(ComponentContext context)
     {
-        super(context);
+        this(context, AnkerData.builder());
     }
 
     public AnkerImpl(ComponentContext context, AnkerDataBuilder ankerData)

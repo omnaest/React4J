@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.omnaest.react4j.domain.Button.Style;
 import org.omnaest.react4j.domain.Card;
 import org.omnaest.react4j.domain.Icon.StandardIcon;
@@ -23,6 +24,8 @@ import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.UnsortedList;
 import org.omnaest.react4j.service.internal.service.ContentService;
 import org.omnaest.react4j.service.internal.service.ContentService.ContentImage;
+import org.omnaest.react4j.domain.markdown.MarkdownIssueHandler;
+import org.omnaest.react4j.service.internal.service.MarkdownDirectiveResolver;
 import org.omnaest.react4j.service.internal.service.MarkdownService;
 import org.omnaest.utils.ConsumerUtils;
 import org.omnaest.utils.EnumUtils;
@@ -39,18 +42,62 @@ import org.omnaest.utils.markdown.MarkdownUtils.Image;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * Interprets markdown content into {@link UIComponent}s.<br>
+ * <br>
+ * Beside standard markdown a set of directives like <code>[BUTTON:SUCCESS:Label](link)</code> is understood. The grammar and the vocabularies of those
+ * directives are documented within the README.md of the react4j-core-markdown module. A directive that cannot be interpreted falls back to a default and is
+ * reported as a {@link org.omnaest.react4j.domain.markdown.MarkdownIssue} to the {@link MarkdownIssueHandler}.
+ *
+ * @see MarkdownDirectiveResolver
+ * @see MarkdownIssueHandler
+ * @author omnaest
+ */
 @Service
 public class MarkdownServiceImpl implements MarkdownService
 {
     @Autowired
-    private ContentService contentService;
+    private ContentService       contentService;
+
+    /**
+     * Optional application provided {@link MarkdownIssueHandler}. Without such a bean the issues are written to the log.
+     */
+    @Autowired(required = false)
+    private MarkdownIssueHandler issueHandler;
 
     @Override
     public FactoryLoadedMarkdownInterpreter interpreterWith(UIComponentFactory uiComponentFactory)
     {
         ContentService contentService = this.contentService;
+        MarkdownIssueHandler defaultIssueHandler = Optional.ofNullable(this.issueHandler)
+                                                           .orElseGet(MarkdownIssueHandler::logging);
 
         return new FactoryLoadedMarkdownInterpreter() {
+            /**
+             * The interpreter is created per interpretation, so the origin and the handler of a single interpretation can be declared on it.
+             */
+            private MarkdownIssueHandler issueHandler = defaultIssueHandler;
+            private String               source       = null;
+
+            @Override
+            public FactoryLoadedMarkdownInterpreter withSource(String source)
+            {
+                this.source = source;
+                return this;
+            }
+
+            @Override
+            public FactoryLoadedMarkdownInterpreter withIssueHandler(MarkdownIssueHandler issueHandler)
+            {
+                this.issueHandler = issueHandler;
+                return this;
+            }
+
+            private MarkdownDirectiveResolver newDirectiveResolver(Optional<Integer> sourceLine)
+            {
+                return new MarkdownDirectiveResolver(this.issueHandler, this.source, sourceLine.orElse(null));
+            }
+
             @Override
             public List<Card> newMarkdownCards(String markdown)
             {
@@ -222,6 +269,21 @@ public class MarkdownServiceImpl implements MarkdownService
                                                                                                                    .filter(PredicateUtils.notNull())
                                                                                                                    .map(MapperUtils.identity()),
                                                                                                   element -> Stream.of(element)
+                                                                                                                   .map(Element::asCodeBlock)
+                                                                                                                   .filter(Optional::isPresent)
+                                                                                                                   .map(Optional::get)
+                                                                                                                   .map(this::createCodeBlockComponent)
+                                                                                                                   .filter(PredicateUtils.notNull())
+                                                                                                                   .map(MapperUtils.identity()),
+                                                                                                  element -> Stream.of(element)
+                                                                                                                   .map(Element::asCode)
+                                                                                                                   .filter(Optional::isPresent)
+                                                                                                                   .map(Optional::get)
+                                                                                                                   .map(code -> uiComponentFactory.newText()
+                                                                                                                                                  .addNonTranslatedText(code.getValue()))
+                                                                                                                   .filter(PredicateUtils.notNull())
+                                                                                                                   .map(MapperUtils.identity()),
+                                                                                                  element -> Stream.of(element)
                                                                                                                    .map(Element::asLineBreak)
                                                                                                                    .filter(Optional::isPresent)
                                                                                                                    .map(Optional::get)
@@ -313,10 +375,12 @@ public class MarkdownServiceImpl implements MarkdownService
 
                                                     if (iconMatch.isPresent())
                                                     {
-                                                        paragraph.addText(iconMatch.get()
-                                                                                   .getSubGroup(1)
-                                                                                   .flatMap(StandardIcon::of)
-                                                                                   .orElse(null),
+                                                        String rawIcon = iconMatch.get()
+                                                                                  .getSubGroup(1)
+                                                                                  .orElse(null);
+                                                        paragraph.addText(this.newDirectiveResolver(text.getSourceLine())
+                                                                              .resolveIcon(rawIcon, "[ICON:" + rawIcon + "]")
+                                                                              .orElse(null),
                                                                           iconMatch.get()
                                                                                    .getSubGroup(2)
                                                                                    .orElse(""));
@@ -345,6 +409,10 @@ public class MarkdownServiceImpl implements MarkdownService
                                                         paragraph.addImage(image.getLabel(), image.getLink());
                                                     }
                                                 });
+                                         element.asCode()
+                                                .ifPresent(code -> paragraph.addNonTranslatedText(code.getValue()));
+                                         element.asCodeBlock()
+                                                .ifPresent(codeBlock -> paragraph.addComponent(this.createCodeBlockComponent(codeBlock)));
                                          element.asLineBreak()
                                                 .ifPresent(lineBreak -> paragraph.addLineBreak());
                                          element.asLink()
@@ -355,14 +423,15 @@ public class MarkdownServiceImpl implements MarkdownService
                                                                 {
                                                                     paragraph.addLinkButton(anker ->
                                                                     {
+                                                                        MarkdownDirectiveResolver directiveResolver = this.newDirectiveResolver(link.getSourceLine());
+                                                                        String rawToken = match.getMatchRegion();
                                                                         String text = match.getSubGroup(3)
                                                                                            .orElse("");
                                                                         String style = match.getSubGroup(2)
                                                                                             .orElse(null);
-                                                                        anker.withText(text)
+                                                                        anker.withText(directiveResolver.resolveButtonText(text, rawToken))
                                                                              .withLink(link.getLink())
-                                                                             .withStyle(Style.of(style)
-                                                                                             .orElse(Style.PRIMARY));
+                                                                             .withStyle(directiveResolver.resolveButtonStyle(style, rawToken));
                                                                     });
                                                                 })
                                                                 .ifContainsRegEx("^IFRAME\\:(VIDEO(\\_[x0-9]+)?\\:)?(.*)", match ->
@@ -379,9 +448,9 @@ public class MarkdownServiceImpl implements MarkdownService
                                                                                                                  .withFullWidth()
                                                                                                                  .withHeightInViewPortRatio(0.8)
                                                                                                                  .withContent(uiComponentFactory.newRatioContainer()
-                                                                                                                                                .withRatio(EnumUtils.toEnumValue(ratio,
-                                                                                                                                                                                 Ratio.class)
-                                                                                                                                                                    .orElse(Ratio._16x9))
+                                                                                                                                                .withRatio(this.newDirectiveResolver(link.getSourceLine())
+                                                                                                                                                               .resolveVideoRatio(ratio,
+                                                                                                                                                                                  match.getMatchRegion()))
                                                                                                                                                 .withContent(uiComponentFactory.newIFrame()
                                                                                                                                                                                .withSourceLink(link.getLink())
                                                                                                                                                                                .withTitle(title)
@@ -412,6 +481,18 @@ public class MarkdownServiceImpl implements MarkdownService
                                      });
                     return paragraph;
                 };
+            }
+
+            /**
+             * Renders a code block as preformatted html. The content is escaped and never translated, since code is not prose.
+             */
+            private UIComponent<?> createCodeBlockComponent(MarkdownUtils.CodeBlock codeBlock)
+            {
+                String languageClass = codeBlock.getLanguage()
+                                                .map(language -> " class=\"language-" + StringEscapeUtils.escapeHtml4(language) + "\"")
+                                                .orElse("");
+                return uiComponentFactory.newNativeHtml()
+                                         .withSource("<pre><code" + languageClass + ">" + StringEscapeUtils.escapeHtml4(codeBlock.getValue()) + "</code></pre>");
             }
 
             private Function<MarkdownUtils.Table, UIComponent<?>> createMarkdownTableMapper(AtomicInteger referenceLinkCounter)

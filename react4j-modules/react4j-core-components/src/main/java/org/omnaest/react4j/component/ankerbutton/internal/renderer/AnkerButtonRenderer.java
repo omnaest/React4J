@@ -57,6 +57,8 @@ public class AnkerButtonRenderer implements UIComponentRenderer
                                     .useTemplateClassResource(this.getClass(), "/render/templates/html/anker_button.html")
                                     .add("link", node.getLink())
                                     .add("text", nodeRenderingProcessor.render(node.getText()))
+                                    .add("style", node.getStyle())
+                                    .add("target", Page.SELF.equals(node.getPage()) ? "_self" : "_blank")
                                     .build()
                                     .get();
             }

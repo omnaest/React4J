@@ -55,6 +55,7 @@ public class AnkerRenderer implements UIComponentRenderer
                                     .useTemplateClassResource(this.getClass(), "/render/templates/html/anker.html")
                                     .add("link", node.getLink())
                                     .add("text", nodeRenderingProcessor.render(node.getText()))
+                                    .add("target", AnkerNode.Page.SELF.equals(node.getPage()) ? "_self" : "_blank")
                                     .build()
                                     .get();
             }

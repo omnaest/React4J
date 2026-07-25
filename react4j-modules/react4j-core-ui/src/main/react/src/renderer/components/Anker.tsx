@@ -26,6 +26,7 @@ export class Anker extends React.Component<Props, {}>
             <a
                 href={this.props.node.link}
                 target={isSelfPage ? "_self" : "_blank"}
+                rel="noopener noreferrer"
                 title={I18nRenderer.render(this.props.node.title)}
             >{I18nRenderer.render(this.props.node.text)}</a>
         );

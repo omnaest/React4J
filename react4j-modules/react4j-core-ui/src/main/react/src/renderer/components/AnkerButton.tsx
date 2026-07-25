@@ -25,6 +25,7 @@ export class AnkerButton extends React.Component<Props, {}>
             <a
                 href={this.props.node.link}
                 target={this.props.node.page === "SELF" ? "_self" : "_blank"}
+                rel="noopener noreferrer"
                 className={"btn btn-md" + (this.props.node.style ? " btn-" + this.props.node.style : "")}
                 role="button"
             >{I18nRenderer.render(this.props.node.text)}</a>

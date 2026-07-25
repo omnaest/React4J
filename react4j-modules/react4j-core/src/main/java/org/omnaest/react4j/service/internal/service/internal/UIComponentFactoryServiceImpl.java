@@ -60,6 +60,7 @@ import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.UIComponentFactory.MarkdownComponentFactory;
 import org.omnaest.react4j.domain.UnsortedList;
+import org.omnaest.react4j.domain.markdown.MarkdownIssue;
 import org.omnaest.react4j.domain.VerticalContentSwitcher;
 import org.omnaest.react4j.domain.i18n.UILocale;
 import org.omnaest.react4j.service.internal.component.AccordionImpl;
@@ -298,45 +299,81 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         @Override
         public List<UIComponent<?>> newMarkdownText(String markdown)
         {
+            return this.newMarkdownText(markdown, null);
+        }
+
+        /**
+         * @param markdown
+         * @param source
+         *            origin of the markdown, e.g. the content file identifier, which any found {@link MarkdownIssue} is attributed to. Can be null.
+         * @return
+         */
+        protected List<UIComponent<?>> newMarkdownText(String markdown, String source)
+        {
             return this.markdownService.interpreterWith(this)
+                                       .withSource(source)
                                        .parseMarkdownElements(markdown);
         }
 
         @Override
         public List<UIComponent<?>> newMarkdownTextFromContent(String identifier)
         {
-            return this.newMarkdownText(this.contentService.findContentMarkdownFile(identifier)
-                                                           .map(ContentFile::asString)
-                                                           .orElse(""));
+            return this.newMarkdownText(this.readContentMarkdownFile(identifier), identifier);
         }
 
         @Override
         public List<Card> newMarkdownCardsFromContent(String identifier)
         {
-            return this.newMarkdownCards(this.contentService.findContentMarkdownFile(identifier)
-                                                            .map(ContentFile::asString)
-                                                            .orElse(""));
+            return this.newMarkdownCards(this.readContentMarkdownFile(identifier), identifier);
         }
 
         @Override
         public List<Card> newMarkdownCards(String markdown)
         {
+            return this.newMarkdownCards(markdown, null);
+        }
+
+        /**
+         * @see #newMarkdownText(String, String)
+         * @param markdown
+         * @param source
+         * @return
+         */
+        protected List<Card> newMarkdownCards(String markdown, String source)
+        {
             return this.markdownService.interpreterWith(this)
+                                       .withSource(source)
                                        .newMarkdownCards(markdown);
         }
 
         @Override
         public Card newMarkdownCard(String markdown)
         {
-            return ListUtils.first(this.newMarkdownCards(markdown));
+            return this.newMarkdownCard(markdown, null);
+        }
+
+        /**
+         * @see #newMarkdownText(String, String)
+         * @param markdown
+         * @param source
+         * @return
+         */
+        protected Card newMarkdownCard(String markdown, String source)
+        {
+            return ListUtils.first(this.newMarkdownCards(markdown, source));
         }
 
         @Override
         public Card newMarkdownCardFromContent(String identifier)
         {
-            return this.newMarkdownCard(this.contentService.findContentMarkdownFile(identifier)
-                                                           .map(ContentFile::asString)
-                                                           .orElse(""));
+            return this.newMarkdownCard(this.readContentMarkdownFile(identifier), identifier);
+        }
+
+        private String readContentMarkdownFile(String identifier)
+        {
+            return this.contentService.findContentMarkdownFile(identifier)
+                                      .map(ContentFile::asString)
+                                      .orElse("");
         }
 
         @Override
@@ -350,9 +387,9 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
                 {
                     return new AbstractMarkdownComponentFactory<List<UIComponent<?>>>(contentService) {
                         @Override
-                        public List<UIComponent<?>> from(String markdown)
+                        protected List<UIComponent<?>> from(String markdown, String source)
                         {
-                            return UIComponentFactoryImpl.this.newMarkdownText(markdown);
+                            return UIComponentFactoryImpl.this.newMarkdownText(markdown, source);
                         }
                     };
                 }
@@ -362,9 +399,9 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
                 {
                     return new AbstractMarkdownComponentFactory<List<Card>>(contentService) {
                         @Override
-                        public List<Card> from(String markdown)
+                        protected List<Card> from(String markdown, String source)
                         {
-                            return UIComponentFactoryImpl.this.newMarkdownCards(markdown);
+                            return UIComponentFactoryImpl.this.newMarkdownCards(markdown, source);
                         }
                     };
                 }
@@ -374,9 +411,9 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
                 {
                     return new AbstractMarkdownComponentFactory<Card>(contentService) {
                         @Override
-                        public Card from(String markdown)
+                        protected Card from(String markdown, String source)
                         {
-                            return UIComponentFactoryImpl.this.newMarkdownCard(markdown);
+                            return UIComponentFactoryImpl.this.newMarkdownCard(markdown, source);
                         }
                     };
                 }
@@ -600,12 +637,28 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         }
 
         @Override
+        public U from(String markdown)
+        {
+            String source = null;
+            return this.from(markdown, source);
+        }
+
+        @Override
         public U fromContentFile(String identifier)
         {
             return this.from(this.contentService.findContentMarkdownFile(identifier)
                                                 .map(ContentFile::asString)
-                                                .orElse(""));
+                                                .orElse(""),
+                             identifier);
         }
+
+        /**
+         * @param markdown
+         * @param source
+         *            origin of the markdown, e.g. the content file identifier, which any found {@link MarkdownIssue} is attributed to. Can be null.
+         * @return
+         */
+        protected abstract U from(String markdown, String source);
 
     }
 }
