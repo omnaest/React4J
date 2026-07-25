@@ -12,6 +12,7 @@ import org.omnaest.react4j.domain.context.data.DataContext;
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.react4j.domain.i18n.I18nText;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 
@@ -41,13 +42,14 @@ public abstract class AbstractFormElementImpl<FE extends FormElement<?>> impleme
     }
 
     @Override
-    public FormElementNode render(Location parentLocation)
+    public FormElementNode render(RenderingProcessor renderingProcessor, Location parentLocation)
     {
         Context context = this.getEffectiveContext();
         Location location = Optional.ofNullable(this.getField())
                                     .map(field -> Location.of(Location.of(parentLocation, this.id), field))
                                     .orElse(Location.of(parentLocation, this.id));
-        return this.renderNode(FormElementNode.builder()
+        return this.renderNode(renderingProcessor,
+                               FormElementNode.builder()
                                               .field(this.getField())
                                               .contextId(context.getId(location))
                                               .label(this.textResolver.apply(this.label, location))
@@ -67,7 +69,7 @@ public abstract class AbstractFormElementImpl<FE extends FormElement<?>> impleme
                        .orElseGet(this.parentDataContext::get);
     }
 
-    protected abstract FormElementNode renderNode(FormElementNode node, Location location);
+    protected abstract FormElementNode renderNode(RenderingProcessor renderingProcessor, FormElementNode node, Location location);
 
     private String getField()
     {

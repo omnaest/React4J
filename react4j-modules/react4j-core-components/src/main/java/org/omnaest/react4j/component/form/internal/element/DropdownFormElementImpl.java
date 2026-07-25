@@ -16,6 +16,7 @@ import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.context.data.DataContext;
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.i18n.I18nText;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 import org.omnaest.utils.ConsumerUtils;
@@ -35,7 +36,7 @@ public class DropdownFormElementImpl extends AbstractFormElementImpl<DropDownFor
     }
 
     @Override
-    protected FormElementNode renderNode(FormElementNode node, Location location)
+    protected FormElementNode renderNode(RenderingProcessor renderingProcessor, FormElementNode node, Location location)
     {
         DropDownData data = this.data.build();
         return node.toBuilder()

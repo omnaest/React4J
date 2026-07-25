@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.handler.EventHandlerService;
+import org.omnaest.react4j.service.internal.handler.HandlerResolver;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler.MappedData;
 import org.omnaest.react4j.service.internal.handler.domain.DataWithContext;
@@ -37,6 +38,7 @@ import org.omnaest.react4j.service.internal.handler.domain.TargetNode;
 import org.omnaest.react4j.service.internal.rerenderer.RerenderingService;
 import org.omnaest.utils.element.transactional.TransactionalElement;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -46,6 +48,17 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
 
     @Autowired
     protected RerenderingService                                      rerenderingService;
+
+    // plan-78 Slice 1: FALLBACK ONLY, consulted by handleEvent when the active handler map misses (below). Not
+    // autowired in EventHandlerServiceImplTest's manual construction, so every use is null-guarded. @Lazy
+    // breaks the real bean-creation cycle this fallback dependency introduces (EventHandlerServiceImpl ->
+    // HandlerResolver -> RootNodeResolverService(ReactUIServiceImpl) -> EventHandlerRegistry(=this bean)) -
+    // Spring Boot's `allow-circular-references` defaults to false, so plain @Autowired field injection alone
+    // does not resolve it; a lazily-resolved proxy here does, and is semantically apt since this field is only
+    // ever consulted on the rare map-miss fallback path.
+    @Autowired
+    @Lazy
+    protected HandlerResolver                                         handlerResolver;
 
     private TransactionalElement<Map<Target, List<DataEventHandler>>> createTransactionalHandlerMap()
     {
@@ -107,7 +120,11 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
                                                                  .flatMap(handlers -> handlers.stream()
                                                                                               .map(handler -> handler.invoke(data.orElse(Data.newInstance()),
                                                                                                                              internalData.orElse(Data.newInstance())))
-                                                                                              .reduce((d1, d2) -> d1.mergeWith(d2)));
+                                                                                              .reduce((d1, d2) -> d1.mergeWith(d2)))
+                                                                 // plan-78 Slice 1: FALLBACK ONLY when the active map misses - resolve by
+                                                                 // descending the component tree instead. Does not change the map lookup above,
+                                                                 // registerDataEventHandler, or the plan-12 two-pass ordering.
+                                                                 .or(() -> this.resolveViaDescentFallback(target, data, internalData));
 
         Optional<Data> renderData = mappedData.isPresent() ? mappedData.map(DataEventHandler.MappedData::getData) : data;
 
@@ -124,6 +141,18 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
                                                                                                         responseData.getInternalData()
                                                                                                                     .toMap()))
                                                                 .setTargetNode(rerenderedNode.orElse(null)));
+    }
+
+    /**
+     * plan-78 Slice 1: FALLBACK ONLY, consulted from {@link #handleEvent(EventBody)} above when the active
+     * handler map misses. Null-guarded because {@link #handlerResolver} is never set in
+     * {@code EventHandlerServiceImplTest}'s manual (non-Spring) construction.
+     */
+    private Optional<DataEventHandler.MappedData> resolveViaDescentFallback(Optional<Target> target, Optional<Data> data, Optional<Data> internalData)
+    {
+        return Optional.ofNullable(this.handlerResolver)
+                       .flatMap(resolver -> target.flatMap(resolvedTarget -> resolver.resolve(resolvedTarget, data)))
+                       .map(handler -> handler.invoke(data.orElse(Data.newInstance()), internalData.orElse(Data.newInstance())));
     }
 
     @Override

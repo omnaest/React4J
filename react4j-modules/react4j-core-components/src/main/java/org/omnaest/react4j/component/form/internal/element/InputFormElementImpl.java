@@ -12,10 +12,13 @@ import org.omnaest.react4j.domain.context.Context;
 import org.omnaest.react4j.domain.context.data.DataContext;
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.i18n.I18nText;
+import org.omnaest.react4j.domain.rendering.components.HandlerEmitter;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler.MappedData;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
+import org.omnaest.react4j.service.internal.nodes.handler.Handler;
 import org.omnaest.react4j.service.internal.nodes.handler.ServerHandler;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 
@@ -46,7 +49,7 @@ public class InputFormElementImpl extends AbstractFormElementImpl<InputFormEleme
     }
 
     @Override
-    protected FormElementNode renderNode(FormElementNode node, Location location)
+    protected FormElementNode renderNode(RenderingProcessor renderingProcessor, FormElementNode node, Location location)
     {
         InputData inputData = this.data.build();
 
@@ -61,8 +64,12 @@ public class InputFormElementImpl extends AbstractFormElementImpl<InputFormEleme
             Context dataContext = this.getEffectiveContext();
             Location enterLocation = location.and("input");
             Target target = Target.from(enterLocation);
-            this.eventHandlerRegistry.registerDataEventHandler(target, this.eventHandler);
-            inputNodeBuilder.submitOnEnter(new ServerHandler(target).setContextId(dataContext.getId(location)));
+            Handler submitOnEnter = this.emitSubmitOnEnterHandler(renderingProcessor, target);
+            if (submitOnEnter instanceof ServerHandler)
+            {
+                ((ServerHandler) submitOnEnter).setContextId(dataContext.getId(location));
+            }
+            inputNodeBuilder.submitOnEnter(submitOnEnter);
         }
 
         return node.toBuilder()
@@ -107,6 +114,31 @@ public class InputFormElementImpl extends AbstractFormElementImpl<InputFormEleme
         private InputType inputType = InputType.TEXT;
 
         private I18nText  placeholder;
+    }
+
+    /**
+     * plan-78 Cliff C1-A: obtains the {@code submitOnEnter} node-DTO {@link Handler} through the
+     * {@link RenderingProcessor}'s {@link HandlerEmitter} instead of the previous direct pair -
+     * {@code this.eventHandlerRegistry.registerDataEventHandler(...)} then {@code new ServerHandler(target)}.
+     * Null-tolerant, mirroring {@code ButtonFormElementImpl.emitOnClickHandler(...)}: a {@code null} processor
+     * (a raw Mockito mock) falls back to registering directly against the field-held
+     * {@link #eventHandlerRegistry}, preserving pre-conversion behavior for callers that supply no real
+     * {@link HandlerEmitter}. Only called from within the {@code this.eventHandler != null} gate at the call
+     * site, so {@link #eventHandler} stays fully opt-in.
+     *
+     * @param renderingProcessor
+     * @param target
+     * @return
+     */
+    private Handler emitSubmitOnEnterHandler(RenderingProcessor renderingProcessor, Target target)
+    {
+        HandlerEmitter handlerEmitter = renderingProcessor != null ? renderingProcessor.handlers() : null;
+        if (handlerEmitter != null)
+        {
+            return handlerEmitter.emitDataEventHandler(target, this.eventHandler);
+        }
+        this.eventHandlerRegistry.registerDataEventHandler(target, this.eventHandler);
+        return this.eventHandler != null ? new ServerHandler(target) : null;
     }
 
 }

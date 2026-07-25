@@ -15,8 +15,11 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.domain;
 
+import java.util.stream.Stream;
+
 import org.omnaest.react4j.domain.ReactUI;
 import org.omnaest.react4j.domain.context.data.source.registry.DataSourceRegistry;
+import org.omnaest.react4j.domain.rendering.RenderableUIComponent;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.nodes.NodeHierarchy;
@@ -30,5 +33,16 @@ public interface ReactUIInternal extends ReactUI
     public ReactUIInternal collectEventHandlers(EventHandlerRegistry registry);
 
     public ReactUIInternal collectDataSources(DataSourceRegistry registry);
+
+    /**
+     * plan-78 Slice 1: exposes this root's top-level {@link RenderableUIComponent}s (the {@code navigationBar}
+     * if any, followed by the page {@code components}) so a
+     * {@link org.omnaest.react4j.service.internal.handler.HandlerResolver} can start its descent from the same
+     * roots {@code ReactUIServiceImpl.registerEventHandlers} already uses - mirroring the same
+     * {@code instanceof RenderableUIComponent} filter used throughout {@code ReactUIServiceImpl}.
+     *
+     * @return
+     */
+    public Stream<RenderableUIComponent<?>> getRootComponents();
 
 }

@@ -326,7 +326,17 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
 
             private RenderingProcessor createRenderingProcessor()
             {
-                return new RenderingProcessorImpl(this.componentFactory());
+                return new RenderingProcessorImpl(this.componentFactory(), ReactUIServiceImpl.this.eventHandlerRegistry);
+            }
+
+            @Override
+            public Stream<RenderableUIComponent<?>> getRootComponents()
+            {
+                FilterMapper<UIComponent<?>, RenderableUIComponent<?>> filterMapper = StreamUtils.filterMapper(iComponent -> iComponent instanceof RenderableUIComponent,
+                                                                                                               iComponent -> (RenderableUIComponent<?>) iComponent);
+                return Stream.concat(Stream.of(this.navigationBar), this.components.stream())
+                             .filter(filterMapper)
+                             .map(filterMapper);
             }
 
             @Override
@@ -370,6 +380,12 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                       .collectDataSources(this.createDataSourceRegistry());
 
         return nodeRenderingProcessor.render(this.resolveNodeHierarchy(contextPath), nodeRenderType);
+    }
+
+    @Override
+    public Optional<ReactUIInternal> resolveRootInternal(String contextPath)
+    {
+        return this.uiManager.get(contextPath);
     }
 
     private DataSourceRegistry createDataSourceRegistry()

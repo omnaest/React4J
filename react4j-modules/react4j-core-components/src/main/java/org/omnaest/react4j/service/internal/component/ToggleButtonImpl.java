@@ -24,6 +24,7 @@ import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.components.HandlerEmitter;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
@@ -31,6 +32,7 @@ import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.ToggleButtonNode;
+import org.omnaest.react4j.service.internal.nodes.handler.Handler;
 import org.omnaest.react4j.service.internal.nodes.handler.ServerHandler;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 
@@ -106,7 +108,7 @@ public class ToggleButtonImpl extends AbstractUIComponent<ToggleButton> implemen
                                                               .setPressed(ToggleButtonImpl.this.pressed);
                 if (ToggleButtonImpl.this.eventHandler != null)
                 {
-                    node.setOnChange(new ServerHandler(Target.from(location)));
+                    node.setOnChange(ToggleButtonImpl.this.emitOnChangeHandler(renderingProcessor, Target.from(location)));
                 }
                 return node;
             }
@@ -138,5 +140,25 @@ public class ToggleButtonImpl extends AbstractUIComponent<ToggleButton> implemen
     public UIComponentProvider<ToggleButton> asTemplateProvider()
     {
         return () -> new ToggleButtonImpl(this.context, this.text, this.style, this.pressed, this.eventHandler);
+    }
+
+    /**
+     * plan-78 Cliff C1-A: obtains the {@code onChange} node-DTO {@link Handler} through the
+     * {@link RenderingProcessor}'s {@link HandlerEmitter} instead of constructing
+     * {@code new ServerHandler(target)} directly - the emitter registers the handler AND returns the node
+     * DTO in one call. Null-tolerant: a raw Mockito {@code mock(RenderingProcessor.class)} returns
+     * {@code null} for {@link RenderingProcessor#handlers()} (Mockito stubs default methods too, unlike a
+     * hand-rolled anonymous subclass), so this falls back to the pre-Slice-2 behavior of building the
+     * {@link ServerHandler} directly - keeping the existing {@code *ImplTest} suite green without requiring
+     * every test to stub a real {@link HandlerEmitter}.
+     *
+     * @param renderingProcessor
+     * @param target
+     * @return
+     */
+    private Handler emitOnChangeHandler(RenderingProcessor renderingProcessor, Target target)
+    {
+        HandlerEmitter handlerEmitter = renderingProcessor != null ? renderingProcessor.handlers() : null;
+        return handlerEmitter != null ? handlerEmitter.emitEventHandler(target, this.eventHandler) : new ServerHandler(target);
     }
 }

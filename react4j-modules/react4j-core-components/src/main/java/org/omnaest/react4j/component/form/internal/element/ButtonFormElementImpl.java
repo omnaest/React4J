@@ -21,10 +21,13 @@ import org.omnaest.react4j.domain.context.data.DataContext;
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.react4j.domain.i18n.I18nText;
+import org.omnaest.react4j.domain.rendering.components.HandlerEmitter;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler.MappedData;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
+import org.omnaest.react4j.service.internal.nodes.handler.Handler;
 import org.omnaest.react4j.service.internal.nodes.handler.ServerHandler;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 import org.omnaest.utils.FunctionUtils;
@@ -51,12 +54,16 @@ public class ButtonFormElementImpl extends AbstractFormElementImpl<ButtonFormEle
     }
 
     @Override
-    protected FormElementNode renderNode(FormElementNode node, Location location)
+    protected FormElementNode renderNode(RenderingProcessor renderingProcessor, FormElementNode node, Location location)
     {
         Context dataContext = this.getEffectiveContext();
         Location buttonLocation = location.and("button[" + this.index + "]");
         Target target = Target.from(buttonLocation);
-        this.eventHandlerRegistry.registerDataEventHandler(target, this.eventHandler);
+        Handler onClick = this.emitOnClickHandler(renderingProcessor, target);
+        if (onClick instanceof ServerHandler)
+        {
+            ((ServerHandler) onClick).setContextId(dataContext.getId(location));
+        }
         return node.toBuilder()
                    .type("BUTTON")
                    .button(FormButtonNode.builder()
@@ -64,7 +71,7 @@ public class ButtonFormElementImpl extends AbstractFormElementImpl<ButtonFormEle
                                          .outline(this.outline)
                                          .size(this.size)
                                          .variant(this.variant)
-                                         .onClick(new ServerHandler(target).setContextId(dataContext.getId(location)))
+                                         .onClick(onClick)
                                          .build())
                    .disabled(this.disabled)
                    .build();
@@ -231,6 +238,30 @@ public class ButtonFormElementImpl extends AbstractFormElementImpl<ButtonFormEle
     public ButtonFormElement withOutline()
     {
         return this.withOutline(true);
+    }
+
+    /**
+     * plan-78 Cliff C1-A: obtains the {@code onClick} node-DTO {@link Handler} through the
+     * {@link RenderingProcessor}'s {@link HandlerEmitter} instead of the previous direct pair -
+     * {@code this.eventHandlerRegistry.registerDataEventHandler(...)} then {@code new ServerHandler(target)}.
+     * Null-tolerant, mirroring {@code ButtonImpl.emitOnClickHandler(...)}: a {@code null} processor (the
+     * {@code render(Location)} compatibility overload, or a raw Mockito mock) falls back to registering
+     * directly against the field-held {@link #eventHandlerRegistry}, preserving pre-Slice-2 behavior for
+     * callers that supply no real {@link HandlerEmitter}.
+     *
+     * @param renderingProcessor
+     * @param target
+     * @return
+     */
+    private Handler emitOnClickHandler(RenderingProcessor renderingProcessor, Target target)
+    {
+        HandlerEmitter handlerEmitter = renderingProcessor != null ? renderingProcessor.handlers() : null;
+        if (handlerEmitter != null)
+        {
+            return handlerEmitter.emitDataEventHandler(target, this.eventHandler);
+        }
+        this.eventHandlerRegistry.registerDataEventHandler(target, this.eventHandler);
+        return this.eventHandler != null ? new ServerHandler(target) : null;
     }
 
 }

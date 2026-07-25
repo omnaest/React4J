@@ -15,12 +15,15 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.nodes.service;
 
+import java.util.Optional;
+
 import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
+import org.omnaest.react4j.service.internal.domain.ReactUIInternal;
 import org.omnaest.react4j.service.internal.nodes.NodeHierarchy;
 
 /**
  * Resolves a node
- * 
+ *
  * @author omnaest
  */
 public interface RootNodeResolverService
@@ -30,4 +33,15 @@ public interface RootNodeResolverService
     public NodeHierarchy resolveDefaultNodeHierarchy();
 
     public String renderDefaultNodeHierarchyAsStatic(NodeRenderType nodeRenderType);
+
+    /**
+     * plan-78 Slice 1: exposes the (cached, or freshly rebuilt - see plan-78 F1) {@link ReactUIInternal} for a
+     * context path, so a {@link org.omnaest.react4j.service.internal.handler.HandlerResolver} can descend its
+     * component tree directly instead of relying on a side-effect-populated lookup map. Empty when no UI has
+     * been registered for the given context path.
+     *
+     * @param contextPath
+     * @return
+     */
+    public Optional<ReactUIInternal> resolveRootInternal(String contextPath);
 }

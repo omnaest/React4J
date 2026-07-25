@@ -15,10 +15,13 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.component;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -32,9 +35,12 @@ import org.junit.jupiter.api.Test;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer.EventHandlerRegistrationSupport;
+import org.omnaest.react4j.domain.rendering.components.HandlerEmitter;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
+import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.ButtonNode;
+import org.omnaest.react4j.service.internal.nodes.handler.Handler;
 import org.omnaest.react4j.service.internal.nodes.handler.ServerHandler;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 
@@ -77,6 +83,39 @@ public class ButtonImplTest
         ButtonNode node1 = (ButtonNode) buttonWithoutHandler.asRenderer()
                                                             .render(mock(RenderingProcessor.class), location1, Optional.empty());
         assertNull(node1.getOnClick());
+    }
+
+    /**
+     * AC-2b (plan-78 Slice 2, Cliff C1-A): the {@code onClick} node DTO is produced by the
+     * {@link RenderingProcessor}'s {@link HandlerEmitter}, not by {@code new ServerHandler(...)} constructed
+     * directly inside {@code render(...)} - and the {@link Handler} the emitter returns is embedded verbatim,
+     * carrying the correct {@link Target} derived from the render {@link Location}.
+     */
+    @Test
+    public void testButtonObtainsOnClickFromRenderingProcessorHandlerEmitterWithCorrectTarget()
+    {
+        ComponentContext context = this.newContext();
+
+        ButtonImpl button = new ButtonImpl(context);
+        EventHandler handler = mock(EventHandler.class);
+        button.onClick(handler);
+
+        Location location = mock(Location.class);
+        when(location.get()).thenReturn(Arrays.asList("root", button.getId()));
+        Target expectedTarget = Target.from(location);
+
+        RenderingProcessor renderingProcessor = mock(RenderingProcessor.class);
+        HandlerEmitter handlerEmitter = mock(HandlerEmitter.class);
+        ServerHandler emittedHandler = new ServerHandler(expectedTarget);
+        when(renderingProcessor.handlers()).thenReturn(handlerEmitter);
+        when(handlerEmitter.emitEventHandler(eq(expectedTarget), eq(handler))).thenReturn(emittedHandler);
+
+        ButtonNode node = (ButtonNode) button.asRenderer()
+                                             .render(renderingProcessor, location, Optional.empty());
+
+        verify(handlerEmitter, times(1)).emitEventHandler(expectedTarget, handler);
+        assertSame(emittedHandler, node.getOnClick());
+        assertEquals(expectedTarget, ((ServerHandler) node.getOnClick()).getTarget());
     }
 
     @Test

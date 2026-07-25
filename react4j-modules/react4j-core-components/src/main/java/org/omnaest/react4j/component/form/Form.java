@@ -29,6 +29,7 @@ import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.context.data.Value;
 import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.document.Document.Field;
+import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.utils.functional.TriFunction;
 
 import lombok.AccessLevel;
@@ -71,7 +72,32 @@ public interface Form extends UIComponent<Form>
 
         public FE withColumnSpan(int columnSpan);
 
-        public FormElementNode render(Location parentLocation);
+        /**
+         * plan-78 Cliff C1-A: the {@link RenderingProcessor}-aware render entry point, threaded down from
+         * {@code FormRendererImpl.render(...)} (which already receives it) so a {@link FormElement} can reach
+         * the {@link org.omnaest.react4j.domain.rendering.components.HandlerEmitter} instead of registering
+         * against an {@code EventHandlerRegistry} field baked in at construction time.
+         *
+         * @param renderingProcessor
+         * @param parentLocation
+         * @return
+         */
+        public FormElementNode render(RenderingProcessor renderingProcessor, Location parentLocation);
+
+        /**
+         * Compatibility overload predating plan-78 Cliff C1-A - renders with no {@link RenderingProcessor}
+         * (mirrors {@link RenderingProcessor}'s own no-{@code Optional<Data>} overload). Every
+         * {@link FormElement} implementation must treat a {@code null} processor the same as a
+         * {@link RenderingProcessor} whose {@code handlers()} returns no real
+         * {@link org.omnaest.react4j.domain.rendering.components.HandlerEmitter}.
+         *
+         * @param parentLocation
+         * @return
+         */
+        public default FormElementNode render(Location parentLocation)
+        {
+            return this.render(null, parentLocation);
+        }
 
         public static enum ColumnSpan
         {

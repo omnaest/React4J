@@ -28,8 +28,10 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.RenderableUIComponent;
 import org.omnaest.react4j.domain.rendering.RenderableUIComponent.UIComponentWrapper;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
+import org.omnaest.react4j.domain.rendering.components.HandlerEmitter;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.nodes.context.UIContextDataNode;
 import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.SetUtils;
@@ -41,10 +43,18 @@ import org.omnaest.utils.stream.FilterMapper;
 public class RenderingProcessorImpl implements RenderingProcessor
 {
     private UIComponentFactory componentFactory;
+    private HandlerEmitter     handlerEmitter;
 
-    public RenderingProcessorImpl(UIComponentFactory componentFactory)
+    public RenderingProcessorImpl(UIComponentFactory componentFactory, EventHandlerRegistry eventHandlerRegistry)
     {
         this.componentFactory = componentFactory;
+        this.handlerEmitter = new HandlerEmitterImpl(eventHandlerRegistry);
+    }
+
+    @Override
+    public HandlerEmitter handlers()
+    {
+        return this.handlerEmitter;
     }
 
     @Override
@@ -124,6 +134,15 @@ public class RenderingProcessorImpl implements RenderingProcessor
             public Node process(UIComponent<?> component, Location parentLocation, Optional<Data> data)
             {
                 return RenderingProcessorImpl.this.process(component, parentLocation, data, currentIgnoredComponents);
+            }
+
+            @Override
+            public HandlerEmitter handlers()
+            {
+                // plan-78 Cliff C1-A: every component's render(...) receives THIS filtering wrapper, never
+                // RenderingProcessorImpl directly - without this override handlers() would silently fall back
+                // to the interface's no-op default for every rendered component.
+                return RenderingProcessorImpl.this.handlers();
             }
         };
     }
