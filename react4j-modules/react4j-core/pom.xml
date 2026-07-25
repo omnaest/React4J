@@ -70,6 +70,48 @@
             <version>0.0.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <!-- CommonsTest wires junit-jupiter-engine directly (not the junit-jupiter aggregator), so params is not
+                 transitive; needed for @ParameterizedTest in NodeRendererCompletenessMetaTest (plan-74 Goal-4 C4 meta-test). -->
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>3.2.3</version>
+            <scope>test</scope>
+            <exclusions>
+                <!-- the project already provides its Slf4j binding via log4j-slf4j2-impl (see CommonsLog); spring-boot-starter-logging
+                     pulls in log4j-to-slf4j, and Log4j2 refuses to initialize when both bridges are on the classpath at once. -->
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <!-- test-only: a Form's DataContext requires a RepositoryProvider bean (see ContextFactoryImpl); this supplies
+                 the zero-config in-memory one via @EnableReactUIInMemoryRepository for FileUploadEndToEndTest. No circular
+                 dependency: react4j-data-inmemory depends only on react4j-data (already a compile dependency here), not on react4j-core. -->
+            <groupId>org.omnaest.react</groupId>
+            <artifactId>react4j-data-inmemory</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <!-- test-only: this module deliberately depends on spring-web/spring-webmvc rather than the full
+                 spring-boot-starter-web, so it never pulls jackson-datatype-jdk8 (normally supplied transitively by
+                 spring-boot-starter-json in a real consuming app). FileUploadEndToEndTest's minimal @SpringBootApplication
+                 needs it directly to serialize NodeHierarchy's Optional<UIContextDataNode> field. Version pinned to match
+                 jackson-core/jackson-databind (2.16.2) already resolved on this module's classpath. -->
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+            <version>2.16.2</version>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.omnaest.react</groupId>

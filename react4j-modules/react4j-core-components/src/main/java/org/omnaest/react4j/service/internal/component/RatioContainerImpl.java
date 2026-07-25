@@ -27,14 +27,10 @@ import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
-import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
-import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
-import org.omnaest.react4j.service.internal.nodes.JumbotronNode;
 import org.omnaest.react4j.service.internal.nodes.RatioContainerNode;
 import org.omnaest.utils.EnumUtils;
-import org.omnaest.utils.template.TemplateUtils;
 
 public class RatioContainerImpl extends AbstractUIComponentAndContentHolder<RatioContainer> implements RatioContainer
 {
@@ -76,18 +72,13 @@ public class RatioContainerImpl extends AbstractUIComponentAndContentHolder<Rati
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(JumbotronNode.class, NodeRenderType.HTML, new NodeRenderer<JumbotronNode>() {
-                    @Override
-                    public String render(JumbotronNode node, NodeRenderingProcessor nodeRenderingProcessor)
-                    {
-                        return TemplateUtils.builder()
-                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/jumbotron.html")
-                                            .add("title", nodeRenderingProcessor.render(node.getTitle()))
-                                            .add("subTitle", nodeRenderingProcessor.render(node.getSubTitle()))
-                                            .add("content", nodeRenderingProcessor.render(node.getContent()))
-                                            .build()
-                                            .get();
-                    }
+                registry.register(RatioContainerNode.class, NodeRenderType.HTML, (node, nodeRenderingProcessor) ->
+                {
+                    String ratioClass = Optional.ofNullable(node.getRatio())
+                                                .map(ratio -> ratio.name()
+                                                                   .replaceFirst("^_", ""))
+                                                .orElse("16x9");
+                    return "<div class=\"ratio ratio-" + ratioClass + "\">" + nodeRenderingProcessor.render(node.getContent()) + "</div>";
                 });
             }
 

@@ -25,6 +25,7 @@ import org.omnaest.react4j.component.form.internal.data.FormData;
 import org.omnaest.react4j.component.form.internal.element.ButtonFormElementImpl;
 import org.omnaest.react4j.component.form.internal.element.CheckboxFormElementImpl;
 import org.omnaest.react4j.component.form.internal.element.DropdownFormElementImpl;
+import org.omnaest.react4j.component.form.internal.element.FileUploadFormElementImpl;
 import org.omnaest.react4j.component.form.internal.element.InputFormElementImpl;
 import org.omnaest.react4j.component.form.internal.element.RangeFormElementImpl;
 import org.omnaest.react4j.component.form.internal.renderer.FormRendererImpl;
@@ -41,6 +42,7 @@ import org.omnaest.react4j.service.internal.component.uicontext.UIContextManager
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler.MappedData;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
+import org.omnaest.react4j.service.internal.upload.UploadChannelRegistry;
 import org.omnaest.utils.element.cached.CachedElement;
 
 public class FormImpl extends AbstractUIComponent<Form> implements Form
@@ -70,6 +72,7 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
         LocalizedTextResolverService textResolver = FormImpl.this.getTextResolver();
         Function<String, I18nText> i18nTextMapper = FormImpl.this.i18nTextMapper();
         EventHandlerRegistry eventHandlerRegistry = this.getEventHandlerRegistry();
+        UploadChannelRegistry uploadChannelRegistry = this.getUploadChannelRegistry();
         UIContextManager uiContextManager = this.uiContextManager;
         CachedElement<? extends DataContext> dataContext = this.dataContextProvider;
         int numberOfFormElements = this.data.build()
@@ -109,6 +112,13 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             {
                 return new CheckboxFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext,
                                                    uiContextManager);
+            }
+
+            @Override
+            public FileUploadFormElement newFileUpload()
+            {
+                return new FileUploadFormElementImpl(FormImpl.this::newComponentId, textResolver, i18nTextMapper, eventHandlerRegistry, dataContext,
+                                                     uploadChannelRegistry);
             }
 
         });
@@ -174,6 +184,17 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
             CheckboxFormElement checkbox = factory.newCheckbox();
             checkboxConsumer.accept(checkbox);
             return checkbox;
+        });
+    }
+
+    @Override
+    public Form addFileUpload(Consumer<FileUploadFormElement> fileUploadConsumer)
+    {
+        return this.add(factory ->
+        {
+            FileUploadFormElement fileUpload = factory.newFileUpload();
+            fileUploadConsumer.accept(fileUpload);
+            return fileUpload;
         });
     }
 

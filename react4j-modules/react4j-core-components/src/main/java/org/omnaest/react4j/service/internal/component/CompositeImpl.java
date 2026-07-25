@@ -29,10 +29,12 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.CompositeNode;
+import org.omnaest.utils.MapperUtils;
 
 public class CompositeImpl extends AbstractUIComponentWithSubComponents<Composite> implements Composite
 {
@@ -63,13 +65,22 @@ public class CompositeImpl extends AbstractUIComponentWithSubComponents<Composit
             public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new CompositeNode().setElements(CompositeImpl.this.components.stream()
-                                                                                    .map(component -> renderingProcessor.process(component, location))
+                                                                                    .map(MapperUtils.withIntCounter())
+                                                                                    .map(componentAndIndex -> renderingProcessor.process(componentAndIndex.getFirst(),
+                                                                                                                                         ChildLocationSupport.indexedChildLocation(location,
+                                                                                                                                                                                   componentAndIndex.getSecond())))
                                                                                     .collect(Collectors.toList()));
             }
 
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
+                registry.register(CompositeNode.class, NodeRenderType.HTML,
+                                  (node, nodeRenderingProcessor) -> "<div>" + node.getElements()
+                                                                                  .stream()
+                                                                                  .map(nodeRenderingProcessor::render)
+                                                                                  .collect(Collectors.joining())
+                                                                    + "</div>");
             }
 
             @Override
@@ -81,7 +92,10 @@ public class CompositeImpl extends AbstractUIComponentWithSubComponents<Composit
             public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return CompositeImpl.this.components.stream()
-                                                    .map(component -> ParentLocationAndComponent.of(parentLocation, component));
+                                                    .map(MapperUtils.withIntCounter())
+                                                    .map(componentAndIndex -> ParentLocationAndComponent.of(ChildLocationSupport.indexedChildLocation(parentLocation,
+                                                                                                                                                      componentAndIndex.getSecond()),
+                                                                                                            componentAndIndex.getFirst()));
             }
 
         };

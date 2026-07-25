@@ -1,6 +1,7 @@
 
 import React from "react";
-import { Node } from "../Renderer";
+import { Node, RenderingSupport } from "../Renderer";
+import { RenderingSupportContext } from "../support/RenderingSupportContext";
 import { Handler, HandlerFactory } from "../handler/Handler";
 import { I18nRenderer, I18nTextValue } from "./I18nText";
 import { Button as BSButton } from "react-bootstrap";
@@ -17,6 +18,7 @@ export interface Props {
 
 export class Button extends React.Component<Props, {}> {
     public static TYPE: string = "BUTTON";
+    public static contextType = RenderingSupportContext;
 
     private onClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         event.preventDefault();
@@ -24,11 +26,12 @@ export class Button extends React.Component<Props, {}> {
     };
 
     public render(): JSX.Element {
+        const renderingSupport = this.context as RenderingSupport | undefined;
         return (
             <BSButton
                 variant={(this.props.node.style ? " btn-" + this.props.node.style : "")}
                 //  className={"btn btn-md donate-button" + (this.props.node.style ? " btn-" + this.props.node.style : "")}
-                onClick={HandlerFactory.onClick(this.props.node.onClick as Handler)}
+                onClick={this.props.node.onClick ? HandlerFactory.onClick(this.props.node.onClick as Handler, renderingSupport?.uiContextAccessor, renderingSupport?.nodeContextAccessor) : undefined}
             >{I18nRenderer.render(this.props.node.name)}</BSButton>
         );
     }

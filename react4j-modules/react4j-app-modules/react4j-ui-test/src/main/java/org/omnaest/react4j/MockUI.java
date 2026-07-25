@@ -35,11 +35,19 @@ import org.omnaest.react4j.domain.context.document.Document;
 import org.omnaest.react4j.domain.context.document.Document.Field;
 import org.omnaest.react4j.service.ReactUIService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 
+/**
+ * {@code @Profile("!treeTableFullWindow")}: kept mutually exclusive with {@link TreeTableFullWindowUI}
+ * ({@code @Profile("treeTableFullWindow")}), mirroring {@link ComponentShowcaseUI}'s own profile split - see
+ * {@link TreeTableFullWindowUI}'s class javadoc for why. Content here is already dead code with respect to the
+ * served app even outside that profile (see {@link ComponentShowcaseUI}'s class javadoc).
+ */
 @Service
+@Profile("!treeTableFullWindow")
 public class MockUI
 {
     @Autowired

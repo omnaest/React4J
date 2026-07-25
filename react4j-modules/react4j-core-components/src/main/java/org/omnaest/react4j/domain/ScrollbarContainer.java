@@ -23,6 +23,14 @@ public interface ScrollbarContainer extends UIComponentWithContent<ScrollbarCont
 
     public ScrollbarContainer withHorizontalBox(HorizontalBoxMode horizontalBoxMode);
 
+    /**
+     * Opt-in: enables auto-scrolling the container's viewport to the bottom whenever its content updates. Default is
+     * disabled (off), so existing usages are unaffected unless this method is called.
+     *
+     * @return this
+     */
+    public ScrollbarContainer scrollToBottomOnUpdate();
+
     public static enum VerticalBoxMode
     {
         FULL_VIEWPORT_HEIGHT, HALF_VIEWPORT_HEIGHT, FULL_VIEWPORT_HEIGHT_WITHOUT_HEADER, FULL_PARENT_HEIGHT, DEFAULT_HEIGHT

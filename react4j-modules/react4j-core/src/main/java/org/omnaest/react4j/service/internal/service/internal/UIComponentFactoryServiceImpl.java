@@ -10,10 +10,19 @@ import org.omnaest.react4j.component.listview.internal.ListViewImpl;
 import org.omnaest.react4j.component.master.MasterDetails;
 import org.omnaest.react4j.component.master.internal.MasterDetailsImpl;
 import org.omnaest.react4j.component.table.Table;
+import org.omnaest.react4j.component.treetable.TreeTable;
+import org.omnaest.react4j.domain.Accordion;
+import org.omnaest.react4j.domain.Alert;
+import org.omnaest.react4j.domain.Badge;
 import org.omnaest.react4j.domain.BlockQuote;
+import org.omnaest.react4j.domain.Breadcrumb;
 import org.omnaest.react4j.domain.Button;
 import org.omnaest.react4j.domain.Card;
+import org.omnaest.react4j.domain.Carousel;
+import org.omnaest.react4j.domain.Collapse;
 import org.omnaest.react4j.domain.Composite;
+import org.omnaest.react4j.domain.Dropdown;
+import org.omnaest.react4j.domain.Figure;
 import org.omnaest.react4j.domain.GridContainer;
 import org.omnaest.react4j.domain.Heading;
 import org.omnaest.react4j.domain.IFrame;
@@ -23,30 +32,49 @@ import org.omnaest.react4j.domain.ImageIndex;
 import org.omnaest.react4j.domain.IntervalRerenderingContainer;
 import org.omnaest.react4j.domain.Jumbotron;
 import org.omnaest.react4j.domain.LineBreak;
+import org.omnaest.react4j.domain.Modal;
 import org.omnaest.react4j.domain.NativeHtml;
 import org.omnaest.react4j.domain.NavigationBar;
+import org.omnaest.react4j.domain.Offcanvas;
 import org.omnaest.react4j.domain.PaddingContainer;
+import org.omnaest.react4j.domain.Pagination;
 import org.omnaest.react4j.domain.Paragraph;
+import org.omnaest.react4j.domain.Placeholder;
+import org.omnaest.react4j.domain.Popover;
 import org.omnaest.react4j.domain.ProgressBar;
 import org.omnaest.react4j.domain.RatioContainer;
 import org.omnaest.react4j.domain.RerenderingContainer;
 import org.omnaest.react4j.domain.SVGContainer;
 import org.omnaest.react4j.domain.ScrollbarContainer;
 import org.omnaest.react4j.domain.SizedContainer;
+import org.omnaest.react4j.domain.Spinner;
+import org.omnaest.react4j.domain.SplitButton;
+import org.omnaest.react4j.domain.Stack;
+import org.omnaest.react4j.domain.Tabs;
 import org.omnaest.react4j.domain.Text;
 import org.omnaest.react4j.domain.TextAlignmentContainer;
 import org.omnaest.react4j.domain.Toaster;
+import org.omnaest.react4j.domain.ToggleButton;
+import org.omnaest.react4j.domain.Tooltip;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.UIComponentFactory.MarkdownComponentFactory;
 import org.omnaest.react4j.domain.UnsortedList;
 import org.omnaest.react4j.domain.VerticalContentSwitcher;
 import org.omnaest.react4j.domain.i18n.UILocale;
+import org.omnaest.react4j.service.internal.component.AccordionImpl;
+import org.omnaest.react4j.service.internal.component.AlertImpl;
+import org.omnaest.react4j.service.internal.component.BadgeImpl;
 import org.omnaest.react4j.service.internal.component.BlockQuoteImpl;
+import org.omnaest.react4j.service.internal.component.BreadcrumbImpl;
 import org.omnaest.react4j.service.internal.component.ButtonImpl;
 import org.omnaest.react4j.service.internal.component.CardImpl;
+import org.omnaest.react4j.service.internal.component.CarouselImpl;
+import org.omnaest.react4j.service.internal.component.CollapseImpl;
 import org.omnaest.react4j.service.internal.component.ComponentContext;
 import org.omnaest.react4j.service.internal.component.CompositeImpl;
+import org.omnaest.react4j.service.internal.component.DropdownImpl;
+import org.omnaest.react4j.service.internal.component.FigureImpl;
 import org.omnaest.react4j.service.internal.component.GridContainerImpl;
 import org.omnaest.react4j.service.internal.component.HeadingImpl;
 import org.omnaest.react4j.service.internal.component.IFrameImpl;
@@ -56,19 +84,30 @@ import org.omnaest.react4j.service.internal.component.ImageIndexImpl;
 import org.omnaest.react4j.service.internal.component.IntervalRerenderingContainerImpl;
 import org.omnaest.react4j.service.internal.component.JumbotronImpl;
 import org.omnaest.react4j.service.internal.component.LineBreakImpl;
+import org.omnaest.react4j.service.internal.component.ModalImpl;
 import org.omnaest.react4j.service.internal.component.NativeHtmlImpl;
 import org.omnaest.react4j.service.internal.component.NavigationBarImpl;
+import org.omnaest.react4j.service.internal.component.OffcanvasImpl;
 import org.omnaest.react4j.service.internal.component.PaddingContainerImpl;
+import org.omnaest.react4j.service.internal.component.PaginationImpl;
 import org.omnaest.react4j.service.internal.component.ParagraphImpl;
+import org.omnaest.react4j.service.internal.component.PlaceholderImpl;
+import org.omnaest.react4j.service.internal.component.PopoverImpl;
 import org.omnaest.react4j.service.internal.component.ProgressBarImpl;
 import org.omnaest.react4j.service.internal.component.RatioContainerImpl;
 import org.omnaest.react4j.service.internal.component.RerenderingContainerImpl;
 import org.omnaest.react4j.service.internal.component.SVGContainerImpl;
 import org.omnaest.react4j.service.internal.component.ScrollbarContainerImpl;
 import org.omnaest.react4j.service.internal.component.SizedContainerImpl;
+import org.omnaest.react4j.service.internal.component.SpinnerImpl;
+import org.omnaest.react4j.service.internal.component.SplitButtonImpl;
+import org.omnaest.react4j.service.internal.component.StackImpl;
+import org.omnaest.react4j.service.internal.component.TabsImpl;
 import org.omnaest.react4j.service.internal.component.TextAlignmentContainerImpl;
 import org.omnaest.react4j.service.internal.component.TextImpl;
 import org.omnaest.react4j.service.internal.component.ToasterImpl;
+import org.omnaest.react4j.service.internal.component.ToggleButtonImpl;
+import org.omnaest.react4j.service.internal.component.TooltipImpl;
 import org.omnaest.react4j.service.internal.component.UnsortedListImpl;
 import org.omnaest.react4j.service.internal.component.VerticalContentSwitcherImpl;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
@@ -78,6 +117,7 @@ import org.omnaest.react4j.service.internal.service.ContextFactory;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 import org.omnaest.react4j.service.internal.service.MarkdownService;
 import org.omnaest.react4j.service.internal.service.UIComponentFactoryService;
+import org.omnaest.react4j.service.internal.upload.UploadChannelRegistry;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.element.cached.CachedElement;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,6 +141,9 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
     protected EventHandlerRegistry            eventHandlerRegistry;
 
     @Autowired
+    protected UploadChannelRegistry           uploadChannelRegistry;
+
+    @Autowired
     protected ContextFactory                  contextFactory;
 
     @Autowired
@@ -111,7 +154,8 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
     {
         CachedElement<UIComponentFactory> factoryHolder = CachedElement.of(() -> null);
         UIComponentFactoryImpl uiComponentFactoryImpl = new UIComponentFactoryImpl(new ComponentContext(locale, this.textResolver, this.eventHandlerRegistry,
-                                                                                                        factoryHolder, this.contextFactory),
+                                                                                                        this.uploadChannelRegistry, factoryHolder,
+                                                                                                        this.contextFactory),
                                                                                    this.contentService, this.markdownService,
                                                                                    this.customUIComponentFactoryManager);
         return factoryHolder.setAndGet(uiComponentFactoryImpl);
@@ -171,6 +215,12 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         public Table newTable()
         {
             return this.newComponent(Table.class);
+        }
+
+        @Override
+        public TreeTable newTreeTable()
+        {
+            return this.newComponent(TreeTable.class);
         }
 
         @Override
@@ -421,6 +471,120 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         public ListView newListView()
         {
             return new ListViewImpl(this.context);
+        }
+
+        @Override
+        public Badge newBadge()
+        {
+            return new BadgeImpl(this.context);
+        }
+
+        @Override
+        public Spinner newSpinner()
+        {
+            return new SpinnerImpl(this.context);
+        }
+
+        @Override
+        public Placeholder newPlaceholder()
+        {
+            return new PlaceholderImpl(this.context);
+        }
+
+        @Override
+        public Alert newAlert()
+        {
+            return new AlertImpl(this.context);
+        }
+
+        @Override
+        public Breadcrumb newBreadcrumb()
+        {
+            return new BreadcrumbImpl(this.context);
+        }
+
+        @Override
+        public Pagination newPagination()
+        {
+            return new PaginationImpl(this.context);
+        }
+
+        @Override
+        public Stack newStack()
+        {
+            return new StackImpl(this.context);
+        }
+
+        @Override
+        public Figure newFigure()
+        {
+            return new FigureImpl(this.context);
+        }
+
+        @Override
+        public Tabs newTabs()
+        {
+            return new TabsImpl(this.context);
+        }
+
+        @Override
+        public Accordion newAccordion()
+        {
+            return new AccordionImpl(this.context);
+        }
+
+        @Override
+        public Modal newModal()
+        {
+            return new ModalImpl(this.context);
+        }
+
+        @Override
+        public Offcanvas newOffcanvas()
+        {
+            return new OffcanvasImpl(this.context);
+        }
+
+        @Override
+        public Tooltip newTooltip()
+        {
+            return new TooltipImpl(this.context);
+        }
+
+        @Override
+        public Popover newPopover()
+        {
+            return new PopoverImpl(this.context);
+        }
+
+        @Override
+        public Collapse newCollapse()
+        {
+            return new CollapseImpl(this.context);
+        }
+
+        @Override
+        public ToggleButton newToggleButton()
+        {
+            return new ToggleButtonImpl(this.context);
+        }
+
+        @Override
+        public Dropdown newDropdown()
+        {
+            return new DropdownImpl(this.context);
+        }
+
+        @Override
+        public SplitButton newSplitButton()
+        {
+            return new SplitButtonImpl(this.context);
+        }
+
+        @Override
+        public Carousel newCarousel()
+        {
+            return new CarouselImpl(this.context);
         }
 
     }

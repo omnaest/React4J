@@ -25,6 +25,7 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.IconNode;
@@ -65,7 +66,10 @@ public class IconImpl extends AbstractUIComponent<Icon> implements Icon
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
+                registry.register(IconNode.class, NodeRenderType.HTML, (node, nodeRenderingProcessor) -> "<i class=\"fa fa-"
+                                                                                                         + Optional.ofNullable(node.getIcon())
+                                                                                                                   .orElse("")
+                                                                                                         + "\"></i>");
             }
 
             @Override

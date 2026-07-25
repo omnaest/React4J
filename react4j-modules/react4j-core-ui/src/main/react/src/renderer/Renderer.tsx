@@ -1,4 +1,5 @@
 import React from "react";
+import ReactDOM from "react-dom";
 import { JumboTron, JumbotronNode } from "./components/JumboTron";
 import { UnorderedListNode, UnorderedList } from "./components/UnorderedList";
 import { ImageNode, Image } from "./components/Image";
@@ -14,6 +15,7 @@ import { Card, CardNode } from "./components/Card";
 import { Composite, CompositeNode } from "./components/Composite";
 import { Paragraph, ParagraphNode } from "./components/Paragraph";
 import { Table, TableNode } from "./components/Table";
+import { TreeTable, TreeTableNode } from "./components/TreeTable";
 import { Anker, AnkerNode } from "./components/Anker";
 import { VerticalContentSwitcher, VerticalContentSwitcherNode } from "./components/VerticalContentSwitcher";
 import { HomePage, HomePageNode } from "./components/HomePage";
@@ -39,6 +41,25 @@ import { RerenderingHelper } from "./support/RerenderingHelper";
 import { RenderingSupportHelper } from "./support/RenderingSupportHelper";
 import { ListView, ListViewNode } from "./components/ListView";
 import { ListViewElement, ListViewElementNode } from "./components/ListViewElement";
+import { Badge, BadgeNode } from "./components/Badge";
+import { Spinner, SpinnerNode } from "./components/Spinner";
+import { Placeholder, PlaceholderNode } from "./components/Placeholder";
+import { Alert, AlertNode } from "./components/Alert";
+import { Breadcrumb, BreadcrumbNode } from "./components/Breadcrumb";
+import { Pagination, PaginationNode } from "./components/Pagination";
+import { Stack, StackNode } from "./components/Stack";
+import { Figure, FigureNode } from "./components/Figure";
+import { Tabs, TabsNode } from "./components/Tabs";
+import { Accordion, AccordionNode } from "./components/Accordion";
+import { Modal, ModalNode } from "./components/Modal";
+import { Offcanvas, OffcanvasNode } from "./components/Offcanvas";
+import { Tooltip, TooltipNode } from "./components/Tooltip";
+import { Popover, PopoverNode } from "./components/Popover";
+import { Collapse, CollapseNode } from "./components/Collapse";
+import { ToggleButton, ToggleButtonNode } from "./components/ToggleButton";
+import { Dropdown, DropdownNode } from "./components/Dropdown";
+import { SplitButton, SplitButtonNode } from "./components/SplitButton";
+import { Carousel, CarouselNode } from "./components/Carousel";
 
 export interface Node {
     target: Target;
@@ -57,6 +78,46 @@ export interface RenderingSupport {
 
 export interface NodeContextAccessor {
     updateNode(node: Node): void;
+}
+
+/**
+ * C1 testability hook (plan-74 Goal 3a): a stable, server-derived DOM selector.
+ *
+ * A transparent, non-DOM-emitting wrapper (its own render() returns the child element
+ * unmodified, so it never introduces a wrapper <div>/layout node) that, once its subtree is
+ * mounted/updated, locates the child's real underlying host DOM element and stamps a
+ * `data-location` attribute onto it — the node's `target` Location path joined with ".".
+ * This is the ONE generalization point: every node type dispatched by Renderer.renderNode is
+ * wrapped here, so no per-component edits are needed even when a node type renders through a
+ * sub-component (e.g. react-bootstrap) that itself performs no prop spreading.
+ */
+interface LocationAttributeProps {
+    target: Target;
+    children: JSX.Element;
+}
+
+class LocationAttribute extends React.Component<LocationAttributeProps, {}> {
+    private applyDataLocationAttribute(): void {
+        // eslint-disable-next-line react/no-find-dom-node -- deliberate: the only generic way to
+        // reach the actual rendered host element of an arbitrary, already-built child subtree
+        // without adding a wrapper DOM node or touching every component (see class doc above).
+        const domNode = ReactDOM.findDOMNode(this);
+        if (domNode instanceof Element) {
+            domNode.setAttribute("data-location", (this.props.target || []).join("."));
+        }
+    }
+
+    public componentDidMount(): void {
+        this.applyDataLocationAttribute();
+    }
+
+    public componentDidUpdate(): void {
+        this.applyDataLocationAttribute();
+    }
+
+    public render(): JSX.Element {
+        return this.props.children;
+    }
 }
 
 export class Renderer {
@@ -87,7 +148,20 @@ export class Renderer {
         }
     }
 
+    /**
+     * The single render-dispatch point for every server node (C1 emission point): resolves the
+     * node-type-specific element via renderNodeElement, then wraps it with LocationAttribute so
+     * every rendered node systematically carries a `data-location` DOM attribute.
+     */
     public static renderNode(node: Node, renderingSupport?: RenderingSupport): JSX.Element {
+        const element = this.renderNodeElement(node, renderingSupport);
+        if (node && node.target) {
+            return <LocationAttribute target={node.target}>{element}</LocationAttribute>;
+        }
+        return element;
+    }
+
+    private static renderNodeElement(node: Node, renderingSupport?: RenderingSupport): JSX.Element {
         if (node) {
             if (node.type === "JUMBOTRON") {
                 return <JumboTron node={node as JumbotronNode} />;
@@ -149,6 +223,9 @@ export class Renderer {
             else if (node.type === Table.TYPE) {
                 return <Table node={node as TableNode} />
             }
+            else if (node.type === TreeTable.TYPE) {
+                return <TreeTable node={node as TreeTableNode} />
+            }
             else if (node.type === Anker.TYPE) {
                 return <Anker node={node as AnkerNode} />
             }
@@ -202,6 +279,63 @@ export class Renderer {
             }
             else if (node.type === ListViewElement.TYPE) {
                 return <ListViewElement node={node as ListViewElementNode} />
+            }
+            else if (node.type === Badge.TYPE) {
+                return <Badge node={node as BadgeNode} />
+            }
+            else if (node.type === Spinner.TYPE) {
+                return <Spinner node={node as SpinnerNode} />
+            }
+            else if (node.type === Placeholder.TYPE) {
+                return <Placeholder node={node as PlaceholderNode} />
+            }
+            else if (node.type === Alert.TYPE) {
+                return <Alert node={node as AlertNode} />
+            }
+            else if (node.type === Breadcrumb.TYPE) {
+                return <Breadcrumb node={node as BreadcrumbNode} />
+            }
+            else if (node.type === Pagination.TYPE) {
+                return <Pagination node={node as PaginationNode} />
+            }
+            else if (node.type === Stack.TYPE) {
+                return <Stack node={node as StackNode} />
+            }
+            else if (node.type === Figure.TYPE) {
+                return <Figure node={node as FigureNode} />
+            }
+            else if (node.type === Tabs.TYPE) {
+                return <Tabs node={node as TabsNode} />
+            }
+            else if (node.type === Accordion.TYPE) {
+                return <Accordion node={node as AccordionNode} />
+            }
+            else if (node.type === Modal.TYPE) {
+                return <Modal node={node as ModalNode} />
+            }
+            else if (node.type === Offcanvas.TYPE) {
+                return <Offcanvas node={node as OffcanvasNode} />
+            }
+            else if (node.type === Tooltip.TYPE) {
+                return <Tooltip node={node as TooltipNode} />
+            }
+            else if (node.type === Popover.TYPE) {
+                return <Popover node={node as PopoverNode} />
+            }
+            else if (node.type === Collapse.TYPE) {
+                return <Collapse node={node as CollapseNode} />
+            }
+            else if (node.type === ToggleButton.TYPE) {
+                return <ToggleButton node={node as ToggleButtonNode} />
+            }
+            else if (node.type === Dropdown.TYPE) {
+                return <Dropdown node={node as DropdownNode} />
+            }
+            else if (node.type === SplitButton.TYPE) {
+                return <SplitButton node={node as SplitButtonNode} />
+            }
+            else if (node.type === Carousel.TYPE) {
+                return <Carousel node={node as CarouselNode} />
             }
             else {
                 console.log("Invalid node " + node.type);

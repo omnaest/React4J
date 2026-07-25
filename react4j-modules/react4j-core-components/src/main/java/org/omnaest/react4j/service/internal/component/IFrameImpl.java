@@ -18,7 +18,6 @@ package org.omnaest.react4j.service.internal.component;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.omnaest.react4j.component.anker.internal.renderer.node.AnkerNode;
 import org.omnaest.react4j.domain.IFrame;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.context.data.Data;
@@ -28,12 +27,9 @@ import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
-import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
-import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.IFrameContainerNode;
-import org.omnaest.utils.template.TemplateUtils;
 
 public class IFrameImpl extends AbstractUIComponent<IFrame> implements IFrame
 {
@@ -76,18 +72,11 @@ public class IFrameImpl extends AbstractUIComponent<IFrame> implements IFrame
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(AnkerNode.class, NodeRenderType.HTML, new NodeRenderer<AnkerNode>() {
-                    @Override
-                    public String render(AnkerNode node, NodeRenderingProcessor nodeRenderingProcessor)
-                    {
-                        return TemplateUtils.builder()
-                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/anker.html")
-                                            .add("link", node.getLink())
-                                            .add("text", nodeRenderingProcessor.render(node.getText()))
-                                            .build()
-                                            .get();
-                    }
-                });
+                registry.register(IFrameContainerNode.class, NodeRenderType.HTML,
+                                  (node, nodeRenderingProcessor) -> "<iframe src=\"" + Optional.ofNullable(node.getSourceLink())
+                                                                                               .orElse("")
+                                                                    + "\" title=\"" + nodeRenderingProcessor.render(node.getTitle()) + "\""
+                                                                    + (node.isAllowFullScreen() ? " allowfullscreen" : "") + "></iframe>");
             }
 
             @Override

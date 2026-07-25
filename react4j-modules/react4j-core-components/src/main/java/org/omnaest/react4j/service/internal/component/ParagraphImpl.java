@@ -47,6 +47,7 @@ import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.ParagraphNode;
 import org.omnaest.utils.ClassUtils;
 import org.omnaest.utils.ClassUtils.Resource;
+import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.StringUtils;
 import org.omnaest.utils.template.TemplateUtils;
 
@@ -244,7 +245,10 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
                 return new ParagraphNode().setId(ParagraphImpl.this.getId())
                                           .setBold(ParagraphImpl.this.bold)
                                           .setElements(ParagraphImpl.this.elements.stream()
-                                                                                  .map(element -> renderingProcessor.process(element, location))
+                                                                                  .map(MapperUtils.withIntCounter())
+                                                                                  .map(elementAndIndex -> renderingProcessor.process(elementAndIndex.getFirst(),
+                                                                                                                                     ChildLocationSupport.indexedChildLocation(location,
+                                                                                                                                                                               elementAndIndex.getSecond())))
                                                                                   .collect(Collectors.toList()));
             }
 
@@ -276,7 +280,10 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
             public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return ParagraphImpl.this.elements.stream()
-                                                  .map(element -> ParentLocationAndComponent.of(parentLocation, element));
+                                                  .map(MapperUtils.withIntCounter())
+                                                  .map(elementAndIndex -> ParentLocationAndComponent.of(ChildLocationSupport.indexedChildLocation(parentLocation,
+                                                                                                                                                  elementAndIndex.getSecond()),
+                                                                                                        elementAndIndex.getFirst()));
             }
 
         };

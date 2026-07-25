@@ -58,23 +58,31 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
     {
         if (target != null && eventHandler != null)
         {
-            List<DataEventHandler> handlers = this.handlers.getStaging()
-                                                           .computeIfAbsent(target, t -> Collections.synchronizedList(new ArrayList<>()));
-            handlers.add(eventHandler);
+            // Idempotent per render: replace any prior registration for this Target within the
+            // current (thread-local) staging cycle, so re-rendering the same Target - which plan-12's
+            // two-pass render and plan-13's per-render content rebuild both cause - yields exactly one
+            // handler and thus exactly one invocation per event. The merge in
+            // executeTransactionalAndPublishStagingHandlers (putIfAbsent) still carries forward
+            // handlers for Targets NOT re-rendered this cycle.
+            this.handlers.getStaging()
+                         .put(target, Collections.synchronizedList(new ArrayList<>(List.of(eventHandler))));
         }
     }
 
     @Override
     public void registerEventHandler(Target target, EventHandler eventHandler)
     {
-        this.registerDataEventHandler(target, (data, internalData) ->
+        if (eventHandler != null)
         {
-            eventHandler.invoke();
-            return MappedData.builder()
-                             .data(data)
-                             .internalData(internalData)
-                             .build();
-        });
+            this.registerDataEventHandler(target, (data, internalData) ->
+            {
+                eventHandler.invoke();
+                return MappedData.builder()
+                                 .data(data)
+                                 .internalData(internalData)
+                                 .build();
+            });
+        }
     }
 
     @Override
@@ -86,23 +94,36 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
                                       .map(dwc -> Data.of(dwc.getContextId(), dwc.getData()));
         Optional<Data> internalData = Optional.ofNullable(eventBody.getDataWithContext())
                                               .map(dwc -> Data.of(dwc.getContextId(), dwc.getInternalData()));
-        Optional<TargetNode> rerenderedNode = this.executeTransactionalAndPublishStagingHandlers(() -> target.flatMap(targetNode -> this.rerenderingService.rerenderTargetNode(targetNode,
-                                                                                                                                                                               data)));
 
-        return target.map(Optional.ofNullable(this.handlers.getActive())
-                                  .orElse(Collections.emptyMap())::get)
-                     .filter(handlers -> !handlers.isEmpty())
-                     .flatMap(handlers -> handlers.stream()
-                                                  .map(handler -> handler.invoke(data.orElse(Data.newInstance()), internalData.orElse(Data.newInstance())))
-                                                  .reduce((d1, d2) -> d1.mergeWith(d2)))
-                     .map(responseData -> new ResponseBody().setTarget(eventBody.getTarget())
-                                                            .setDataWithContext(new DataWithContext(responseData.getData()
-                                                                                                                .getContextId(),
-                                                                                                    responseData.getData()
-                                                                                                                .toMap(),
-                                                                                                    responseData.getInternalData()
-                                                                                                                .toMap()))
-                                                            .setTargetNode(rerenderedNode.orElse(null)));
+        // First render pass: (re)registers the target's current handlers into the active map (unchanged behavior).
+        // Its resulting node is intentionally discarded - the response node is produced by the SECOND, post-handler
+        // render pass below, so that any RerenderingContainer subtree reflects server state mutated by the handler.
+        this.executeTransactionalAndPublishStagingHandlers(() -> target.flatMap(targetNode -> this.rerenderingService.rerenderTargetNode(targetNode,
+                                                                                                                                         data)));
+
+        Optional<DataEventHandler.MappedData> mappedData = target.map(Optional.ofNullable(this.handlers.getActive())
+                                                                              .orElse(Collections.emptyMap())::get)
+                                                                 .filter(handlers -> !handlers.isEmpty())
+                                                                 .flatMap(handlers -> handlers.stream()
+                                                                                              .map(handler -> handler.invoke(data.orElse(Data.newInstance()),
+                                                                                                                             internalData.orElse(Data.newInstance())))
+                                                                                              .reduce((d1, d2) -> d1.mergeWith(d2)));
+
+        Optional<Data> renderData = mappedData.isPresent() ? mappedData.map(DataEventHandler.MappedData::getData) : data;
+
+        // Second render pass: produces the response targetNode using the post-handler data, so the returned node
+        // reflects server state mutated inside the handler invoked above.
+        Optional<TargetNode> rerenderedNode = this.executeTransactionalAndPublishStagingHandlers(() -> target.flatMap(targetNode -> this.rerenderingService.rerenderTargetNode(targetNode,
+                                                                                                                                                                               renderData)));
+
+        return mappedData.map(responseData -> new ResponseBody().setTarget(eventBody.getTarget())
+                                                                .setDataWithContext(new DataWithContext(responseData.getData()
+                                                                                                                    .getContextId(),
+                                                                                                        responseData.getData()
+                                                                                                                    .toMap(),
+                                                                                                        responseData.getInternalData()
+                                                                                                                    .toMap()))
+                                                                .setTargetNode(rerenderedNode.orElse(null)));
     }
 
     @Override

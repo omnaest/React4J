@@ -21,6 +21,9 @@ export class HandlerFactory {
     }
 
     public static handleEvent(handler: Handler, uiContextAccessor?: UIContextAccessor, nodeContextAccessor?: NodeContextAccessor) {
+        if (!handler) {
+            return;
+        }
         if (handler && handler.type === "SERVER") {
             const serverHandler = (handler as ServerHandler);
             Backend.sendEvent(serverHandler.target, serverHandler.contextId, uiContextAccessor, nodeContextAccessor);

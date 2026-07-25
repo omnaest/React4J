@@ -26,6 +26,7 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.ScrollbarContainerNode;
@@ -33,20 +34,22 @@ import org.omnaest.react4j.service.internal.nodes.ScrollbarContainerNode;
 public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<ScrollbarContainer> implements ScrollbarContainer
 {
     private UIComponent<?>    content;
-    private VerticalBoxMode   verticalBoxMode   = VerticalBoxMode.DEFAULT_HEIGHT;
-    private HorizontalBoxMode horizontalBoxMode = HorizontalBoxMode.DEFAULT_WIDTH;
+    private VerticalBoxMode   verticalBoxMode        = VerticalBoxMode.DEFAULT_HEIGHT;
+    private HorizontalBoxMode horizontalBoxMode      = HorizontalBoxMode.DEFAULT_WIDTH;
+    private boolean           scrollToBottomOnUpdate = false;
 
     public ScrollbarContainerImpl(ComponentContext context)
     {
         super(context);
     }
 
-    public ScrollbarContainerImpl(ComponentContext context, UIComponent<?> content, VerticalBoxMode verticalBoxMode, HorizontalBoxMode horizontalBoxMode)
+    public ScrollbarContainerImpl(ComponentContext context, UIComponent<?> content, VerticalBoxMode verticalBoxMode, HorizontalBoxMode horizontalBoxMode, boolean scrollToBottomOnUpdate)
     {
         super(context);
         this.content = content;
         this.verticalBoxMode = verticalBoxMode;
         this.horizontalBoxMode = horizontalBoxMode;
+        this.scrollToBottomOnUpdate = scrollToBottomOnUpdate;
     }
 
     @Override
@@ -71,12 +74,20 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
                                                                                                                   .toLowerCase())
                                                    .setHorizontalBoxMode(ScrollbarContainerImpl.this.horizontalBoxMode.name()
                                                                                                                       .replaceAll("_", "-")
-                                                                                                                      .toLowerCase());
+                                                                                                                      .toLowerCase())
+                                                   .setScrollToBottomOnUpdate(ScrollbarContainerImpl.this.scrollToBottomOnUpdate);
             }
 
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
+                registry.register(ScrollbarContainerNode.class, NodeRenderType.HTML,
+                                  (node, nodeRenderingProcessor) -> "<div class=\"overflow-auto v-box-" + node.getVerticalBoxMode() + " h-box-"
+                                                                    + node.getHorizontalBoxMode() + "\">"
+                                                                    + Optional.ofNullable(node.getContent())
+                                                                              .map(nodeRenderingProcessor::render)
+                                                                              .orElse("")
+                                                                    + "</div>");
             }
 
             @Override
@@ -115,9 +126,17 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
     }
 
     @Override
+    public ScrollbarContainer scrollToBottomOnUpdate()
+    {
+        this.scrollToBottomOnUpdate = true;
+        return this;
+    }
+
+    @Override
     public UIComponentProvider<ScrollbarContainer> asTemplateProvider()
     {
-        return () -> new ScrollbarContainerImpl(this.context, this.content, this.verticalBoxMode, this.horizontalBoxMode);
+        return () -> new ScrollbarContainerImpl(this.context, this.content, this.verticalBoxMode, this.horizontalBoxMode,
+                                                this.scrollToBottomOnUpdate);
     }
 
 }

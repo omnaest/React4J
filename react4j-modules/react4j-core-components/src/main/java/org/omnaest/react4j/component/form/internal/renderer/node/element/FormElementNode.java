@@ -1,5 +1,6 @@
 package org.omnaest.react4j.component.form.internal.renderer.node.element;
 
+import org.omnaest.react4j.service.internal.nodes.handler.Handler;
 import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,43 +13,46 @@ import lombok.Data;
 public class FormElementNode
 {
     @JsonProperty
-    private String           field;
+    private String             field;
 
     @JsonProperty
-    private String           contextId;
+    private String             contextId;
 
     @JsonProperty
-    private String           type;
+    private String             type;
 
     @JsonProperty
-    private I18nTextValue    label;
+    private I18nTextValue      label;
 
     @JsonProperty
-    private I18nTextValue    description;
+    private I18nTextValue      description;
 
     @JsonProperty
-    private boolean          disabled;
+    private boolean            disabled;
 
     @JsonProperty
-    private boolean          readonly;
+    private boolean            readonly;
 
     @JsonProperty
-    private String           colspan;
+    private String             colspan;
 
     @JsonProperty
-    private FormRangeNode    range;
+    private FormRangeNode      range;
 
     @JsonProperty
-    private FormDropDownNode dropDown;
+    private FormDropDownNode   dropDown;
 
     @JsonProperty
-    private FormButtonNode   button;
+    private FormButtonNode     button;
 
     @JsonProperty
-    private FormCheckboxNode checkbox;
+    private FormCheckboxNode   checkbox;
 
     @JsonProperty
-    private FormInputNode    input;
+    private FormInputNode      input;
+
+    @JsonProperty
+    private FormFileUploadNode fileUpload;
 
     @Data
     @Builder
@@ -67,6 +71,9 @@ public class FormElementNode
 
         @JsonProperty
         private String        type;
+
+        @JsonProperty
+        private Handler       submitOnEnter;
     }
 
     public String getType()

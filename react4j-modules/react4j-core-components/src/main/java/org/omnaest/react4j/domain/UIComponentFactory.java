@@ -23,6 +23,7 @@ import org.omnaest.react4j.component.form.Form;
 import org.omnaest.react4j.component.listview.ListView;
 import org.omnaest.react4j.component.master.MasterDetails;
 import org.omnaest.react4j.component.table.Table;
+import org.omnaest.react4j.component.treetable.TreeTable;
 
 /**
  * Factory for all UI relevant {@link UIComponent}s like grids, forms, paragraphs, cards, ankers, buttons, etc.
@@ -44,6 +45,8 @@ public interface UIComponentFactory
     public Card newCard();
 
     public Table newTable();
+
+    public TreeTable newTreeTable();
 
     public Composite newComposite();
 
@@ -162,4 +165,42 @@ public interface UIComponentFactory
     public MasterDetails newMasterDetails();
 
     public ListView newListView();
+
+    public Badge newBadge();
+
+    public Spinner newSpinner();
+
+    public Placeholder newPlaceholder();
+
+    public Alert newAlert();
+
+    public Breadcrumb newBreadcrumb();
+
+    public Pagination newPagination();
+
+    public Stack newStack();
+
+    public Figure newFigure();
+
+    public Tabs newTabs();
+
+    public Accordion newAccordion();
+
+    public Modal newModal();
+
+    public Offcanvas newOffcanvas();
+
+    public Tooltip newTooltip();
+
+    public Popover newPopover();
+
+    public Collapse newCollapse();
+
+    public ToggleButton newToggleButton();
+
+    public Dropdown newDropdown();
+
+    public SplitButton newSplitButton();
+
+    public Carousel newCarousel();
 }

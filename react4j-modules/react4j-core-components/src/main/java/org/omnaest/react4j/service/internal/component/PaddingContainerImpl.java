@@ -15,7 +15,10 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.Location;
@@ -26,6 +29,7 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.PaddingContainerNode;
@@ -71,6 +75,21 @@ public class PaddingContainerImpl extends AbstractUIComponentAndContentHolder<Pa
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
+                registry.register(PaddingContainerNode.class, NodeRenderType.HTML, (node, nodeRenderingProcessor) ->
+                {
+                    List<String> classes = new ArrayList<>();
+                    if (node.isVertical())
+                    {
+                        classes.add("py-3");
+                    }
+                    if (node.isHorizontal())
+                    {
+                        classes.add("px-3");
+                    }
+                    return "<div class=\"" + classes.stream()
+                                                    .collect(Collectors.joining(" "))
+                           + "\">" + nodeRenderingProcessor.render(node.getContent()) + "</div>";
+                });
             }
 
             @Override

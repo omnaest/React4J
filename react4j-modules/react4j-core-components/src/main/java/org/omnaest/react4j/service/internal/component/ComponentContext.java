@@ -22,21 +22,24 @@ import org.omnaest.react4j.domain.i18n.UILocale;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.service.ContextFactory;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
+import org.omnaest.react4j.service.internal.upload.UploadChannelRegistry;
 
 public class ComponentContext
 {
     protected UILocale                     defaultLocale;
     protected LocalizedTextResolverService textResolver;
     protected EventHandlerRegistry         eventHandlerRegistry;
+    protected UploadChannelRegistry        uploadChannelRegistry;
     protected Supplier<UIComponentFactory> uiComponentFactory;
     protected ContextFactory               contextFactory;
 
-    public ComponentContext(UILocale defaultLocale, LocalizedTextResolverService textResolver, EventHandlerRegistry eventHandlerRegistry, Supplier<UIComponentFactory> uiComponentFactory, ContextFactory contextFactory)
+    public ComponentContext(UILocale defaultLocale, LocalizedTextResolverService textResolver, EventHandlerRegistry eventHandlerRegistry, UploadChannelRegistry uploadChannelRegistry, Supplier<UIComponentFactory> uiComponentFactory, ContextFactory contextFactory)
     {
         super();
         this.defaultLocale = defaultLocale;
         this.textResolver = textResolver;
         this.eventHandlerRegistry = eventHandlerRegistry;
+        this.uploadChannelRegistry = uploadChannelRegistry;
         this.uiComponentFactory = uiComponentFactory;
         this.contextFactory = contextFactory;
     }
@@ -59,6 +62,11 @@ public class ComponentContext
     public EventHandlerRegistry getEventHandlerRegistry()
     {
         return this.eventHandlerRegistry;
+    }
+
+    public UploadChannelRegistry getUploadChannelRegistry()
+    {
+        return this.uploadChannelRegistry;
     }
 
     public UIComponentFactory getUiComponentFactory()

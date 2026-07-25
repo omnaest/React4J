@@ -21,11 +21,15 @@ import org.omnaest.react4j.service.internal.nodes.AbstractNode;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ListViewNode extends AbstractNode implements Node
 {
     @JsonProperty

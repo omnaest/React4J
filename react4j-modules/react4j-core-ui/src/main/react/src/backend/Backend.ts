@@ -2,12 +2,28 @@ import Axios, { AxiosResponse } from "axios";
 import { UIContextAccessor } from "../renderer/data/DataContextManager";
 import { Node, NodeContextAccessor } from "../renderer/Renderer";
 import { ElementMap } from "../utils/Utils";
+import { InFlightTracker } from "./InFlightTracker";
 
 export class BackendUri {
     public static LOCALE_CONTEXT: string | null = document.documentElement.lang && document.documentElement.lang !== "%LOCALE%" ? document.documentElement.lang : null;
     public static URI_UI = (process.env.REACT_APP_BASEURL || "") + (BackendUri.LOCALE_CONTEXT ? BackendUri.LOCALE_CONTEXT + "/" : "") + "ui";
     public static URI_UI_HANDLER = BackendUri.URI_UI + "/event";
     public static URI_UI_DATA_SOURCE = BackendUri.URI_UI + "/data/query";
+    public static URI_UPLOAD = (process.env.REACT_APP_BASEURL || "") + (BackendUri.LOCALE_CONTEXT ? BackendUri.LOCALE_CONTEXT + "/" : "") + "ui/upload";
+
+    /**
+     * Resolves a (possibly server-supplied) relative uri segment, e.g. "ui/upload", against the same
+     * base + optional locale prefix used by URI_UI/URI_UPLOAD. Absolute uris (http/https) are returned unchanged.
+     */
+    public static resolve(uri: string): string {
+        if (!uri) {
+            return BackendUri.URI_UPLOAD;
+        }
+        if (/^https?:\/\//i.test(uri)) {
+            return uri;
+        }
+        return (process.env.REACT_APP_BASEURL || "") + (BackendUri.LOCALE_CONTEXT ? BackendUri.LOCALE_CONTEXT + "/" : "") + uri;
+    }
 }
 
 export class Target extends Array<string> {
@@ -40,6 +56,13 @@ export interface ElementData {
     fieldToValue: InternalData;
 }
 
+export interface UploadReceipt {
+    uploadId: string;
+    filename: string;
+    size: number;
+    contentType: string;
+}
+
 export class Backend {
     public static getUI() {
         return Axios.get(BackendUri.URI_UI);
@@ -52,6 +75,7 @@ export class Backend {
     }
 
     public static sendEvent(target: Target, contextId: string, uiContextAccessor?: UIContextAccessor, nodeContextAccessor?: NodeContextAccessor) {
+        InFlightTracker.increment();
         return Axios.post(BackendUri.URI_UI_HANDLER, {
             target: target,
             dataWithContext: {
@@ -75,6 +99,9 @@ export class Backend {
             if (targetNode) {
                 nodeContextAccessor?.updateNode(targetNode.node);
             }
+        }).finally(() => {
+            // CRITICAL: decrement in finally so a failed round-trip still settles the counter.
+            InFlightTracker.decrement();
         });
     }
 
@@ -84,6 +111,23 @@ export class Backend {
             pageIndex: pageIndex
         }).then((response: AxiosResponse<DataPage>) => {
             return response?.data;
+        });
+    }
+
+    public static uploadFile(uploadUrl: string, uploadId: string, file: File): Promise<UploadReceipt> {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("uploadId", uploadId);
+        InFlightTracker.increment();
+        return Axios.post(BackendUri.resolve(uploadUrl), formData, {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        }).then((response: AxiosResponse<UploadReceipt>) => {
+            return response?.data;
+        }).finally(() => {
+            // CRITICAL: decrement in finally so a failed round-trip still settles the counter.
+            InFlightTracker.decrement();
         });
     }
 }

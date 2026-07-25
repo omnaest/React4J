@@ -1,5 +1,6 @@
 import React from "react";
 import { Node, Renderer } from "../Renderer";
+import { RenderingSupportContext } from "../support/RenderingSupportContext";
 import { RenderingSupportHelper, UIContextsState, UpdateActions, UpdateNodeAction, UpdateUIContextAction } from "../support/RenderingSupportHelper";
 
 export interface RerenderingContainerNode extends Node {
@@ -20,12 +21,13 @@ class RerenderingContainer extends React.Component<PropsWithReduxStore, State> {
     public static TYPE: string = "RERENDERINGCONTAINER";
 
     public render(): JSX.Element {
+        const renderingSupport = RenderingSupportHelper.newRenderingSupport(this.props, this.props);
         return (
-            <>
+            <RenderingSupportContext.Provider value={renderingSupport}>
                 {
-                    Renderer.render(this.props.node?.content, RenderingSupportHelper.newRenderingSupport(this.props, this.props))
+                    Renderer.render(this.props.node?.content, renderingSupport)
                 }
-            </>
+            </RenderingSupportContext.Provider>
         );
     }
 }

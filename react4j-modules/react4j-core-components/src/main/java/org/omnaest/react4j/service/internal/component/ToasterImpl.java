@@ -36,17 +36,21 @@ public class ToasterImpl extends AbstractUIComponentAndContentHolder<Toaster> im
 {
     private I18nText       title;
     private UIComponent<?> content;
+    private Style          style;
+    private Placement      placement;
 
     public ToasterImpl(ComponentContext context)
     {
         super(context);
     }
 
-    public ToasterImpl(ComponentContext context, I18nText title, UIComponent<?> content)
+    public ToasterImpl(ComponentContext context, I18nText title, UIComponent<?> content, Style style, Placement placement)
     {
         super(context);
         this.title = title;
         this.content = content;
+        this.style = style;
+        this.placement = placement;
     }
 
     @Override
@@ -64,7 +68,14 @@ public class ToasterImpl extends AbstractUIComponentAndContentHolder<Toaster> im
             {
                 LocalizedTextResolverService textResolver = ToasterImpl.this.getTextResolver();
                 return new ToasterNode().setContent(renderingProcessor.process(ToasterImpl.this.content, location))
-                                        .setTitle(textResolver.apply(ToasterImpl.this.title, location));
+                                        .setTitle(textResolver.apply(ToasterImpl.this.title, location))
+                                        .setStyle(ToasterImpl.this.style != null ? ToasterImpl.this.style.name()
+                                                                                                         .toLowerCase()
+                                                : null)
+                                        .setPlacement(ToasterImpl.this.placement != null ? ToasterImpl.this.placement.name()
+                                                                                                                     .toLowerCase()
+                                                                                                                     .replace('_', '-')
+                                                : null);
             }
 
             @Override
@@ -102,9 +113,23 @@ public class ToasterImpl extends AbstractUIComponentAndContentHolder<Toaster> im
     }
 
     @Override
+    public Toaster withStyle(Style style)
+    {
+        this.style = style;
+        return this;
+    }
+
+    @Override
+    public Toaster withPlacement(Placement placement)
+    {
+        this.placement = placement;
+        return this;
+    }
+
+    @Override
     public UIComponentProvider<Toaster> asTemplateProvider()
     {
-        return () -> new ToasterImpl(this.context, this.title, this.content);
+        return () -> new ToasterImpl(this.context, this.title, this.content, this.style, this.placement);
     }
 
 }

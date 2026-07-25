@@ -28,14 +28,10 @@ import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
-import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
-import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
-import org.omnaest.react4j.service.internal.nodes.JumbotronNode;
 import org.omnaest.react4j.service.internal.nodes.SizedContainerNode;
 import org.omnaest.utils.NumberUtils;
-import org.omnaest.utils.template.TemplateUtils;
 
 public class SizedContainerImpl extends AbstractUIComponentAndContentHolder<SizedContainer> implements SizedContainer
 {
@@ -78,19 +74,9 @@ public class SizedContainerImpl extends AbstractUIComponentAndContentHolder<Size
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(JumbotronNode.class, NodeRenderType.HTML, new NodeRenderer<JumbotronNode>() {
-                    @Override
-                    public String render(JumbotronNode node, NodeRenderingProcessor nodeRenderingProcessor)
-                    {
-                        return TemplateUtils.builder()
-                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/jumbotron.html")
-                                            .add("title", nodeRenderingProcessor.render(node.getTitle()))
-                                            .add("subTitle", nodeRenderingProcessor.render(node.getSubTitle()))
-                                            .add("content", nodeRenderingProcessor.render(node.getContent()))
-                                            .build()
-                                            .get();
-                    }
-                });
+                registry.register(SizedContainerNode.class, NodeRenderType.HTML,
+                                  (node, nodeRenderingProcessor) -> "<div style=\"width:" + node.getWidth() + ";height:" + node.getHeight() + ";\">"
+                                                                    + nodeRenderingProcessor.render(node.getContent()) + "</div>");
             }
 
             @Override

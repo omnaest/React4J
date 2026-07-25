@@ -8,4 +8,63 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>react4j-ui-test</artifactId>
+
+    <!-- plan-74 Cliff C5: Tier-2 browser *IT tests are excluded from default `mvn test` via this
+         POM property (NOT a surefire/failsafe configuration literal: such a literal always wins
+         over a same-named -D override and would silently kill the on-demand path; see memory
+         surefire-excludedgroups-property-not-config-literal). Both surefire (default-test,
+         phase test) and failsafe (integration-test/verify) read ${excludedGroups} by default, so
+         one property gates both. Run on demand with -DexcludedGroups= (clears it) or
+         -Dgroups=browser. -->
+    <properties>
+        <excludedGroups>browser</excludedGroups>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.omnaest.utils</groupId>
+            <artifactId>CommonsTest</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>3.2.3</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <!-- Tier-2 browser round-trip driver (plan-74 Cliff C5, Slice 0/4 pilot). -->
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>1.44.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <!-- Binds *IT classes (ToggleButtonRoundTripIT) to integration-test/verify so
+                     `mvn verify` runs them, gated by the same ${excludedGroups} property as
+                     surefire above. Default `mvn test` never reaches this plugin's bound phases. -->
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.1.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

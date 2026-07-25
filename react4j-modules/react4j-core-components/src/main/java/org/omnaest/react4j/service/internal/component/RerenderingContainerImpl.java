@@ -28,6 +28,7 @@ import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.support.UIComponentFactoryFunction;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.domain.support.UIComponentProviderWithData;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
@@ -96,6 +97,15 @@ public class RerenderingContainerImpl extends AbstractUIComponentAndContentHolde
                 return Stream.of(ParentLocationAndComponent.of(parentLocation, RerenderingContainerImpl.this.content.apply(Data.empty())));
             }
 
+            @Override
+            public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation, Optional<Data> data)
+            {
+                // plan-77 Cliff F2: apply the REAL submitted Data (not the hardcoded empty Data the 1-arg overload
+                // above uses) so the event-handler registration walk discovers exactly the subcomponents render()
+                // above would emit for the SAME Data - the revealed subtree of a withDataDrivenContent container.
+                return Stream.of(ParentLocationAndComponent.of(parentLocation, RerenderingContainerImpl.this.content.apply(data.orElse(Data.empty()))));
+            }
+
         };
     }
 
@@ -110,6 +120,12 @@ public class RerenderingContainerImpl extends AbstractUIComponentAndContentHolde
     {
         this.content = data -> componentProvider.get();
         return this;
+    }
+
+    @Override
+    public RerenderingContainer withContent(UIComponentFactoryFunction factoryConsumer)
+    {
+        return this.withContent(() -> factoryConsumer.apply(this.getUiComponentFactory()));
     }
 
     @Override

@@ -38,6 +38,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.UnsortedListNode;
+import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.template.TemplateUtils;
 
 public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implements UnsortedList
@@ -72,7 +73,10 @@ public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implemen
             {
                 return new UnsortedListNode().setEnableBulletPoints(UnsortedListImpl.this.enableBulletPoints)
                                              .setElements(UnsortedListImpl.this.elements.stream()
-                                                                                        .map(component -> renderingProcessor.process(component, location))
+                                                                                        .map(MapperUtils.withIntCounter())
+                                                                                        .map(componentAndIndex -> renderingProcessor.process(componentAndIndex.getFirst(),
+                                                                                                                                             ChildLocationSupport.indexedChildLocation(location,
+                                                                                                                                                                                       componentAndIndex.getSecond())))
                                                                                         .collect(Collectors.toList()));
             }
 
@@ -104,7 +108,10 @@ public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implemen
             public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
                 return UnsortedListImpl.this.elements.stream()
-                                                     .map(component -> ParentLocationAndComponent.of(parentLocation, component));
+                                                     .map(MapperUtils.withIntCounter())
+                                                     .map(componentAndIndex -> ParentLocationAndComponent.of(ChildLocationSupport.indexedChildLocation(parentLocation,
+                                                                                                                                                       componentAndIndex.getSecond()),
+                                                                                                             componentAndIndex.getFirst()));
             }
 
         };

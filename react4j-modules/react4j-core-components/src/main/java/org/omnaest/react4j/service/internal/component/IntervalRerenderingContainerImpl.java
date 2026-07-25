@@ -89,6 +89,10 @@ public class IntervalRerenderingContainerImpl extends AbstractUIComponentWithSub
                 return Stream.of(ParentLocationAndComponent.of(parentLocation, IntervalRerenderingContainerImpl.this.content.get()));
             }
 
+            // plan-77 Cliff F2: no getSubComponents(Location, Optional<Data>) override needed - this container's
+            // content is Data-INDEPENDENT (UIComponentProvider<?>.get(), no Data parameter to apply), so the
+            // inherited default (which delegates to the 1-arg overload above) already returns the identical
+            // subtree regardless of submitted Data. Deliberate, not an oversight.
         };
     }
 

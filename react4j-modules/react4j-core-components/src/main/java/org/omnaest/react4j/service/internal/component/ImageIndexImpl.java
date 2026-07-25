@@ -29,7 +29,9 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.ImageIndexNode;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
@@ -77,7 +79,19 @@ public class ImageIndexImpl extends AbstractUIComponent<ImageIndex> implements I
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
+                registry.register(ImageIndexNode.class, NodeRenderType.HTML,
+                                  (node, nodeRenderingProcessor) -> "<div class=\"row\">" + node.getEntries()
+                                                                                                .stream()
+                                                                                                .map(entry -> this.renderEntry(entry, nodeRenderingProcessor))
+                                                                                                .collect(Collectors.joining())
+                                                                    + "</div>");
+            }
+
+            private String renderEntry(ImageIndexNode.Entry entry, NodeRenderingProcessor nodeRenderingProcessor)
+            {
+                String title = nodeRenderingProcessor.render(entry.getTitle());
+                return "<div class=\"col\"><a href=\"#" + entry.getId() + "\"><img src=\"" + entry.getImage() + "\" alt=\"" + title + "\"><div>" + title
+                       + "</div></a></div>";
             }
 
             @Override

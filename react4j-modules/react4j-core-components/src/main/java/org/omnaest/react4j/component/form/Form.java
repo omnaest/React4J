@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNode;
+import org.omnaest.react4j.component.form.upload.UploadChannel;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.context.Context;
@@ -54,6 +55,8 @@ public interface Form extends UIComponent<Form>
 
     public Form addCheckbox(Consumer<CheckboxFormElement> checkbox);
 
+    public Form addFileUpload(Consumer<FileUploadFormElement> fileUpload);
+
     Form attachTo(Document document);
 
     Form onChange(FormOnChangeEventHandler eventHandler);
@@ -86,6 +89,16 @@ public interface Form extends UIComponent<Form>
         public InputFormElement withPlaceholder(String placeholder);
 
         public InputFormElement withType(InputType inputType);
+
+        /**
+         * Optional handler invoked (via the normal {@code /ui/event} round-trip) when the user presses Enter while focused on this input. Registered
+         * under this input's OWN {@link org.omnaest.react4j.service.internal.handler.domain.Target}, distinct from any sibling button's target, so it
+         * cannot double-fire alongside a button click.
+         *
+         * @param eventHandler
+         * @return
+         */
+        public InputFormElement onEnter(ButtonFormElement.ButtonEventHandler eventHandler);
 
         public static enum InputType
         {
@@ -221,6 +234,37 @@ public interface Form extends UIComponent<Form>
 
     }
 
+    public static interface FileUploadFormElement extends FormFieldElement<FileUploadFormElement>
+    {
+        /**
+         * Assigns the sink that receives the uploaded bytes. See {@link UploadChannel} for the size/content-type policy and the requirement to hold a
+         * stable channel reference across renders.
+         *
+         * @param uploadChannel
+         * @return
+         */
+        public FileUploadFormElement withUploadChannel(UploadChannel uploadChannel);
+
+        /**
+         * UX hinting only (the {@code accept} attribute on the underlying HTML file input) - never a security control. Content-type enforcement is done
+         * server-side via {@link UploadChannel#acceptedContentTypes()}.
+         *
+         * @param accept
+         * @return
+         */
+        public FileUploadFormElement withAccept(String accept);
+
+        /**
+         * Optional handler invoked (via the normal {@code /ui/event} round-trip) once the upload has completed and its receipt has been written into the
+         * bound field.
+         *
+         * @param eventHandler
+         * @return
+         */
+        public FileUploadFormElement onUpload(ButtonFormElement.ButtonEventHandler eventHandler);
+
+    }
+
     public static enum ValidationMessageType
     {
         VALID, INVALID
@@ -237,6 +281,8 @@ public interface Form extends UIComponent<Form>
         public DropDownFormElement newDropdown();
 
         public CheckboxFormElement newCheckbox();
+
+        public FileUploadFormElement newFileUpload();
     }
 
     public static interface FormOnChangeEventHandler extends BiFunction<Data, Context, Data>

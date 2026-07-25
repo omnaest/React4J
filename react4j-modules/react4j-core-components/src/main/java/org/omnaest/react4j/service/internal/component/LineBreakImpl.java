@@ -25,6 +25,7 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
+import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.LineBreakNode;
@@ -56,7 +57,7 @@ public class LineBreakImpl extends AbstractUIComponent<LineBreak> implements Lin
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                // TODO Auto-generated method stub
+                registry.register(LineBreakNode.class, NodeRenderType.HTML, (node, nodeRenderingProcessor) -> "<br>");
             }
 
             @Override

@@ -15,9 +15,47 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain;
 
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.omnaest.react4j.domain.support.UIComponentWithContent;
 
 public interface Toaster extends UIComponentWithContent<Toaster>
 {
     public Toaster withTitle(String title);
+
+    public Toaster withStyle(Style style);
+
+    public Toaster withPlacement(Placement placement);
+
+    public static enum Style
+    {
+        PRIMARY, SECONDARY, SUCCESS, DANGER, WARNING, INFO, LIGHT, DARK;
+
+        public static Optional<Style> of(String value)
+        {
+            return Optional.ofNullable(value)
+                           .filter(Arrays.asList(values())
+                                         .stream()
+                                         .map(Style::name)
+                                         .collect(Collectors.toSet())::contains)
+                           .map(Style::valueOf);
+        }
+    }
+
+    public static enum Placement
+    {
+        TOP_START, TOP_CENTER, TOP_END, MIDDLE_START, MIDDLE_CENTER, MIDDLE_END, BOTTOM_START, BOTTOM_CENTER, BOTTOM_END;
+
+        public static Optional<Placement> of(String value)
+        {
+            return Optional.ofNullable(value)
+                           .filter(Arrays.asList(values())
+                                         .stream()
+                                         .map(Placement::name)
+                                         .collect(Collectors.toSet())::contains)
+                           .map(Placement::valueOf);
+        }
+    }
 }

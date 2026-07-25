@@ -31,6 +31,7 @@ import org.omnaest.react4j.domain.ReactUI;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.configuration.HomePageConfiguration;
+import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.context.data.source.DataSource;
 import org.omnaest.react4j.domain.context.data.source.registry.DataSourceRegistry;
 import org.omnaest.react4j.domain.i18n.UILocale;
@@ -279,30 +280,17 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
             {
                 FilterMapper<UIComponent<?>, RenderableUIComponent<?>> filterMapper = StreamUtils.filterMapper(iComponent -> iComponent instanceof RenderableUIComponent,
                                                                                                                iComponent -> (RenderableUIComponent<?>) iComponent);
-                StreamUtils.recursiveFlattened(Stream.concat(Stream.of(this.navigationBar), this.components.stream())
-                                                     .filter(filterMapper)
-                                                     .map(filterMapper)
-                                                     .map(component -> BiElement.of((RenderableUIComponent) component, component.asRenderer()
-                                                                                                                                .getLocation(new LocationSupportImpl(Location.empty())))),
-                                               parentComponentAndLocation -> parentComponentAndLocation.getFirst()
-                                                                                                       .asRenderer()
-                                                                                                       .getSubComponents(parentComponentAndLocation.getSecond())
-                                                                                                       .filter(locationAndComponent -> filterMapper.test(locationAndComponent.getComponent()))
-                                                                                                       .map(locationAndComponent -> locationAndComponent.applyToComponent(filterMapper))
-                                                                                                       .map(locationAndComponent -> BiElement.of(locationAndComponent.getSecond(),
-                                                                                                                                                 locationAndComponent.getSecond()
-                                                                                                                                                                     .asRenderer()
-                                                                                                                                                                     .getLocation(new LocationSupportImpl(locationAndComponent.getFirst())))))
-                           .forEach(componentAndLocation ->
-                           {
-                               Location location = componentAndLocation.getSecond();
-                               RenderableUIComponent component = componentAndLocation.getFirst();
-                               component.asRenderer()
-                                        .manageEventHandler(new EventHandlerRegistrationSupportImpl(ReactUIServiceImpl.this.eventHandlerRegistry,
-                                                                                                    ReactUIServiceImpl.this.rerenderingNodeProviderRegistry,
-                                                                                                    location, Target.from(location),
-                                                                                                    this.createRenderingProcessor(), component));
-                           });
+                // plan-77 Cliff F1/F2: behavior-preserving for GET /ui - routed through the SAME reusable walk the
+                // event round-trip's RerenderedNodeProvider now also uses (see registerEventHandlers below), called
+                // here with Optional.empty() so every Data-aware component (RerenderingContainerImpl) sees the
+                // identical empty-Data subtree it always did.
+                ReactUIServiceImpl.registerEventHandlers(Stream.concat(Stream.of(this.navigationBar), this.components.stream())
+                                                               .filter(filterMapper)
+                                                               .map(filterMapper)
+                                                               .map(component -> BiElement.of((RenderableUIComponent) component, component.asRenderer()
+                                                                                                                                          .getLocation(new LocationSupportImpl(Location.empty())))),
+                                                         Optional.empty(), this.createRenderingProcessor(), ReactUIServiceImpl.this.eventHandlerRegistry,
+                                                         ReactUIServiceImpl.this.rerenderingNodeProviderRegistry);
                 return this;
             }
 
@@ -406,6 +394,53 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
         return this;
     }
 
+    /**
+     * plan-77 Cliff F1/F2: the ONE reusable, {@link Data}-parameterized event-handler registration walk, shared by
+     * {@code collectEventHandlers} (whole tree, {@link Optional#empty()}, at {@code GET /ui}) and
+     * {@link EventHandlerRegistrationSupportImpl#registerAsRerenderingNode()}'s {@link RerenderedNodeProvider} (one
+     * subtree, the submitted {@link Data}, during the {@code POST /ui/event} round trip). Descends via the
+     * {@link Data}-aware 2-arg {@code getSubComponents(Location, Optional)} overload so a
+     * {@code withDataDrivenContent} container enumerates its REVEALED subtree for the SAME {@link Data} its
+     * {@code render()} already uses, and calls {@code manageEventHandler} per component - reproducing
+     * {@code collectEventHandlers}'s original Location computation exactly (same helper, same
+     * {@link LocationSupportImpl} calls), so both traversals stay positionally identical
+     * ({@code react4j-routing-key-must-be-stable-and-unique-use-positional-id}). Re-running this walk is idempotent
+     * (plan-14 {@code registerDataEventHandler} single-element-list replace) - re-registering N times yields exactly
+     * one handler per Target.
+     *
+     * @param rootComponentsAndLocations
+     *            each root {@link RenderableUIComponent} paired with its OWN (already-computed) {@link Location} -
+     *            the whole-tree roots for {@code GET /ui}, or a single {@code (component, location)} pair rooted at
+     *            one {@code RerenderingContainer} for the event round-trip.
+     * @param data
+     *            the {@link Data} to apply at every Data-aware {@code getSubComponents} call in the walk -
+     *            {@link Optional#empty()} for {@code GET /ui}, the submitted {@link Data} for the event round-trip.
+     */
+    @SuppressWarnings("rawtypes")
+    private static void registerEventHandlers(Stream<BiElement<RenderableUIComponent, Location>> rootComponentsAndLocations, Optional<Data> data, RenderingProcessor renderingProcessor, EventHandlerRegistry eventHandlerRegistry, RerenderingNodeProviderRegistry rerenderingNodeProviderRegistry)
+    {
+        FilterMapper<UIComponent<?>, RenderableUIComponent<?>> filterMapper = StreamUtils.filterMapper(iComponent -> iComponent instanceof RenderableUIComponent,
+                                                                                                       iComponent -> (RenderableUIComponent<?>) iComponent);
+        StreamUtils.recursiveFlattened(rootComponentsAndLocations,
+                                       parentComponentAndLocation -> parentComponentAndLocation.getFirst()
+                                                                                               .asRenderer()
+                                                                                               .getSubComponents(parentComponentAndLocation.getSecond(), data)
+                                                                                               .filter(locationAndComponent -> filterMapper.test(locationAndComponent.getComponent()))
+                                                                                               .map(locationAndComponent -> locationAndComponent.applyToComponent(filterMapper))
+                                                                                               .map(locationAndComponent -> BiElement.of(locationAndComponent.getSecond(),
+                                                                                                                                         locationAndComponent.getSecond()
+                                                                                                                                                             .asRenderer()
+                                                                                                                                                             .getLocation(new LocationSupportImpl(locationAndComponent.getFirst())))))
+                   .forEach(componentAndLocation ->
+                   {
+                       Location location = componentAndLocation.getSecond();
+                       RenderableUIComponent component = componentAndLocation.getFirst();
+                       component.asRenderer()
+                                .manageEventHandler(new EventHandlerRegistrationSupportImpl(eventHandlerRegistry, rerenderingNodeProviderRegistry, location,
+                                                                                            Target.from(location), renderingProcessor, component));
+                   });
+    }
+
     private static class EventHandlerRegistrationSupportImpl implements EventHandlerRegistrationSupport
     {
         private final EventHandlerRegistry            eventHandlerRegistry;
@@ -425,10 +460,21 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
             this.component = component;
         }
 
+        @SuppressWarnings("rawtypes")
         @Override
         public EventHandlerRegistrationSupport registerAsRerenderingNode()
         {
-            RerenderedNodeProvider rerenderedNodeProvider = data -> this.renderingProcessor.process(this.component, this.location.getParent(), data);
+            // plan-77 Cliff F1: fold subtree re-registration into the SAME provider application render() already
+            // uses, in BOTH of handleEvent's render passes - re-registration happens under the SAME Data value at
+            // the SAME call site render() uses, so the two traversals compute identical positional Locations
+            // (constraint 3). The handler invocation itself (between the two passes) is untouched (constraint 1);
+            // re-registration is only a side effect of applying this provider.
+            RerenderedNodeProvider rerenderedNodeProvider = data ->
+            {
+                ReactUIServiceImpl.registerEventHandlers(Stream.of(BiElement.of((RenderableUIComponent) this.component, this.location)), data,
+                                                         this.renderingProcessor, this.eventHandlerRegistry, this.rerenderingNodeProviderRegistry);
+                return this.renderingProcessor.process(this.component, this.location.getParent(), data);
+            };
             this.rerenderingNodeProviderRegistry.register(this.target, rerenderedNodeProvider);
             return this;
         }

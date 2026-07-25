@@ -70,11 +70,28 @@ public interface UIComponentRenderer
 
     /**
      * Returns all contained sub {@link UIComponent}s and their additional parent location
-     * 
+     *
      * @param parentLocation
      * @return
      */
     public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation);
+
+    /**
+     * {@link Data}-aware variant of {@link #getSubComponents(Location)} used by the event-handler registration walk
+     * (plan-77 Cliff F2) so a subtree whose sub {@link UIComponent}s vary by submitted {@link Data} - today only a
+     * {@code RerenderingContainer} built via {@code withDataDrivenContent(...)} - can enumerate its REVEALED
+     * subcomponents instead of always its empty-{@link Data} subtree. Additive: the default delegates to the
+     * single-arg {@link #getSubComponents(Location)}, so every {@link Data}-independent component (the vast
+     * majority) is unaffected and needs no override.
+     *
+     * @param parentLocation
+     * @param data
+     * @return
+     */
+    public default Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation, Optional<Data> data)
+    {
+        return this.getSubComponents(parentLocation);
+    }
 
     /**
      * Allows to register {@link EventHandler} to the {@link EventHandlerRegistry}

@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,6 +45,17 @@ public class NodeHierarchyStaticRenderer
     public static interface NodeHierarchyRenderingProcessor extends NodeRendererRegistry
     {
         public String render(NodeHierarchy nodeHierarchy, NodeRenderType nodeRenderType);
+
+        /**
+         * Introspection hook (plan-74 Cliff C4): exposes the {@link Node#getType()} values which currently have a
+         * registered {@link NodeRenderer} for the given {@link NodeRenderType}, so a completeness meta-test can assert
+         * every emitted node type is covered rather than silently falling through to the lossy default (reflective,
+         * wrapper-less) renderer used for any unregistered node type.
+         *
+         * @param nodeRenderType
+         * @return an unmodifiable snapshot of the currently registered node types; never {@code null}
+         */
+        public Set<String> registeredNodeTypes(NodeRenderType nodeRenderType);
     }
 
     public NodeHierarchyRenderingProcessor newNodeRenderingProcessor()
@@ -82,6 +94,13 @@ public class NodeHierarchyStaticRenderer
                                                                                                                             Collections.emptyMap());
 
             return this.renderNode(nodeTypeToNodeRenderer, nodeHierarchy.getRoot());
+        }
+
+        @Override
+        public Set<String> registeredNodeTypes(NodeRenderType nodeRenderType)
+        {
+            return Collections.unmodifiableSet(this.rendererTypeToNodeTypeToNodeRenderer.getOrDefault(nodeRenderType, Collections.emptyMap())
+                                                                                        .keySet());
         }
 
         private String renderNode(Map<String, NodeRenderer<Node>> nodeTypeToNodeRenderer, Node node)

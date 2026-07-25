@@ -31,6 +31,12 @@ public class ToasterNode extends AbstractNode implements Node
     @JsonProperty
     private I18nTextValue title;
 
+    @JsonProperty
+    private String        style;
+
+    @JsonProperty
+    private String        placement;
+
     @Override
     public String getType()
     {
@@ -56,6 +62,28 @@ public class ToasterNode extends AbstractNode implements Node
     public ToasterNode setTitle(I18nTextValue title)
     {
         this.title = title;
+        return this;
+    }
+
+    public String getStyle()
+    {
+        return this.style;
+    }
+
+    public ToasterNode setStyle(String style)
+    {
+        this.style = style;
+        return this;
+    }
+
+    public String getPlacement()
+    {
+        return this.placement;
+    }
+
+    public ToasterNode setPlacement(String placement)
+    {
+        this.placement = placement;
         return this;
     }
 

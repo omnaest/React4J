@@ -12,6 +12,7 @@ import RerenderingContainer from "../RerenderingContainer";
 import LocalRerenderingContainer from "../LocalRerenderingContainer";
 import { RerenderingHelper } from "../../support/RerenderingHelper";
 import { FormCheckbox, FormCheckboxFormElement } from "./elements/FormCheckbox";
+import { FileUpload, FileUploadFormElement, FileUploadFormNode } from "./elements/FileUpload";
 
 export interface FormNode extends Node {
     elements: FormElement[];
@@ -30,6 +31,7 @@ export interface FormElement {
     required: boolean;
     range?: RangeFormElement;
     button?: ButtonFormElement;
+    fileUpload?: FileUploadFormNode;
     colspan?: string;
 }
 
@@ -111,6 +113,17 @@ export class Form extends React.Component<Props, State> {
                             <FormCheckbox
                                 id={htmlId}
                                 element={element as FormCheckboxFormElement}
+                                onUpdate={(element, value) => this.handleInputChange(element, value, renderingSupport)}
+                                updateCounter={this.state?.updateCounter}
+                                renderingSupport={renderingSupport}
+                            />
+                        );
+                    }
+                    else if (element.type === FileUpload.TYPE) {
+                        return (
+                            <FileUpload
+                                id={htmlId}
+                                element={element as FileUploadFormElement}
                                 onUpdate={(element, value) => this.handleInputChange(element, value, renderingSupport)}
                                 updateCounter={this.state?.updateCounter}
                                 renderingSupport={renderingSupport}

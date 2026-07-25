@@ -1,11 +1,15 @@
 import React from "react";
 import { Node, Renderer } from "../Renderer";
 import { I18nRenderer, I18nTextValue } from "./I18nText";
+import { Toast, ToastContainer } from "react-bootstrap";
+import { ToastPosition } from "react-bootstrap/esm/ToastContainer";
 
 export interface ToasterNode extends Node
 {
     title: I18nTextValue;
     content: Node;
+    style?: string;
+    placement?: string;
 }
 
 export interface Props
@@ -42,30 +46,26 @@ export class Toaster extends React.Component<Props, State>
     {
         if (this.state.visible)
         {
+            const node = this.props.node;
+
             return (
-                <div
-                    className="toast show toast-location"
-                    role="alert"
-                    aria-live="assertive"
-                    aria-atomic="true"
+                <ToastContainer
+                    position={node.placement ? (node.placement as ToastPosition) : "top-end"}
+                    className="p-3"
                 >
-                    <div className="toast-header">
-                        <strong className="mr-auto"> {I18nRenderer.render(this.props.node.title)}</strong>
-                        <small className="text-muted"></small>
-                        <button
-                            type="button"
-                            className="ml-2 mb-1 close"
-                            data-dismiss="toast"
-                            aria-label="Close"
-                            onClick={() => this.onClose()}
-                        >
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div className="toast-body">
-                        {Renderer.render(this.props.node.content)}
-                    </div>
-                </div>
+                    <Toast
+                        show={this.state.visible}
+                        onClose={() => this.onClose()}
+                        bg={node.style || undefined}
+                    >
+                        <Toast.Header>
+                            <strong className="me-auto">{I18nRenderer.render(node.title)}</strong>
+                        </Toast.Header>
+                        <Toast.Body>
+                            {Renderer.render(node.content)}
+                        </Toast.Body>
+                    </Toast>
+                </ToastContainer>
             );
         }
         else

@@ -22,16 +22,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ScrollbarContainerNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String type = "SCROLLBARCONTAINER";
+    private String  type = "SCROLLBARCONTAINER";
 
     @JsonProperty
-    private Node   content;
+    private Node    content;
 
     @JsonProperty
-    private String verticalBoxMode;
+    private String  verticalBoxMode;
 
     @JsonProperty
-    private String horizontalBoxMode;
+    private String  horizontalBoxMode;
+
+    @JsonProperty
+    private boolean scrollToBottomOnUpdate;
 
     @Override
     public String getType()
@@ -70,6 +73,17 @@ public class ScrollbarContainerNode extends AbstractNode implements Node
     public String getVerticalBoxMode()
     {
         return this.verticalBoxMode;
+    }
+
+    public boolean isScrollToBottomOnUpdate()
+    {
+        return this.scrollToBottomOnUpdate;
+    }
+
+    public ScrollbarContainerNode setScrollToBottomOnUpdate(boolean scrollToBottomOnUpdate)
+    {
+        this.scrollToBottomOnUpdate = scrollToBottomOnUpdate;
+        return this;
     }
 
 }

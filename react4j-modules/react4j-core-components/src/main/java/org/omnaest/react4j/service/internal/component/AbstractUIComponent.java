@@ -44,6 +44,7 @@ import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.service.ContextFactory;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService.LocationAwareTextResolver;
+import org.omnaest.react4j.service.internal.upload.UploadChannelRegistry;
 import org.omnaest.utils.ConsumerUtils;
 import org.omnaest.utils.element.cached.CachedElement;
 
@@ -168,6 +169,11 @@ public abstract class AbstractUIComponent<UIC extends UIComponent<?>> implements
     protected EventHandlerRegistry getEventHandlerRegistry()
     {
         return this.context.getEventHandlerRegistry();
+    }
+
+    protected UploadChannelRegistry getUploadChannelRegistry()
+    {
+        return this.context.getUploadChannelRegistry();
     }
 
     protected UIComponentFactory getUiComponentFactory()
