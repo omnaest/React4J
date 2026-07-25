@@ -28,7 +28,14 @@
         <artifactId>CommonsParent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    
+
+    <properties>
+        <!-- Single source of truth for the Spring Boot version used across react4j-core, react4j-data, and
+             react4j-i18n-deepl (spring-boot-autoconfigure has no managing BOM import in this reactor, unlike
+             Spring Framework itself via spring-framework-bom below), so it cannot drift out of sync again. -->
+        <spring-boot.version>3.2.3</spring-boot.version>
+    </properties>
+
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -44,13 +51,6 @@
             <email>awonderland6@googlemail.com</email>
         </developer>
     </developers>
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
 
     <dependencyManagement>
         <dependencies>
