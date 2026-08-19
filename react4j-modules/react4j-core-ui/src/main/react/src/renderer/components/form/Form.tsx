@@ -188,8 +188,15 @@ export class Form extends React.Component<Props, State> {
         const useLayout = this.props.node.elements?.map((element) => !!element.colspan).reduce((l, r) => l || r);
         const defaultColSpan = useLayout ? "col-12" : "";
         const responseSegment = this.props.node.responsive !== false ? "md-" : "";
+        /*
+         * onSubmit must cancel the browser's own submission. A React4J form has no action and no method of its
+         * own, so an implicit submit - pressing Enter in any text input - navigates to the current page with
+         * every field appended as a query string. The user sees a full reload, the typed value is silently NOT
+         * delivered to the server handler, and it ends up in the URL and in browser history instead. Every
+         * interaction here goes through POST /ui/event; the browser's default submission is never right.
+         */
         return (
-            <form className={useLayout ? "row g-3" : ""} noValidate>
+            <form className={useLayout ? "row g-3" : ""} noValidate onSubmit={(event) => event.preventDefault()}>
                 {
                     this.props.node.elements.map((element) => {
                         const htmlId = element?.field;

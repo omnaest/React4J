@@ -94,8 +94,28 @@
  * itself is sized. min-height:0 does not help here: it permits shrinking along the MAIN axis and says
  * nothing about cross-axis auto sizing. Resolving 100% against the row's now-definite height is what
  * makes the column a fixed box, so whatever the app puts inside it scrolls rather than pushes.
+ *
+ * ONLY above the md breakpoint, where col-md-* columns actually sit side by side. Below it they collapse
+ * to full width and STACK, and "each column is 100% of the region" then means every column after the
+ * first starts below the fold - measured at 700x800: the second card ran from 762px to 1474px with the
+ * region clipping rather than scrolling, leaving the chat panel and its message box simply unreachable.
  */
-.scrollbar-container-content.fill-remaining-height > .container-fluid > .row > .column {
-	height: 100%;
-	min-height: 0;
+@media (min-width: 768px) {
+	.scrollbar-container-content.fill-remaining-height > .container-fluid > .row > .column {
+		height: 100%;
+		min-height: 0;
+	}
+}
+
+/*
+ * Below md the panels stack, so the filled region scrolls as one column of panels instead of holding
+ * them side by side. The intermediate boxes have to stop claiming exactly the region's height for that
+ * to be reachable - otherwise they clip their own overflowing content and nothing scrolls at all.
+ */
+@media (max-width: 767.98px) {
+	.scrollbar-container-content.fill-remaining-height > .container-fluid,
+	.scrollbar-container-content.fill-remaining-height > .container-fluid > .row {
+		flex: 0 0 auto;
+		min-height: auto;
+	}
 }
