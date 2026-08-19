@@ -9,6 +9,8 @@ import { Button as BSButton } from "react-bootstrap";
 export interface ButtonNode extends Node {
     name: I18nTextValue;
     style: string;
+    /** Accessible name announced instead of the visible text (see Button.withAriaLabel). */
+    ariaLabel?: string;
     onClick?: Handler;
 }
 
@@ -30,6 +32,7 @@ export class Button extends React.Component<Props, {}> {
         return (
             <BSButton
                 variant={(this.props.node.style ? " btn-" + this.props.node.style : "")}
+                aria-label={this.props.node.ariaLabel || undefined}
                 //  className={"btn btn-md donate-button" + (this.props.node.style ? " btn-" + this.props.node.style : "")}
                 onClick={this.props.node.onClick ? HandlerFactory.onClick(this.props.node.onClick as Handler, renderingSupport?.uiContextAccessor, renderingSupport?.nodeContextAccessor) : undefined}
             >{I18nRenderer.render(this.props.node.name)}</BSButton>

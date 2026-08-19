@@ -1,4 +1,5 @@
 import React from "react";
+import "./Form.css";
 import { Node, RenderingSupport } from "../../Renderer";
 import { DataContextManager } from "../../data/DataContextManager";
 import { Handler, HandlerFactory } from "../../handler/Handler";
@@ -15,6 +16,8 @@ import { FormCheckbox, FormCheckboxFormElement } from "./elements/FormCheckbox";
 import { FileUpload, FileUploadFormElement, FileUploadFormNode } from "./elements/FileUpload";
 
 export interface FormNode extends Node {
+    /** Lay the controls out on one line as a Bootstrap input group (see Form.withInlineControls). */
+    inlineControls?: boolean;
     elements: FormElement[];
     responsive: boolean;
     onChange?: Handler;
@@ -209,18 +212,32 @@ export class Form extends React.Component<Props, State> {
         const useLayout = this.props.node.elements?.map((element) => !!element.colspan).reduce((l, r) => l || r);
         const defaultColSpan = useLayout ? "col-12" : "";
         const responseSegment = this.props.node.responsive !== false ? "md-" : "";
+        const inline = this.props.node.inlineControls === true;
         return (
-            <form className={useLayout ? "row g-3" : ""} noValidate onSubmit={this.handleSubmit}>
+            <form className={useLayout && !inline ? "row g-3" : ""} noValidate onSubmit={this.handleSubmit}>
                 {
-                    this.props.node.elements.map((element) => {
-                        const htmlId = element?.field;
-                        const colSpan = element.colspan ? "col-" + responseSegment + element.colspan : defaultColSpan;
-                        return (
-                            <div className={colSpan} key={element.field}>
-                                {this.renderElement(htmlId, element)}
+                    /*
+                     * Inline mode drops the per-element column wrapper: an input group joins its children into one
+                     * control, and a div around each of them breaks that join, leaving the button detached below the
+                     * input. See Form.withInlineControls.
+                     */
+                    inline
+                        ? (
+                            <div className="input-group">
+                                {this.props.node.elements.map((element) => (
+                                    <React.Fragment key={element.field}>{this.renderElement(element?.field, element)}</React.Fragment>
+                                ))}
                             </div>
-                        );
-                    })
+                        )
+                        : this.props.node.elements.map((element) => {
+                            const htmlId = element?.field;
+                            const colSpan = element.colspan ? "col-" + responseSegment + element.colspan : defaultColSpan;
+                            return (
+                                <div className={colSpan} key={element.field}>
+                                    {this.renderElement(htmlId, element)}
+                                </div>
+                            );
+                        })
                 }
             </form>
         );

@@ -54,6 +54,7 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
     private UIComponent<?>  footer;
     private boolean         adjust = false;
     private boolean         fullHeight = false;
+    private String          ariaLabel;
 
     public CardImpl(ComponentContext context)
     {
@@ -110,6 +111,7 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
                                      .setLocator(CardImpl.this.locator)
                                      .setAdjust(CardImpl.this.adjust)
                                      .setFullHeight(CardImpl.this.fullHeight)
+                                     .setAriaLabel(CardImpl.this.ariaLabel)
                                      .setHeader(Optional.ofNullable(CardImpl.this.header)
                                                         .map(header -> renderingProcessor.process(header, location))
                                                         .orElse(null))
@@ -254,6 +256,13 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
         {
             component.registerParent(this);
         }
+        return this;
+    }
+
+    @Override
+    public Card withAriaLabel(String ariaLabel)
+    {
+        this.ariaLabel = ariaLabel;
         return this;
     }
 

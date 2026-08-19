@@ -48,6 +48,7 @@ public class FormRendererImpl implements UIComponentRenderer
             ((ServerHandler) onChange).setContextId(dataContext.getId(location));
         }
         return new FormNode().setResponsive(this.formData.isResponsive())
+                             .setInlineControls(this.formData.isInlineControls())
                              .setElements(this.formData.getElements()
                                                        .stream()
                                                        .map(element -> element.render(renderingProcessor, location))

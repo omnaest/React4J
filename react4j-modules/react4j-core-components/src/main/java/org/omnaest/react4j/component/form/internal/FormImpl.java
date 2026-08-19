@@ -206,6 +206,13 @@ public class FormImpl extends AbstractUIComponent<Form> implements Form
     }
 
     @Override
+    public Form withInlineControls(boolean inlineControls)
+    {
+        this.data.inlineControls(inlineControls);
+        return this;
+    }
+
+    @Override
     public Form withResponsiveness(boolean responsive)
     {
         this.data.responsive(responsive);

@@ -40,6 +40,23 @@ public interface Form extends UIComponent<Form>
 {
     public Form withResponsiveness(boolean responsive);
 
+    /**
+     * Lays this form's controls out on ONE line, as a Bootstrap input group - an input with its button joined to the
+     * right of it, sharing a single border, the way a search or message box reads.
+     *
+     * Field labels are kept for screen readers but hidden visually, because a visible label inside an input group
+     * breaks the joined shape. Give every input a placeholder when using this: it is what the input announces as its
+     * accessible name once the label is not on screen.
+     *
+     * Intended for a small form - a message box, a search, a filter. A multi-field form crammed onto one line stops
+     * being readable well before it stops fitting.
+     *
+     * @param inlineControls
+     *            {@code true} to lay the controls out on one line
+     * @return this
+     */
+    public Form withInlineControls(boolean inlineControls);
+
     public Form withDisabledResponsiveness();
 
     public Form add(Function<FormElementFactory, FormElement<?>> formElementFactoryConsumer);

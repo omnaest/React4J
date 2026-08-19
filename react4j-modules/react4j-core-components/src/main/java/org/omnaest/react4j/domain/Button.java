@@ -27,6 +27,21 @@ public interface Button extends UIComponent<Button>
 
     public Button withStyle(Style style);
 
+    /**
+     * An accessible name for this button, announced by a screen reader in place of its visible text.
+     * <p>
+     * Necessary whenever the visible text does not identify the action on its own - an icon-only button announces
+     * nothing at all without it, and several buttons reading "Edit" are indistinguishable to someone who cannot see
+     * which row they sit in. Leave unset when the visible text already says what the button does; a redundant label
+     * that drifts out of step with the text is worse than none.
+     *
+     * @param ariaLabel
+     *            the accessible name, or {@code null} to announce the visible text
+     * @return this
+     */
+    public Button withAriaLabel(String ariaLabel);
+
+
     public Button onClick(EventHandler eventHandler);
 
     public static enum Style

@@ -21,6 +21,8 @@ public class FormData
     @Default
     private boolean              responsive = true;
 
+    private boolean              inlineControls;
+
     private Document             document;
 
     private DataEventHandler     eventHandler;

@@ -40,6 +40,9 @@ public class FormNode extends AbstractNode implements Node
     private boolean               responsive;
 
     @JsonProperty
+    private boolean               inlineControls;
+
+    @JsonProperty
     private Handler               onChange;
 
     @Override
@@ -51,6 +54,17 @@ public class FormNode extends AbstractNode implements Node
     public FormNode setElements(List<FormElementNode> elements)
     {
         this.elements = elements;
+        return this;
+    }
+
+    public boolean isInlineControls()
+    {
+        return this.inlineControls;
+    }
+
+    public FormNode setInlineControls(boolean inlineControls)
+    {
+        this.inlineControls = inlineControls;
         return this;
     }
 

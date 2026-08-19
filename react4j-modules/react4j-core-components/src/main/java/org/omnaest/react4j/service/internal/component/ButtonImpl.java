@@ -40,6 +40,7 @@ public class ButtonImpl extends AbstractUIComponent<Button> implements Button
     private I18nText     name;
     private Style        style = Style.PRIMARY;
     private EventHandler eventHandler;
+    private String       ariaLabel;
 
     public ButtonImpl(ComponentContext context)
     {
@@ -58,6 +59,13 @@ public class ButtonImpl extends AbstractUIComponent<Button> implements Button
     public Button withName(String name)
     {
         this.name = this.toI18nText(name);
+        return this;
+    }
+
+    @Override
+    public Button withAriaLabel(String ariaLabel)
+    {
+        this.ariaLabel = ariaLabel;
         return this;
     }
 
@@ -83,6 +91,7 @@ public class ButtonImpl extends AbstractUIComponent<Button> implements Button
             {
                 ButtonNode node = new ButtonNode().setName(ButtonImpl.this.getTextResolver()
                                                                           .apply(ButtonImpl.this.name, location))
+                                                  .setAriaLabel(ButtonImpl.this.ariaLabel)
                                                   .setStyle(ButtonImpl.this.style.name()
                                                                                  .toLowerCase());
                 if (ButtonImpl.this.eventHandler != null)

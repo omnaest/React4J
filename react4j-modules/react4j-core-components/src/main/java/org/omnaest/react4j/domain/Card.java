@@ -79,4 +79,19 @@ public interface Card extends UIComponentWithContent<Card>
      */
     public Card withFullHeight(boolean fullHeight);
 
+    /**
+     * An accessible name for this card, which also promotes it to a landmark region a screen reader user can jump
+     * between. Emits {@code role="region"} with {@code aria-label}.
+     * <p>
+     * Worth setting on a card that is a major area of the page - a panel, a sidebar, a transcript - because landmarks
+     * are how a screen reader user navigates past content rather than through it. Not worth setting on a card used as
+     * a list item or a tile: promoting dozens of them to landmarks makes the landmark list useless.
+     *
+     * @param ariaLabel
+     *            the accessible name, or {@code null} to leave the card an ordinary container
+     * @return this
+     */
+    public Card withAriaLabel(String ariaLabel);
+
+
 }

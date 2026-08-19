@@ -33,6 +33,9 @@ public class ButtonNode extends AbstractNode implements Node
     private String        style;
 
     @JsonProperty
+    private String        ariaLabel;
+
+    @JsonProperty
     private Handler       onClick;
 
     @Override
@@ -60,6 +63,17 @@ public class ButtonNode extends AbstractNode implements Node
     public ButtonNode setName(I18nTextValue i18nTextValue)
     {
         this.name = i18nTextValue;
+        return this;
+    }
+
+    public String getAriaLabel()
+    {
+        return this.ariaLabel;
+    }
+
+    public ButtonNode setAriaLabel(String ariaLabel)
+    {
+        this.ariaLabel = ariaLabel;
         return this;
     }
 

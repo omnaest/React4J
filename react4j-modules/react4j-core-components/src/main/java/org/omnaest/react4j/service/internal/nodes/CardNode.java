@@ -56,6 +56,9 @@ public class CardNode extends AbstractNode implements Node
     @JsonProperty
     private boolean       fullHeight;
 
+    @JsonProperty
+    private String        ariaLabel;
+
     @Override
     public String getType()
     {
@@ -114,6 +117,17 @@ public class CardNode extends AbstractNode implements Node
     public CardNode setFooter(Node footer)
     {
         this.footer = footer;
+        return this;
+    }
+
+    public String getAriaLabel()
+    {
+        return this.ariaLabel;
+    }
+
+    public CardNode setAriaLabel(String ariaLabel)
+    {
+        this.ariaLabel = ariaLabel;
         return this;
     }
 

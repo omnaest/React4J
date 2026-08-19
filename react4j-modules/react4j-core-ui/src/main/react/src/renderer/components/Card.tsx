@@ -17,6 +17,8 @@ export interface CardNode extends Node {
     image?: ImageNode;
     adjust?: boolean;
     fullHeight?: boolean;
+    /** Accessible name; also promotes the card to a landmark region (see Card.withAriaLabel). */
+    ariaLabel?: string;
 }
 
 export interface Props {
@@ -49,7 +51,9 @@ export class Card extends React.Component<Props, {}> {
             /* h-100 is Bootstrap's own utility; a .card is already a vertical flex container whose .card-body grows,
                so filling the parent height is what puts a footer at the BOTTOM of the panel rather than directly
                under the content. */
-            <BSCard id={this.props.node.locator} className={this.props.node.fullHeight ? "h-100" : undefined}>
+            <BSCard id={this.props.node.locator} className={this.props.node.fullHeight ? "h-100" : undefined}
+                role={this.props.node.ariaLabel ? "region" : undefined}
+                aria-label={this.props.node.ariaLabel || undefined}>
                 {this.props.node.header ? <BSCard.Header>{Renderer.render(this.props.node.header)}</BSCard.Header> : <></>}
                 <BSCard.Body>
                     {this.renderImage(this.props.node?.image)}
