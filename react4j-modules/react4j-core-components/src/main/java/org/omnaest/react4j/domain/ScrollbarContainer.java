@@ -31,6 +31,26 @@ public interface ScrollbarContainer extends UIComponentWithContent<ScrollbarCont
      */
     public ScrollbarContainer scrollToBottomOnUpdate();
 
+    /**
+     * Marks this region as one whose newly appended content should be read out by a screen reader, without moving
+     * keyboard focus. Emits {@code role="log"} with {@code aria-live="polite"} and {@code aria-relevant="additions"}.
+     * <p>
+     * For a transcript - a chat, an event feed, a console - this is the correct alternative to focusing each new
+     * entry. Moving focus to arriving content is a common and damaging instinct: it interrupts whatever the reader
+     * was doing, it drags a keyboard user out of the input they are typing in, and with content that arrives on its
+     * own it can move the caret unpredictably. A live region announces the new text and leaves the user exactly where
+     * they were.
+     * <p>
+     * {@code polite} rather than {@code assertive} deliberately: assertive interrupts the current utterance mid-word,
+     * which is right for an error and wrong for a message that can wait for the end of a sentence. Pair with
+     * {@link #scrollToBottomOnUpdate()} so sighted users see what screen reader users hear.
+     *
+     * @param announcedUpdates
+     *            {@code true} to announce appended content
+     * @return this
+     */
+    public ScrollbarContainer withAnnouncedUpdates(boolean announcedUpdates);
+
     public static enum VerticalBoxMode
     {
         FULL_VIEWPORT_HEIGHT,

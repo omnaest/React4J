@@ -36,10 +36,24 @@ public class ScrollbarContainerNode extends AbstractNode implements Node
     @JsonProperty
     private boolean scrollToBottomOnUpdate;
 
+    @JsonProperty
+    private boolean announcedUpdates;
+
     @Override
     public String getType()
     {
         return this.type;
+    }
+
+    public boolean isAnnouncedUpdates()
+    {
+        return this.announcedUpdates;
+    }
+
+    public ScrollbarContainerNode setAnnouncedUpdates(boolean announcedUpdates)
+    {
+        this.announcedUpdates = announcedUpdates;
+        return this;
     }
 
     public Node getContent()

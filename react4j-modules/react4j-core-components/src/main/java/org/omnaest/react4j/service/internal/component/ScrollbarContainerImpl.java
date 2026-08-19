@@ -37,6 +37,7 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
     private VerticalBoxMode   verticalBoxMode        = VerticalBoxMode.DEFAULT_HEIGHT;
     private HorizontalBoxMode horizontalBoxMode      = HorizontalBoxMode.DEFAULT_WIDTH;
     private boolean           scrollToBottomOnUpdate = false;
+    private boolean           announcedUpdates       = false;
 
     public ScrollbarContainerImpl(ComponentContext context)
     {
@@ -45,11 +46,18 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
 
     public ScrollbarContainerImpl(ComponentContext context, UIComponent<?> content, VerticalBoxMode verticalBoxMode, HorizontalBoxMode horizontalBoxMode, boolean scrollToBottomOnUpdate)
     {
+        this(context, content, verticalBoxMode, horizontalBoxMode, scrollToBottomOnUpdate, false);
+    }
+
+    public ScrollbarContainerImpl(ComponentContext context, UIComponent<?> content, VerticalBoxMode verticalBoxMode, HorizontalBoxMode horizontalBoxMode,
+                                  boolean scrollToBottomOnUpdate, boolean announcedUpdates)
+    {
         super(context);
         this.content = content;
         this.verticalBoxMode = verticalBoxMode;
         this.horizontalBoxMode = horizontalBoxMode;
         this.scrollToBottomOnUpdate = scrollToBottomOnUpdate;
+        this.announcedUpdates = announcedUpdates;
     }
 
     @Override
@@ -75,7 +83,8 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
                                                    .setHorizontalBoxMode(ScrollbarContainerImpl.this.horizontalBoxMode.name()
                                                                                                                       .replaceAll("_", "-")
                                                                                                                       .toLowerCase())
-                                                   .setScrollToBottomOnUpdate(ScrollbarContainerImpl.this.scrollToBottomOnUpdate);
+                                                   .setScrollToBottomOnUpdate(ScrollbarContainerImpl.this.scrollToBottomOnUpdate)
+                                                   .setAnnouncedUpdates(ScrollbarContainerImpl.this.announcedUpdates);
             }
 
             @Override
@@ -126,6 +135,13 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
     }
 
     @Override
+    public ScrollbarContainer withAnnouncedUpdates(boolean announcedUpdates)
+    {
+        this.announcedUpdates = announcedUpdates;
+        return this;
+    }
+
+    @Override
     public ScrollbarContainer scrollToBottomOnUpdate()
     {
         this.scrollToBottomOnUpdate = true;
@@ -136,7 +152,7 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
     public UIComponentProvider<ScrollbarContainer> asTemplateProvider()
     {
         return () -> new ScrollbarContainerImpl(this.context, this.content, this.verticalBoxMode, this.horizontalBoxMode,
-                                                this.scrollToBottomOnUpdate);
+                                                this.scrollToBottomOnUpdate, this.announcedUpdates);
     }
 
 }
