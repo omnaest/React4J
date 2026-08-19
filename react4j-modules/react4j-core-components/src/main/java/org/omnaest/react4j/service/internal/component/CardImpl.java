@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.component;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -48,15 +49,25 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
     private I18nText        subTitle;
     private Optional<Image> image  = Optional.empty();
     private String          locator;
+    private UIComponent<?>  header;
     private UIComponent<?>  content;
+    private UIComponent<?>  footer;
     private boolean         adjust = false;
+    private boolean         fullHeight = false;
 
     public CardImpl(ComponentContext context)
     {
         super(context);
     }
 
-    public CardImpl(ComponentContext context, TextValueSource featuredTitle, TextValueSource title, I18nText subTitle, Optional<Image> image, String locator, UIComponent<?> content, boolean adjust)
+    public CardImpl(ComponentContext context, TextValueSource featuredTitle, TextValueSource title, I18nText subTitle, Optional<Image> image, String locator,
+                    UIComponent<?> content, boolean adjust)
+    {
+        this(context, featuredTitle, title, subTitle, image, locator, null, content, null, adjust);
+    }
+
+    public CardImpl(ComponentContext context, TextValueSource featuredTitle, TextValueSource title, I18nText subTitle, Optional<Image> image, String locator,
+                    UIComponent<?> header, UIComponent<?> content, UIComponent<?> footer, boolean adjust)
     {
         super(context);
         this.featuredTitle = featuredTitle;
@@ -64,7 +75,9 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
         this.subTitle = subTitle;
         this.image = image;
         this.locator = locator;
+        this.header = header;
         this.content = content;
+        this.footer = footer;
         this.adjust = adjust;
     }
 
@@ -96,9 +109,16 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
                                                                   .orElse(null))
                                      .setLocator(CardImpl.this.locator)
                                      .setAdjust(CardImpl.this.adjust)
+                                     .setFullHeight(CardImpl.this.fullHeight)
+                                     .setHeader(Optional.ofNullable(CardImpl.this.header)
+                                                        .map(header -> renderingProcessor.process(header, location))
+                                                        .orElse(null))
                                      .setContent(Optional.ofNullable(CardImpl.this.content)
                                                          .map(content -> renderingProcessor.process(content, location))
-                                                         .orElse(null));
+                                                         .orElse(null))
+                                     .setFooter(Optional.ofNullable(CardImpl.this.footer)
+                                                        .map(footer -> renderingProcessor.process(footer, location))
+                                                        .orElse(null));
             }
 
             @Override
@@ -126,10 +146,17 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
             {
             }
 
+            /**
+             * Header and footer are enumerated here as well as the body. This traversal is how event handlers get
+             * registered, so omitting them would leave any Button placed in a header or footer rendered but dead -
+             * the failure would look like a click doing nothing rather than like a missing registration.
+             */
             @Override
             public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
-                return Stream.of(ParentLocationAndComponent.of(parentLocation, CardImpl.this.content));
+                return Stream.of(CardImpl.this.header, CardImpl.this.content, CardImpl.this.footer)
+                             .filter(Objects::nonNull)
+                             .map(component -> ParentLocationAndComponent.of(parentLocation, component));
             }
 
         };
@@ -209,16 +236,50 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
     }
 
     @Override
+    public Card withHeader(UIComponent<?> component)
+    {
+        this.header = component;
+        if (component != null)
+        {
+            component.registerParent(this);
+        }
+        return this;
+    }
+
+    @Override
+    public Card withFooter(UIComponent<?> component)
+    {
+        this.footer = component;
+        if (component != null)
+        {
+            component.registerParent(this);
+        }
+        return this;
+    }
+
+    @Override
+    public Card withFullHeight(boolean fullHeight)
+    {
+        this.fullHeight = fullHeight;
+        return this;
+    }
+
+    @Override
     public Card withAdjustment(boolean value)
     {
         this.adjust = value;
         return this;
     }
 
+    /**
+     * Note the second argument: this used to pass {@code featuredTitle} a second time in the {@code title} position,
+     * so a templated Card silently lost its title and rendered the featured title in its place.
+     */
     @Override
     public UIComponentProvider<Card> asTemplateProvider()
     {
-        return () -> new CardImpl(this.context, this.featuredTitle, this.featuredTitle, this.subTitle, this.image, this.locator, this.content, this.adjust);
+        return () -> new CardImpl(this.context, this.featuredTitle, this.title, this.subTitle, this.image, this.locator, this.header, this.content,
+                                  this.footer, this.adjust);
     }
 
 }

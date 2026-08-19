@@ -34,4 +34,49 @@ public interface Card extends UIComponentWithContent<Card>
 
     public Card withSubTitle(String subTitle);
 
+    /**
+     * Content for the card's header - a Bootstrap {@code card-header}, rendered above the body and visually separated
+     * from it.
+     * <p>
+     * Distinct from {@link #withTitle(String)}, which is a heading INSIDE the body: a header can hold components, so
+     * it is where controls that act on the whole card belong (a toolbar, a filter chip row, a close button). Without
+     * it an app has to place such controls in the body and separate them by hand.
+     *
+     * @param component
+     *            the header content, or {@code null} for no header
+     * @return this
+     */
+    public Card withHeader(UIComponent<?> component);
+
+    /**
+     * Content for the card's footer - a Bootstrap {@code card-footer}, rendered below the body and visually separated
+     * from it.
+     * <p>
+     * Useful for the actions or summary belonging to a card: a submit row, a result count, pagination. Note that the
+     * footer sits after the body in normal flow; it does not pin to the bottom of a fixed-height card on its own.
+     *
+     * @param component
+     *            the footer content, or {@code null} for no footer
+     * @return this
+     */
+    public Card withFooter(UIComponent<?> component);
+
+    /**
+     * Makes the card take the full height of its parent instead of sizing to its content.
+     * <p>
+     * The point is not the height itself but what follows from it: a Bootstrap card is already a vertical flex
+     * container whose body grows, so a full-height card puts its {@link #withFooter(UIComponent)} at the BOTTOM of the
+     * available space rather than immediately under the content. That is the difference between a chat panel whose
+     * message box sits at the foot of the panel and one whose message box floats halfway up it.
+     * <p>
+     * Only meaningful when the parent has a height to fill - pair it with
+     * {@link org.omnaest.react4j.domain.ScrollbarContainer.VerticalBoxMode#FILL_REMAINING_HEIGHT} or
+     * {@code FULL_PARENT_HEIGHT}, or there is nothing to be 100% of.
+     *
+     * @param fullHeight
+     *            {@code true} to fill the parent's height
+     * @return this
+     */
+    public Card withFullHeight(boolean fullHeight);
+
 }

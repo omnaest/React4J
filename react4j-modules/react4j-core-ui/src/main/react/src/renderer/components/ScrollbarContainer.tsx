@@ -1,5 +1,8 @@
 import React from "react";
 import { Node, Renderer } from "../Renderer";
+// Layout mechanics for this component's box modes. Bundled with the framework rather than placed in
+// /css/custom.css, which is the application's customisation slot - see ScrollbarContainer.css.
+import "./ScrollbarContainer.css";
 
 export interface ScrollbarContainerNode extends Node
 {

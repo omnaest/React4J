@@ -65,7 +65,22 @@ public interface UIContentHolder<R>
                                                                      f -> f.newScrollbarContainer()
                                                                            .withVerticalBox(VerticalBoxMode.HALF_VIEWPORT_HEIGHT)), FULL_CONTENT_WIDTH(
                                                                                    f -> f.newScrollbarContainer()
-                                                                                         .withHorizontalBox(HorizontalBoxMode.FULL_CONTENT_WIDTH));
+                                                                                         .withHorizontalBox(HorizontalBoxMode.FULL_CONTENT_WIDTH)),
+
+        /**
+         * Lays children out top to bottom over the full height of the parent, so that one of them can claim whatever
+         * the others leave over. Pair with {@link #FILL_REMAINING_HEIGHT} on that child - see
+         * {@link VerticalBoxMode#VERTICAL_FLOW}.
+         */
+        VERTICAL_FLOW(f -> f.newScrollbarContainer()
+                            .withVerticalBox(VerticalBoxMode.VERTICAL_FLOW)),
+
+        /**
+         * Takes whatever vertical space the siblings leave over and scrolls inside itself. Requires an enclosing
+         * {@link #VERTICAL_FLOW} - see {@link VerticalBoxMode#FILL_REMAINING_HEIGHT}.
+         */
+        FILL_REMAINING_HEIGHT(f -> f.newScrollbarContainer()
+                                    .withVerticalBox(VerticalBoxMode.FILL_REMAINING_HEIGHT));
 
         private LayoutProvider layoutProvider;
 

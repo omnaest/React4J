@@ -1,0 +1,15 @@
+/*
+ * Card's own layout mechanics. Lives beside the component and is imported by Card.tsx, so it ships with
+ * the framework rather than in /css/custom.css - that file is the application's customisation slot, and
+ * anything structural placed there disappears the moment an app ships its own copy.
+ *
+ * A full-height card (withFullHeight(true)) needs its body to scroll rather than grow: a .card is a
+ * vertical flex container and .card-body already carries flex:1 1 auto, so without min-height:0 the body
+ * refuses to shrink below its content and pushes the footer out of the card instead of scrolling. That
+ * min-height:0 is the same property Bootstrap ships no utility for.
+ */
+
+.card.h-100 > .card-body {
+	min-height: 0;
+	overflow-y: auto;
+}

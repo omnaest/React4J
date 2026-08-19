@@ -39,13 +39,22 @@ public class CardNode extends AbstractNode implements Node
     private String        locator;
 
     @JsonProperty
+    private Node          header;
+
+    @JsonProperty
     private Node          content;
+
+    @JsonProperty
+    private Node          footer;
 
     @JsonProperty
     private ImageNode     image;
 
     @JsonProperty
     private boolean       adjust;
+
+    @JsonProperty
+    private boolean       fullHeight;
 
     @Override
     public String getType()
@@ -83,6 +92,39 @@ public class CardNode extends AbstractNode implements Node
     public CardNode setContent(Node content)
     {
         this.content = content;
+        return this;
+    }
+
+    public Node getHeader()
+    {
+        return this.header;
+    }
+
+    public CardNode setHeader(Node header)
+    {
+        this.header = header;
+        return this;
+    }
+
+    public Node getFooter()
+    {
+        return this.footer;
+    }
+
+    public CardNode setFooter(Node footer)
+    {
+        this.footer = footer;
+        return this;
+    }
+
+    public boolean isFullHeight()
+    {
+        return this.fullHeight;
+    }
+
+    public CardNode setFullHeight(boolean fullHeight)
+    {
+        this.fullHeight = fullHeight;
         return this;
     }
 
