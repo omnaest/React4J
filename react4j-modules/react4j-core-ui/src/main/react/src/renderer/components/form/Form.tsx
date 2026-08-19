@@ -1,5 +1,4 @@
 import React from "react";
-import "./Form.css";
 import { Node, RenderingSupport } from "../../Renderer";
 import { DataContextManager } from "../../data/DataContextManager";
 import { Handler, HandlerFactory } from "../../handler/Handler";
@@ -106,7 +105,7 @@ export class Form extends React.Component<Props, State> {
         HandlerFactory.handleEvent(this.props.node?.onChange as Handler, renderingSupport?.uiContextAccessor, renderingSupport?.nodeContextAccessor);
     }
 
-    private renderElement(htmlId: string, element: FormElement): React.ReactNode {
+    private renderElement(htmlId: string, element: FormElement, inline: boolean = false): React.ReactNode {
         return RerenderingHelper.wrapIntoRerenderingContainer([element.contextId],
             (renderingSupport) => {
                 if (element) {
@@ -114,6 +113,7 @@ export class Form extends React.Component<Props, State> {
                         return (
                             <Input
                                 id={htmlId}
+                                inline={inline}
                                 element={element as InputFormElement}
                                 onUpdate={(element, value) => this.handleInputChange(element, value, renderingSupport)}
                                 updateCounter={this.state?.updateCounter}
@@ -163,7 +163,11 @@ export class Form extends React.Component<Props, State> {
                         const fullWidthClassName = element.colspan ? "w-100 " : "";
                         return (
                             <>
-                                <label htmlFor={htmlId}>{I18nRenderer.render(element.label)}&nbsp;</label>
+                                {/* Inline mode emits ONLY the control. Bootstrap flattens the corners of every
+                                    .input-group child that is not first or last, so a label before the button or a
+                                    description after it makes the button neither - and the group renders square at
+                                    both ends instead of rounded. */}
+                                {!inline && <label htmlFor={htmlId}>{I18nRenderer.render(element.label)}&nbsp;</label>}
                                 <button
                                     id={htmlId}
                                     type="button"
@@ -172,7 +176,7 @@ export class Form extends React.Component<Props, State> {
                                     aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, uiContext, element.field)}
                                     onClick={HandlerFactory.onClick(buttonElement.onClick as Handler, renderingSupport?.uiContextAccessor, renderingSupport?.nodeContextAccessor)}
                                 >{I18nRenderer.render(buttonElement.text)}</button>
-                                {FormDescriptionHelper.renderDescription(htmlId, element.description)}
+                                {!inline && FormDescriptionHelper.renderDescription(htmlId, element.description)}
                                 {ValidationMessageHelper.renderValidationFeedback(htmlId, uiContext, element.field)}
                             </>
                         );
@@ -225,7 +229,7 @@ export class Form extends React.Component<Props, State> {
                         ? (
                             <div className="input-group">
                                 {this.props.node.elements.map((element) => (
-                                    <React.Fragment key={element.field}>{this.renderElement(element?.field, element)}</React.Fragment>
+                                    <React.Fragment key={element.field}>{this.renderElement(element?.field, element, true)}</React.Fragment>
                                 ))}
                             </div>
                         )

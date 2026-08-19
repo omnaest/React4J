@@ -25,6 +25,8 @@ export interface Props {
     renderingSupport?: RenderingSupport;
     onUpdate: (element: InputFormElement, value: string) => void
     updateCounter: number;
+    /** Rendered inside a Bootstrap input group: emit only the control (see Form.withInlineControls). */
+    inline?: boolean;
 }
 
 export class Input extends React.Component<Props> {
@@ -53,7 +55,11 @@ export class Input extends React.Component<Props> {
         const ariaDescribedByValidation = ValidationMessageHelper.determineValidationFeedbackJoinedHtmlIds(htmlId, uiContext, element.field);
         return (
             <>
-                {FormLabelHelper.renderLabel(htmlId, element.label)}
+                {/* Inline mode emits ONLY the control. Bootstrap flattens the corners of every .input-group child
+                    that is not first or last, so a label before the input or a description after it makes the input
+                    neither - and the group renders square at both ends instead of rounded. The label's text becomes
+                    the accessible name below, so nothing is lost to a screen reader. */}
+                {!this.props.inline && FormLabelHelper.renderLabel(htmlId, element.label)}
                 <Form.Control
                     id={htmlId}
                     type={element.input?.type || "text"}
@@ -66,9 +72,9 @@ export class Input extends React.Component<Props> {
                     readOnly={element.readonly === true}
                     {...ValidationMessageHelper.determineFormControlValidationProperties(htmlId, uiContext, element.field)}
                     aria-describedby={FormDescriptionHelper.determineDescriptionHtmlId(htmlId) + " " + ariaDescribedByValidation}
-                    aria-label={I18nRenderer.render(element.input?.placeholder)}
+                    aria-label={I18nRenderer.render(element.label) || I18nRenderer.render(element.input?.placeholder)}
                 />
-                {FormDescriptionHelper.renderDescription(htmlId, element.description)}
+                {!this.props.inline && FormDescriptionHelper.renderDescription(htmlId, element.description)}
                 {ValidationMessageHelper.renderValidationFeedback(htmlId, uiContext, element.field)}
             </>
         );
