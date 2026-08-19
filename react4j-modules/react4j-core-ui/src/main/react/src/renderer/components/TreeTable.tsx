@@ -134,6 +134,8 @@ export interface TreeTableNode extends Node {
 
     /** Whether the header stays put while the body scrolls (see TreeTable.withStickyHeader). */
     stickyHeader?: boolean;
+    /** Accessible name for the grid as a whole (see TreeTable.withAriaLabel). */
+    ariaLabel?: string;
     /**
      * Slice 7: count of columns with a non-empty active filter value -- drives the funnel toggle's
      * filled-vs-outline "filters are active" state (and the accessible aria-label suffix) even while
@@ -666,11 +668,19 @@ export class TreeTable extends React.Component<Props, {}> {
         const filtersVisible = node.filtersVisible === true;
 
         return (
-            <table className={"table" + (node.stickyHeader === true ? " tree-table-sticky-header" : "")}>
+            <table className={"table" + (node.stickyHeader === true ? " tree-table-sticky-header" : "")} aria-label={node.ariaLabel || undefined}>
                 <thead>
                     <tr>
                         {columns.map((column, columnIndex) => (
-                            <th key={column.key} scope="col">
+                            /* aria-sort is what makes a sorted column audible: without it a screen reader reads the
+                               header text and the sort control's label, but never says the table is currently ordered
+                               by this column. "none" rather than omitting it, so the header announces that it is
+                               sortable-but-unsorted rather than not sortable at all. */
+                            <th key={column.key} scope="col"
+                                aria-sort={node.sortEnabled === true && column.sortable === true
+                                    ? (column.sortDirection === "ASCENDING" ? "ascending"
+                                        : column.sortDirection === "DESCENDING" ? "descending" : "none")
+                                    : undefined}>
                                 {columnIndex === 0 && node.filterEnabled === true && this.renderFilterToggle(node, renderingSupport)}
                                 {columnIndex === 0 && node.flatModeToggleEnabled === true && this.renderFlatModeToggle(node, renderingSupport)}
                                 <span className="tree-table-header-title">{column.title}</span>

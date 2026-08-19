@@ -40,6 +40,8 @@ public interface TreeTable extends UIComponent<TreeTable>
      * @param enabled
      * @return this {@link TreeTable} for fluent chaining
      */
+    public TreeTable withFilterEnabled(boolean enabled);
+
     /**
      * Keeps the header row - and the filter row with it - in place while the body scrolls, so the columns stay
      * identifiable however far down the data you are.
@@ -58,7 +60,22 @@ public interface TreeTable extends UIComponent<TreeTable>
      */
     public TreeTable withStickyHeader(boolean stickyHeader);
 
-    public TreeTable withFilterEnabled(boolean enabled);
+    /**
+     * An accessible name for the grid as a whole, announced when a screen reader enters the table.
+     * <p>
+     * Worth setting whenever a page holds more than one table, or the table's meaning comes from a heading beside it
+     * rather than from the table itself: "table with 6 columns" tells a listener nothing about which table they have
+     * landed in.
+     * <p>
+     * Note the grid already announces its per-column state without configuration - each header carries
+     * {@code aria-sort} reflecting the current ordering, and the filter, sort and expand controls carry their own
+     * labels naming the column they act on.
+     *
+     * @param ariaLabel
+     *            the accessible name, or {@code null} to leave the table unnamed
+     * @return this
+     */
+    public TreeTable withAriaLabel(String ariaLabel);
 
     /**
      * Enables or disables per-column sorting entirely (default {@code true}). When {@code false}, no sort toggles

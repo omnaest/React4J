@@ -70,6 +70,13 @@ public class TreeTableImpl extends AbstractUIComponentWithSubComponents<TreeTabl
     }
 
     @Override
+    public TreeTable withAriaLabel(String ariaLabel)
+    {
+        this.data.ariaLabel(ariaLabel);
+        return this;
+    }
+
+    @Override
     public TreeTable withStickyHeader(boolean stickyHeader)
     {
         this.data.stickyHeader(stickyHeader);

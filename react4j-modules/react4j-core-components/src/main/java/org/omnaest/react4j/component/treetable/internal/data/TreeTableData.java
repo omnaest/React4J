@@ -41,6 +41,8 @@ public class TreeTableData
     @Default
     private boolean               stickyHeader            = false;
 
+    private String                ariaLabel;
+
     @Default
     private boolean               initiallyFlat           = false;
 }

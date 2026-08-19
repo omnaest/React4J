@@ -77,6 +77,13 @@ public class TreeTableNode extends AbstractNode
     private boolean            stickyHeader;
 
     /**
+     * Accessible name for the grid as a whole (build-time component configuration, constant across renders), or
+     * {@code null} to leave the table unnamed.
+     */
+    @JsonProperty
+    private String             ariaLabel;
+
+    /**
      * Whether the per-column sort toggle accumulates a multi-column ordered sort spec, or replaces it with a single
      * active column on every click (build-time component configuration, constant across renders, see
      * {@code TreeTable.withMultiColumnSortEnabled(boolean)}, default {@code false} i.e. single-column). Drives

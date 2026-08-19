@@ -368,6 +368,7 @@ public class TreeTableRendererImpl implements UIComponentRenderer
                                 .filterEnabled(filterEnabled)
                                 .sortEnabled(sortEnabled)
                                 .stickyHeader(this.data.isStickyHeader())
+                                .ariaLabel(this.data.getAriaLabel())
                                 .multiColumnSortEnabled(multiColumnSortEnabled)
                                 .activeSortCount(sorts.size())
                                 .flatModeToggleEnabled(flatModeToggleEnabled)
