@@ -681,8 +681,10 @@ export class TreeTable extends React.Component<Props, {}> {
                                     ? (column.sortDirection === "ASCENDING" ? "ascending"
                                         : column.sortDirection === "DESCENDING" ? "descending" : "none")
                                     : undefined}>
-                                {columnIndex === 0 && node.filterEnabled === true && this.renderFilterToggle(node, renderingSupport)}
+                                {/* Flat/tree first, then filter: the toggle that changes what the table IS reads
+                                    ahead of the one that narrows what it shows. */}
                                 {columnIndex === 0 && node.flatModeToggleEnabled === true && this.renderFlatModeToggle(node, renderingSupport)}
+                                {columnIndex === 0 && node.filterEnabled === true && this.renderFilterToggle(node, renderingSupport)}
                                 <span className="tree-table-header-title">{column.title}</span>
                                 {node.sortEnabled === true && column.sortable === true && this.renderSortToggle(column, renderingSupport)}
                                 {node.sortEnabled === true && column.sortable === true && this.shouldRenderSortPrioritySelect(node, column) && this.renderSortPrioritySelect(node, column, renderingSupport)}
