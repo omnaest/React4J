@@ -75,6 +75,27 @@ export class Form extends React.Component<Props, State> {
         this.state = { updateCounter: 0 };
     }
 
+    /**
+     * Enter in a text input reaches here as an implicit form submission.
+     *
+     * The browser's own submission is always wrong for a React4J form: it has no action and no method, so the
+     * browser navigates to the current page with every field appended as a query string - a full reload, with the
+     * typed value silently NOT delivered to the server handler and left in the URL and browser history instead.
+     *
+     * Cancelling it is necessary but not sufficient: doing only that makes Enter do nothing at all, which is worse
+     * than it looks, because a text field that ignores Enter reads as broken. So the default is reproduced rather
+     * than removed - the browser would activate the form's first submit button, and this activates the form's first
+     * enabled button, which is the same thing given React4J renders every form button as type="button".
+     *
+     * Clicking a button directly does NOT come through here (a type="button" never submits), so there is no risk of
+     * one click being counted twice.
+     */
+    private handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+        event.preventDefault();
+        const firstEnabledButton = event.currentTarget.querySelector<HTMLButtonElement>("button:not([disabled])");
+        firstEnabledButton?.click();
+    };
+
     private handleInputChange(element: FormElement, value: string | string[], renderingSupport?: RenderingSupport) {
         const updateCounter = DataContextManager.updateFieldByContext(element.contextId, element.field, value, renderingSupport?.uiContextAccessor);
         this.setState({ updateCounter: updateCounter });
@@ -188,15 +209,8 @@ export class Form extends React.Component<Props, State> {
         const useLayout = this.props.node.elements?.map((element) => !!element.colspan).reduce((l, r) => l || r);
         const defaultColSpan = useLayout ? "col-12" : "";
         const responseSegment = this.props.node.responsive !== false ? "md-" : "";
-        /*
-         * onSubmit must cancel the browser's own submission. A React4J form has no action and no method of its
-         * own, so an implicit submit - pressing Enter in any text input - navigates to the current page with
-         * every field appended as a query string. The user sees a full reload, the typed value is silently NOT
-         * delivered to the server handler, and it ends up in the URL and in browser history instead. Every
-         * interaction here goes through POST /ui/event; the browser's default submission is never right.
-         */
         return (
-            <form className={useLayout ? "row g-3" : ""} noValidate onSubmit={(event) => event.preventDefault()}>
+            <form className={useLayout ? "row g-3" : ""} noValidate onSubmit={this.handleSubmit}>
                 {
                     this.props.node.elements.map((element) => {
                         const htmlId = element?.field;
