@@ -69,6 +69,14 @@ public class TreeTableNode extends AbstractNode
     private boolean            sortEnabled;
 
     /**
+     * Whether the header stays put while the body scrolls (build-time component configuration, constant across
+     * renders): {@code true} when the app called {@code TreeTable.withStickyHeader(true)}. Purely presentational -
+     * the server emits the same rows either way.
+     */
+    @JsonProperty
+    private boolean            stickyHeader;
+
+    /**
      * Whether the per-column sort toggle accumulates a multi-column ordered sort spec, or replaces it with a single
      * active column on every click (build-time component configuration, constant across renders, see
      * {@code TreeTable.withMultiColumnSortEnabled(boolean)}, default {@code false} i.e. single-column). Drives

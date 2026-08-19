@@ -1,4 +1,5 @@
 import React from "react";
+import "./TreeTable.css";
 import { Node, RenderingSupport, Target } from "../Renderer";
 import { RenderingSupportContext } from "../support/RenderingSupportContext";
 import { HandlerFactory, ServerHandler } from "../handler/Handler";
@@ -130,6 +131,9 @@ export interface TreeTableNode extends Node {
      * own visibility state. Defaults to `false` (collapsed) on the backend.
      */
     filtersVisible: boolean;
+
+    /** Whether the header stays put while the body scrolls (see TreeTable.withStickyHeader). */
+    stickyHeader?: boolean;
     /**
      * Slice 7: count of columns with a non-empty active filter value -- drives the funnel toggle's
      * filled-vs-outline "filters are active" state (and the accessible aria-label suffix) even while
@@ -662,7 +666,7 @@ export class TreeTable extends React.Component<Props, {}> {
         const filtersVisible = node.filtersVisible === true;
 
         return (
-            <table className="table">
+            <table className={"table" + (node.stickyHeader === true ? " tree-table-sticky-header" : "")}>
                 <thead>
                     <tr>
                         {columns.map((column, columnIndex) => (

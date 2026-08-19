@@ -39,5 +39,8 @@ public class TreeTableData
     private boolean               flatModeToggleEnabled   = false;
 
     @Default
+    private boolean               stickyHeader            = false;
+
+    @Default
     private boolean               initiallyFlat           = false;
 }

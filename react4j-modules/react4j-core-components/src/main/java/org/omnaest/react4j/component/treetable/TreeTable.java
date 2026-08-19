@@ -40,6 +40,24 @@ public interface TreeTable extends UIComponent<TreeTable>
      * @param enabled
      * @return this {@link TreeTable} for fluent chaining
      */
+    /**
+     * Keeps the header row - and the filter row with it - in place while the body scrolls, so the columns stay
+     * identifiable however far down the data you are.
+     * <p>
+     * The table does not create a scroll region of its own; it sticks to whichever ancestor scrolls. That is
+     * deliberate: a table that scrolled internally would need a height, and any height it could invent would be a
+     * fixed number that is wrong at the next window size. Put the table in a region that has a height instead - see
+     * {@link org.omnaest.react4j.domain.ScrollbarContainer.VerticalBoxMode#FILL_REMAINING_HEIGHT} - and the header
+     * sticks to the top of that region.
+     * <p>
+     * Purely presentational: the same rows are emitted either way.
+     *
+     * @param stickyHeader
+     *            {@code true} to keep the header visible while the body scrolls
+     * @return this
+     */
+    public TreeTable withStickyHeader(boolean stickyHeader);
+
     public TreeTable withFilterEnabled(boolean enabled);
 
     /**

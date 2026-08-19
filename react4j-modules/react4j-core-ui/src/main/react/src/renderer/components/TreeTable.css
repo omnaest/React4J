@@ -1,0 +1,53 @@
+/*
+ * TreeTable's own layout mechanics. Lives beside the component and is imported by TreeTable.tsx, so it
+ * ships with the framework rather than in /css/custom.css - that file is the application's customisation
+ * slot, and anything structural placed there disappears the moment an app ships its own copy.
+ *
+ * Sticky header (withStickyHeader(true)): the header row, and the filter row with it, stay in place while
+ * the body scrolls.
+ *
+ * Applied to the whole <thead> rather than to individual <th> cells, deliberately. Sticking the cells
+ * would need each row offset by the height of the rows above it - a pixel number that is wrong as soon as
+ * the header font, padding or the filter row's presence changes - whereas a sticky <thead> carries both
+ * of its rows as one block and needs no offsets at all.
+ *
+ * The table does not scroll itself; it sticks to whichever ancestor scrolls. A table with its own scroll
+ * region would need a height, and any height it invented would be wrong at the next window size.
+ */
+
+.tree-table-sticky-header > thead {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+}
+
+/*
+ * A sticky header sticks at the top of its scroll container's CONTENT box, so any top padding on that
+ * container is a gap ABOVE the header through which scrolled rows remain visible - a sliver of the row
+ * that just passed underneath, hanging over the column titles. Removing the padding closes that gap; the
+ * header's own cell padding still provides the spacing.
+ *
+ * Scoped by :has() to containers that actually hold a sticky table, so no other layout is touched.
+ *
+ * !important for the same reason Bootstrap's own spacing utilities carry it (.pt-0 is
+ * "padding-top:0!important"): the rule it has to beat is .card-body's padding SHORTHAND, and a shorthand
+ * declared later overrides a longhand declared earlier regardless of how the selectors compare. An
+ * earlier attempt wrapped these selectors in :where(), which zeroes their specificity, and lost outright.
+ */
+.card-body:has(.tree-table-sticky-header),
+.scrollbar-container:has(.tree-table-sticky-header),
+.scrollbar-container-content:has(.tree-table-sticky-header) {
+	padding-top: 0 !important;
+}
+
+/*
+ * A sticky cell's own borders do not paint, because Bootstrap's .table uses border-collapse:collapse and
+ * collapsed borders belong to the table, not to the cell that scrolled away from it. The header would
+ * therefore sit on the first data row with no dividing line. box-shadow is drawn by the cell itself and
+ * so travels with it.
+ */
+.tree-table-sticky-header > thead > tr > th,
+.tree-table-sticky-header > thead > tr > td {
+	background-color: var(--bs-body-bg, #ffffff);
+	box-shadow: inset 0 -1px 0 var(--bs-border-color, #dee2e6);
+}

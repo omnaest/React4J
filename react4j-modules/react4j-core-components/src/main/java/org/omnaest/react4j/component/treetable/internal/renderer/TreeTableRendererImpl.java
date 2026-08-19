@@ -367,6 +367,7 @@ public class TreeTableRendererImpl implements UIComponentRenderer
                                 .filterToggleTarget(filterToggleLocation != null ? Target.from(filterToggleLocation) : Target.empty())
                                 .filterEnabled(filterEnabled)
                                 .sortEnabled(sortEnabled)
+                                .stickyHeader(this.data.isStickyHeader())
                                 .multiColumnSortEnabled(multiColumnSortEnabled)
                                 .activeSortCount(sorts.size())
                                 .flatModeToggleEnabled(flatModeToggleEnabled)

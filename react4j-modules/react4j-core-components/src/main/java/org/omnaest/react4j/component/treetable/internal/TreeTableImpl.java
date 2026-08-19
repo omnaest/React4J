@@ -70,6 +70,13 @@ public class TreeTableImpl extends AbstractUIComponentWithSubComponents<TreeTabl
     }
 
     @Override
+    public TreeTable withStickyHeader(boolean stickyHeader)
+    {
+        this.data.stickyHeader(stickyHeader);
+        return this;
+    }
+
+    @Override
     public TreeTable withMultiColumnSortEnabled(boolean enabled)
     {
         this.data.multiColumnSortEnabled(enabled);
