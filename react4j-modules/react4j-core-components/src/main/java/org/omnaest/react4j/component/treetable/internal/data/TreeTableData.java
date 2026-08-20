@@ -2,6 +2,7 @@ package org.omnaest.react4j.component.treetable.internal.data;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.omnaest.react4j.component.treetable.TreeTable;
 import org.omnaest.react4j.component.treetable.provider.TreeTableColumn;
@@ -47,16 +48,21 @@ public class TreeTableData
     private boolean               initiallyFlat           = false;
 
     /**
-     * A server-side request to SET the flat/tree mode on this render, rather than merely default it.
+     * The application-supplied flat/tree mode, making this a CONTROLLED component.
      * <p>
-     * {@code null} means "no request" and is the normal case - the mode then comes from the submitted data, i.e.
-     * from whatever the user last chose. A non-null value is applied and WRITTEN BACK into the submitted data, so
-     * it behaves exactly as though the toggle had been pressed: it persists, and the user's next click flips from
-     * it rather than from a stale value.
+     * {@code null} - the normal case - leaves the table uncontrolled: the mode comes from the field the toggle
+     * flips, and the application need not know about it at all. A non-null value is authoritative for every
+     * render, and the application is then responsible for keeping it current via {@link #onFlatModeChange}.
      * <p>
-     * Deliberately not a plain boolean with a default. A default cannot express "leave it alone", and a table
-     * rebuilt on every render - which is the ordinary React4J shape - would then re-assert the same value forever
-     * and silently undo the user's toggle on the very next round trip.
+     * Boxed rather than a plain boolean with a default, because a default cannot express "leave it alone".
      */
     private Boolean               flatModeRequest;
+
+    /**
+     * Notified with the NEW mode whenever the user presses the toggle - the other half of the controlled contract.
+     * <p>
+     * Without it, a controlled table would ignore its own toggle: the application would keep supplying the value
+     * it last set, and the user's press would be overwritten on the very next render.
+     */
+    private Consumer<Boolean>     onFlatModeChange;
 }

@@ -1,4 +1,5 @@
 import { Backend, Target } from "../../backend/Backend";
+import { InFlightTracker } from "../../backend/InFlightTracker";
 import { UIContextAccessor } from "../data/DataContextManager";
 import { NodeContextAccessor } from "../Renderer";
 
@@ -36,6 +37,22 @@ export class HandlerFactory {
      * one occasion a user most needs to retry. Errors are already surfaced by the backend layer; this method's
      * contract is "the round trip is over", not "the round trip worked".
      */
+    /**
+     * Dispatches as {@link #handleEvent} but marks the round trip as framework housekeeping, so indicators do not
+     * report it as work the user is waiting on.
+     *
+     * For the form's per-keystroke field sync: a real request, but not one anybody asked for, and reporting it
+     * makes every busy indicator fire continuously while somebody types.
+     */
+    public static handleEventInBackground(handler: Handler, uiContextAccessor?: UIContextAccessor, nodeContextAccessor?: NodeContextAccessor): Promise<void> {
+        if (!handler) {
+            return Promise.resolve();
+        }
+        InFlightTracker.incrementBackground();
+        return HandlerFactory.handleEvent(handler, uiContextAccessor, nodeContextAccessor)
+            .finally(() => InFlightTracker.decrementBackground());
+    }
+
     public static handleEvent(handler: Handler, uiContextAccessor?: UIContextAccessor, nodeContextAccessor?: NodeContextAccessor): Promise<void> {
         if (!handler) {
             return Promise.resolve();

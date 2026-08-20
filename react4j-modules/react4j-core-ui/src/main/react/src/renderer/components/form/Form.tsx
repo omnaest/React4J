@@ -164,7 +164,10 @@ export class Form extends React.Component<Props, State> {
         const updateCounter = DataContextManager.updateFieldByContext(element.contextId, element.field, value, renderingSupport?.uiContextAccessor);
         this.setState({ updateCounter: updateCounter });
 
-        HandlerFactory.handleEvent(this.props.node?.onChange as Handler, renderingSupport?.uiContextAccessor, renderingSupport?.nodeContextAccessor);
+        // In the background: this fires on every keystroke, and a busy indicator that reports typing is a busy
+        // indicator nobody reads. See InFlightTracker.incrementBackground.
+        HandlerFactory.handleEventInBackground(this.props.node?.onChange as Handler, renderingSupport?.uiContextAccessor,
+                                               renderingSupport?.nodeContextAccessor);
     }
 
     private renderElement(htmlId: string, element: FormElement, inline: boolean = false): React.ReactNode {

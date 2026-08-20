@@ -15,6 +15,7 @@ export type InFlightListener = (count: number) => void;
 export class InFlightTracker {
     private static count = 0;
     private static claimedCount = 0;
+    private static backgroundCount = 0;
     private static listeners: InFlightListener[] = [];
 
     public static increment(): void {
@@ -64,7 +65,34 @@ export class InFlightTracker {
      * outnumber the requests. Clamping keeps that ordering detail from surfacing as a flicker.
      */
     public static getUnclaimedCount(): number {
-        return Math.max(0, InFlightTracker.count - InFlightTracker.claimedCount);
+        return Math.max(0, InFlightTracker.getForegroundCount() - InFlightTracker.claimedCount);
+    }
+
+    /**
+     * A round trip the USER is waiting on, as opposed to housekeeping the framework does on their behalf.
+     *
+     * WHY THIS DISTINCTION EXISTS. A form syncs its field to the server on every input change, so typing a short
+     * message issues a request per keystroke - measured at three in flight at once while typing five characters,
+     * and continuously above zero through any real burst of typing. Every indicator keyed on the raw count
+     * therefore reported "working" while somebody was merely typing, which is worse than saying nothing: it makes
+     * the signal meaningless exactly when the user is about to need it.
+     *
+     * The keystroke sync is still a request and still costs what it costs - this only stops it CLAIMING THE USER'S
+     * ATTENTION. Whether a form should round-trip per keystroke at all is a separate question, and a larger one.
+     */
+    public static incrementBackground(): void {
+        InFlightTracker.backgroundCount += 1;
+        InFlightTracker.increment();
+    }
+
+    public static decrementBackground(): void {
+        InFlightTracker.backgroundCount = Math.max(0, InFlightTracker.backgroundCount - 1);
+        InFlightTracker.decrement();
+    }
+
+    /** Round trips worth reporting: everything except framework housekeeping. */
+    public static getForegroundCount(): number {
+        return Math.max(0, InFlightTracker.count - InFlightTracker.backgroundCount);
     }
 
     /**
@@ -90,6 +118,7 @@ export class InFlightTracker {
     public static resetForTests(): void {
         InFlightTracker.count = 0;
         InFlightTracker.claimedCount = 0;
+        InFlightTracker.backgroundCount = 0;
         InFlightTracker.listeners = [];
     }
 }

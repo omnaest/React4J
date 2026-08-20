@@ -47,7 +47,8 @@ export class PendingContent extends React.Component<Props, State> {
     }
 
     public componentDidMount(): void {
-        this.unsubscribe = InFlightTracker.subscribe((count) => this.synchronise(count));
+        // Foreground only: a per-keystroke field sync is a round trip, but not one the user is waiting on.
+        this.unsubscribe = InFlightTracker.subscribe(() => this.synchronise(InFlightTracker.getForegroundCount()));
     }
 
     /**
