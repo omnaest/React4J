@@ -702,7 +702,7 @@ export class TreeTable extends React.Component<Props, {}> {
                                header text and the sort control's label, but never says the table is currently ordered
                                by this column. "none" rather than omitting it, so the header announces that it is
                                sortable-but-unsorted rather than not sortable at all. */
-                            <th key={column.key} scope="col"
+                            <th key={column.key} scope="col" className="tree-table-header-cell"
                                 aria-sort={node.sortEnabled === true && column.sortable === true
                                     ? (column.sortDirection === "ASCENDING" ? "ascending"
                                         : column.sortDirection === "DESCENDING" ? "descending" : "none")

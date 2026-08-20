@@ -51,3 +51,32 @@
 	background-color: var(--bs-body-bg, #ffffff);
 	box-shadow: inset 0 -1px 0 var(--bs-border-color, #dee2e6);
 }
+
+/*
+ * A column title stays on ONE line, always.
+ *
+ * THE FAILURE THIS FIXES. A header cell holds its title alongside its sort control (and, in the first
+ * column, the flat and filter toggles), so the space left for the TEXT is the column width minus padding
+ * minus those buttons. When one column carries unusually wide content the browser's automatic table layout
+ * takes the width from the others, and the first thing to give is the header label: it wraps to two lines,
+ * the row doubles in height, and because header cells are bottom-aligned the titles end up floating under a
+ * band of empty space with their sort arrows orphaned. Measured on a NodeStudio table, one wide column left
+ * three of six headers wrapped and the header row 65px tall against a natural 32px.
+ *
+ * The trade is deliberate: a column can no longer be squeezed narrower than its own label, so a table with
+ * many columns may overflow its container and scroll horizontally. That is the better failure. A horizontal
+ * scrollbar is a thing users know how to operate; a two-line header with the control on the wrong line
+ * reads as broken layout, and it moves every row down the page to say nothing.
+ *
+ * Applied to the whole CELL as well as the title span. Nowrap on the span alone stops the words breaking but
+ * still lets the span drop onto its own line beneath the buttons; nowrap on the cell makes the title and its
+ * controls one unbreakable run, which is also what the automatic layout measures when it distributes width -
+ * so the column is allocated enough room in the first place rather than allocated too little and overflowed.
+ */
+.tree-table-header-title {
+	white-space: nowrap;
+}
+
+.tree-table-header-cell {
+	white-space: nowrap;
+}
