@@ -91,6 +91,32 @@ describe("PendingContent", () => {
         expect(screen.queryByTestId("react4j-pending-content")).toBeNull();
     });
 
+    test("scrolls the enclosing scroll container to the bottom when it appears", () => {
+        // A real scrolling ancestor: overflow-y auto AND content taller than the box. Both conditions are what
+        // ScrollSupport looks for, and a fixture satisfying only the first would make this pass against a helper
+        // that had stopped working.
+        const scroller = document.createElement("div");
+        scroller.style.overflowY = "auto";
+        Object.defineProperty(scroller, "scrollHeight", { value: 1000, configurable: true });
+        Object.defineProperty(scroller, "clientHeight", { value: 200, configurable: true });
+        document.body.appendChild(scroller);
+
+        render(<PendingContent node={node} />, { container: scroller });
+        expect(scroller.scrollTop).toBe(0);
+
+        act(() => {
+            InFlightTracker.increment();
+            jest.advanceTimersByTime(10);
+        });
+
+        // Nothing else would do this. The enclosing container follows the transcript on every SERVER update, and
+        // this block appears without one - so an indicator below the fold is indistinguishable from nothing
+        // happening, which is the problem it exists to solve.
+        expect(scroller.scrollTop).toBe(1000);
+
+        document.body.removeChild(scroller);
+    });
+
     test("releases its claim if it is unmounted while still showing", () => {
         const { unmount } = render(<PendingContent node={node} />);
 

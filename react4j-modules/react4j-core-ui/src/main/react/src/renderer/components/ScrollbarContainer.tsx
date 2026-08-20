@@ -1,5 +1,6 @@
 import React from "react";
 import { Node, Renderer } from "../Renderer";
+import { ScrollSupport } from "../support/ScrollSupport";
 // Layout mechanics for this component's box modes. Bundled with the framework rather than placed in
 // /css/custom.css, which is the application's customisation slot - see ScrollbarContainer.css.
 import "./ScrollbarContainer.css";
@@ -53,28 +54,9 @@ export class ScrollbarContainer extends React.Component<Props, {}>
         {
             return;
         }
-        const scrollable = this.findScrollableElement(this.contentRef.current);
-        if (scrollable)
-        {
-            scrollable.scrollTop = scrollable.scrollHeight;
-        }
+        ScrollSupport.scrollToBottom(this.contentRef.current);
     }
 
-    private findScrollableElement(start: HTMLElement | null): HTMLElement | null
-    {
-        let candidate: HTMLElement | null = start;
-        while (candidate)
-        {
-            const overflowY = window.getComputedStyle(candidate).overflowY;
-            const scrolls = overflowY === "auto" || overflowY === "scroll";
-            if (scrolls && candidate.scrollHeight > candidate.clientHeight)
-            {
-                return candidate;
-            }
-            candidate = candidate.parentElement;
-        }
-        return null;
-    }
 
     public render(): JSX.Element
     {

@@ -1,6 +1,7 @@
 import React from "react";
 import { Node, Renderer } from "../Renderer";
 import { InFlightTracker } from "../../backend/InFlightTracker";
+import { ScrollSupport } from "../support/ScrollSupport";
 
 export interface PendingContentNode extends Node {
     content: Node;
@@ -38,6 +39,7 @@ export class PendingContent extends React.Component<Props, State> {
     private appearTimeout?: ReturnType<typeof setTimeout>;
     /** Whether this component currently holds a claim, so it releases exactly the claims it made. */
     private claimed: boolean = false;
+    private contentRef = React.createRef<HTMLDivElement>();
 
     public constructor(props: Props) {
         super(props);
@@ -46,6 +48,27 @@ export class PendingContent extends React.Component<Props, State> {
 
     public componentDidMount(): void {
         this.unsubscribe = InFlightTracker.subscribe((count) => this.synchronise(count));
+    }
+
+    /**
+     * Brings the block into view once it appears.
+     *
+     * Necessary because nothing else will. The enclosing scroll container follows the transcript on every SERVER
+     * update, and this block appears without one - it is a client-side reaction to a request that has not come
+     * back yet. So a user with any scroll history at all got a "working on it" indicator below the fold,
+     * indistinguishable from nothing happening, which is the exact problem it exists to solve.
+     *
+     * Scrolls to the container's bottom rather than scrolling this element into view: the block sits at the end of
+     * the transcript, and the reply that replaces it will put the container in the same place. Matching them means
+     * the arrival does not move the page a second time.
+     *
+     * Same trade-off the enclosing container already makes: a user who deliberately scrolled up to read history
+     * gets pulled back down. Consistency with the existing behaviour wins over inventing a second rule.
+     */
+    public componentDidUpdate(previousProps: Props, previousState: State): void {
+        if (this.state.visible && !previousState.visible) {
+            ScrollSupport.scrollToBottom(this.contentRef.current);
+        }
     }
 
     public componentWillUnmount(): void {
@@ -106,7 +129,7 @@ export class PendingContent extends React.Component<Props, State> {
         return (
             // role="status" with aria-live="polite": a pending answer is information, not an alert, and must not
             // interrupt whatever a screen reader is currently reading out.
-            <div role="status" aria-live="polite" data-testid="react4j-pending-content">
+            <div ref={this.contentRef} role="status" aria-live="polite" data-testid="react4j-pending-content">
                 {Renderer.render(this.props.node.content)}
             </div>
         );
