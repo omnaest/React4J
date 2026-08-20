@@ -528,6 +528,32 @@ export class TreeTable extends React.Component<Props, {}> {
      * a null handler, and the backend contract emits target=[] exactly when the caret is not clickable.
      * Caret direction is derived purely from row.expanded -- stateless (Cliff C5).
      */
+
+    /**
+     * An empty stand-in occupying exactly the caret's footprint on rows that have no caret.
+     *
+     * Without it the caret sits IN the text flow, so an expandable row's label is pushed right by the caret's width
+     * while a leaf's is not - and since that width (1.25rem + 0.25rem margin) is exactly DEPTH_INDENT_EM, a parent at
+     * depth N ends up horizontally identical to a leaf at depth N+1. The indentation then reads one level short for
+     * every branch, which makes the hierarchy ambiguous precisely where it matters: you cannot tell whether a row is a
+     * child of the one above it or its sibling.
+     *
+     * aria-hidden because it carries no meaning - depth is conveyed by the row itself, not by this spacer.
+     */
+    private renderCaretPlaceholder(): JSX.Element {
+        return (
+            <span
+                className="tree-table-caret-placeholder"
+                aria-hidden="true"
+                style={{
+                    display: "inline-block",
+                    width: "1.25rem",
+                    marginRight: "0.25rem"
+                }}
+            />
+        );
+    }
+
     private renderCaret(row: TreeTableRow, renderingSupport: RenderingSupport | undefined): JSX.Element {
         const iconClass = row.expanded ? TreeTable.CARET_ICON_EXPANDED : TreeTable.CARET_ICON_COLLAPSED;
         const hasTarget = Array.isArray(row.target) && row.target.length > 0;
@@ -568,7 +594,7 @@ export class TreeTable extends React.Component<Props, {}> {
                     const cellValue = row.cells ? row.cells[column.key] : undefined;
                     return columnIndex === 0 ? (
                         <td key={column.key} style={{ paddingLeft: `${row.depth * DEPTH_INDENT_EM}em` }}>
-                            {row.expandable && this.renderCaret(row, renderingSupport)}
+                            {row.expandable ? this.renderCaret(row, renderingSupport) : this.renderCaretPlaceholder()}
                             <span className="tree-table-cell-label">{cellValue}</span>
                         </td>
                     ) : (
