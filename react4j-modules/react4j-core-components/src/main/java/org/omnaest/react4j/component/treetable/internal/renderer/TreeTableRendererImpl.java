@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.OptionalLong;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -1115,29 +1114,8 @@ public class TreeTableRendererImpl implements UIComponentRenderer
          * a genuinely-root {@code gridLocation == null} call site and when the field was never toggled. Mirrors
          * {@link #currentFiltersVisible(Location)} exactly.
          */
-        /**
-         * The mode this render uses.
-         * <p>
-         * <b>Controlled when the application supplies a value.</b> {@code TreeTable.withFlatMode(boolean)} makes
-         * the application the source of truth, and {@code onFlatModeChange} tells it when the user presses the
-         * toggle so it can keep that truth current - the ordinary controlled-component contract, value in and
-         * change out.
-         * <p>
-         * An earlier attempt tried to WRITE the caller's value into the submitted data here, so it would persist
-         * without the application having to hold it. That is not possible and not merely ineffective: the data
-         * seen during a render is immutable, and {@code setFieldValue} throws. Writing belongs to a handler, which
-         * is where the toggle does it.
-         * <p>
-         * With no supplied value the component stays uncontrolled and reads the field the toggle flips, which is
-         * the behaviour every existing caller already has.
-         */
         private boolean currentFlatMode(Location gridLocation)
         {
-            Boolean controlled = this.data.getFlatModeRequest();
-            if (controlled != null)
-            {
-                return controlled;
-            }
             if (gridLocation == null)
             {
                 return this.data.isInitiallyFlat();
@@ -1146,6 +1124,7 @@ public class TreeTableRendererImpl implements UIComponentRenderer
                                      .map(Value::asBoolean)
                                      .orElse(this.data.isInitiallyFlat());
         }
+
 
         /**
          * Builds the flat/tree toggle's click handler (plan-80): a server-computed FLIP of the shared
@@ -1161,24 +1140,12 @@ public class TreeTableRendererImpl implements UIComponentRenderer
         {
             String fieldKey = this.flatModeFieldKey(gridLocation);
             boolean initiallyFlat = this.data.isInitiallyFlat();
-            Boolean controlled = this.data.getFlatModeRequest();
-            Consumer<Boolean> onFlatModeChange = this.data.getOnFlatModeChange();
             return (eventData, internalData) ->
             {
-                // The controlled value, when there is one, is what the user sees - so it is what a press must
-                // flip. Flipping the stored field instead would toggle away from a value that is not on screen.
-                boolean current = controlled != null ? controlled
-                        : eventData.getFieldValue(fieldKey)
-                                   .map(Value::asBoolean)
-                                   .orElse(initiallyFlat);
+                boolean current = eventData.getFieldValue(fieldKey)
+                                           .map(Value::asBoolean)
+                                           .orElse(initiallyFlat);
                 eventData.setFieldValue(fieldKey, !current);
-                // Announced to the application AFTER the field is written, so an uncontrolled table keeps working
-                // exactly as before and a controlled one can record the change before the render pass reads it
-                // back. Handlers run before rendering, so the new value is in place by then.
-                if (onFlatModeChange != null)
-                {
-                    onFlatModeChange.accept(!current);
-                }
                 return DataEventHandler.MappedData.builder()
                                                   .data(eventData)
                                                   .internalData(internalData)

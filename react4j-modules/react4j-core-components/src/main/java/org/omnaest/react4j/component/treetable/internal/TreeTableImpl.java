@@ -2,7 +2,6 @@ package org.omnaest.react4j.component.treetable.internal;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.omnaest.react4j.component.treetable.TreeTable;
 import org.omnaest.react4j.component.treetable.internal.data.TreeTableData;
@@ -109,20 +108,6 @@ public class TreeTableImpl extends AbstractUIComponentWithSubComponents<TreeTabl
     public TreeTable withInitiallyFlat(boolean flat)
     {
         this.data.initiallyFlat(flat);
-        return this;
-    }
-
-    @Override
-    public TreeTable withFlatMode(boolean flat)
-    {
-        this.data.flatModeRequest(flat);
-        return this;
-    }
-
-    @Override
-    public TreeTable onFlatModeChange(Consumer<Boolean> onFlatModeChange)
-    {
-        this.data.onFlatModeChange(onFlatModeChange);
         return this;
     }
 

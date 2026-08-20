@@ -1,7 +1,6 @@
 package org.omnaest.react4j.component.treetable;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.omnaest.react4j.component.treetable.provider.TreeTableColumn;
 import org.omnaest.react4j.component.treetable.provider.TreeTableDataProvider;
@@ -152,35 +151,6 @@ public interface TreeTable extends UIComponent<TreeTable>
      */
     public TreeTable withInitiallyFlat(boolean flat);
 
-    /**
-     * Makes the caller the source of truth for the flat/tree mode - a CONTROLLED component.
-     * <p>
-     * <b>Why this is not {@link #withInitiallyFlat(boolean)}.</b> That one supplies only the value used before the
-     * user has ever touched the toggle, and is inert from that moment on, so a table could be given a starting
-     * mode and never changed again. The mode is server-owned - it lives in the submitted data and every render
-     * reads it - but nothing could WRITE it, so anything driving the view from the server side could operate every
-     * other control on the table and not this one.
-     * <p>
-     * <b>Pair it with {@link #onFlatModeChange(Consumer)}.</b> A controlled table ignores its own toggle unless
-     * the caller is told about the press and updates the value it supplies; otherwise the next render re-asserts
-     * the old value and the user's click appears to do nothing. Supplying a value without a change handler is
-     * therefore a table whose toggle is decorative.
-     * <p>
-     * Do not attempt the alternative of writing the mode into the submitted data during a render - it is immutable
-     * there and throws. Writing belongs to a handler, which is where the toggle does it.
-     *
-     * @param flat
-     *            {@code true} for the flat list, {@code false} for the hierarchy.
-     */
-    public TreeTable withFlatMode(boolean flat);
-
-    /**
-     * Called with the NEW mode when the user presses the flat/tree toggle.
-     * <p>
-     * Runs before the render pass, so a caller that records the value here has it in place by the time
-     * {@link #withFlatMode(boolean)} is read for the same round trip.
-     */
-    public TreeTable onFlatModeChange(Consumer<Boolean> onFlatModeChange);
 
     /**
      * Lifecycle hook for an external data change (plan-76 &sect;2.4 extension point "refresh() (lifecycle hook for
