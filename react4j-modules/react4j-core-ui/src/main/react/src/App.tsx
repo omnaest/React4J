@@ -4,6 +4,7 @@ import { Renderer, Node } from './renderer/Renderer';
 import { Backend } from './backend/Backend';
 import { AxiosHelper } from './utils/AxiosHelper';
 import { InFlightTracker } from './backend/InFlightTracker';
+import { BusyIndicator } from './renderer/components/BusyIndicator';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
@@ -33,6 +34,10 @@ class App extends React.Component<{}, State> {
         data-inflight-count={this.state.inFlightCount}
         data-rerender-pending={this.state.inFlightCount > 0}
       >
+        {/* Unclaimed, not total: a round trip already reported by something local - a pending block in a
+            transcript, a form disabling itself - needs no second indicator across the top of the window. This
+            bar is the fallback for everything with no closer feedback of its own. */}
+        <BusyIndicator inFlightCount={InFlightTracker.getUnclaimedCount()} />
         {Renderer.render(this.state.node)}
       </div>
     );

@@ -47,6 +47,7 @@ import org.omnaest.react4j.domain.RerenderingContainer;
 import org.omnaest.react4j.domain.SVGContainer;
 import org.omnaest.react4j.domain.ScrollbarContainer;
 import org.omnaest.react4j.domain.SizedContainer;
+import org.omnaest.react4j.domain.PendingContent;
 import org.omnaest.react4j.domain.Spinner;
 import org.omnaest.react4j.domain.SplitButton;
 import org.omnaest.react4j.domain.Stack;
@@ -100,6 +101,7 @@ import org.omnaest.react4j.service.internal.component.RerenderingContainerImpl;
 import org.omnaest.react4j.service.internal.component.SVGContainerImpl;
 import org.omnaest.react4j.service.internal.component.ScrollbarContainerImpl;
 import org.omnaest.react4j.service.internal.component.SizedContainerImpl;
+import org.omnaest.react4j.service.internal.component.PendingContentImpl;
 import org.omnaest.react4j.service.internal.component.SpinnerImpl;
 import org.omnaest.react4j.service.internal.component.SplitButtonImpl;
 import org.omnaest.react4j.service.internal.component.StackImpl;
@@ -520,6 +522,12 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         public Spinner newSpinner()
         {
             return new SpinnerImpl(this.context);
+        }
+
+        @Override
+        public PendingContent newPendingContent()
+        {
+            return new PendingContentImpl(this.context);
         }
 
         @Override

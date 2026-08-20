@@ -1,5 +1,5 @@
 import React from "react";
-import { render, fireEvent, screen } from "@testing-library/react";
+import { render, fireEvent, screen, act } from "@testing-library/react";
 import { Button, ButtonNode } from "./Button";
 import { ServerHandler } from "../handler/Handler";
 import { Backend } from "../../backend/Backend";
@@ -29,6 +29,10 @@ const mockedSendEvent = Backend.sendEvent as jest.MockedFunction<typeof Backend.
 
 beforeEach(() => {
     jest.clearAllMocks();
+    // sendEvent has always returned a Promise; the mock used to return undefined and got away with it because
+    // nothing looked at the result. Button now waits on it to know when to stop being busy, so the double must
+    // honour the same contract the real one does.
+    mockedSendEvent.mockResolvedValue(undefined as never);
 });
 
 function createNode(onClick: ButtonNode["onClick"]): ButtonNode {
@@ -83,4 +87,57 @@ test("clicking a Button with a SERVER onClick handler dispatches to Backend.send
         undefined,
         undefined
     );
+});
+
+test("a Button disables itself and shows a spinner while its own round trip is in flight, and recovers afterwards", async () => {
+    let settleRoundTrip!: () => void;
+    mockedSendEvent.mockImplementation(() => new Promise<void>((resolve) => {
+        settleRoundTrip = resolve;
+    }) as never);
+
+    const node = createNode({ type: "SERVER", target: ["t"], contextId: "ctx1" } as ServerHandler);
+    render(<Button node={node} />);
+
+    const button = await screen.findByRole("button");
+    expect(button).not.toBeDisabled();
+
+    await act(async () => {
+        fireEvent.click(button);
+    });
+
+    // Disabled is the part that prevents a second submission of a mutating handler; the spinner only explains it.
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute("aria-busy", "true");
+    expect(button.querySelector(".spinner-border")).not.toBeNull();
+
+    await act(async () => {
+        settleRoundTrip();
+    });
+
+    expect(button).not.toBeDisabled();
+    expect(button.querySelector(".spinner-border")).toBeNull();
+});
+
+test("a Button whose round trip FAILS still becomes usable again", async () => {
+    let rejectRoundTrip!: (reason?: unknown) => void;
+    mockedSendEvent.mockImplementation(() => new Promise<void>((resolve, reject) => {
+        rejectRoundTrip = reject;
+    }) as never);
+
+    const node = createNode({ type: "SERVER", target: ["t"], contextId: "ctx1" } as ServerHandler);
+    render(<Button node={node} />);
+
+    const button = await screen.findByRole("button");
+    await act(async () => {
+        fireEvent.click(button);
+    });
+    expect(button).toBeDisabled();
+
+    await act(async () => {
+        rejectRoundTrip(new Error("network down"));
+    });
+
+    // The decisive one. A control left disabled after an error is a dead end on the single occasion the user most
+    // needs to retry - which is why handleEvent resolves rather than rejects when a round trip fails.
+    expect(button).not.toBeDisabled();
 });

@@ -1,0 +1,33 @@
+/*
+ * Styles for Form, co-located with the component that owns them - not in custom.css, which is the slot an
+ * APPLICATION uses to customise React4J and would lose these the moment an application ships its own copy.
+ */
+
+/*
+ * The fieldset exists only so that `disabled` can reach every control at once while the form is waiting on the
+ * server. It must therefore contribute nothing of its own to the layout: a fieldset carries a default border,
+ * margin and padding, and it also carries an implicit `min-width: min-content` that a flex or grid child does not
+ * expect - which is what makes an unreset fieldset silently refuse to shrink inside a row.
+ */
+.react4j-form-fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+}
+
+/*
+ * A disabled fieldset already greys its controls via Bootstrap's own :disabled styling. What it does NOT do is
+ * say why - so the cursor is the one extra signal, distinguishing "waiting" from "permanently unavailable" for
+ * anyone who tries to click into the field.
+ */
+.react4j-form-fieldset:disabled {
+    cursor: progress;
+}
+
+.react4j-form-fieldset:disabled input,
+.react4j-form-fieldset:disabled textarea,
+.react4j-form-fieldset:disabled select,
+.react4j-form-fieldset:disabled button {
+    cursor: progress;
+}

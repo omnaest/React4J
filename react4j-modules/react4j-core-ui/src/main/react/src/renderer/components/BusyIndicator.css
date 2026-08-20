@@ -1,0 +1,58 @@
+/*
+ * Styles for BusyIndicator, co-located with the component that owns them.
+ *
+ * NOT in custom.css: that file is the slot an APPLICATION uses to customise React4J, so framework rules placed
+ * there are lost the moment an application ships its own copy. A component's own stylesheet travels with it.
+ *
+ * Bootstrap has no top-of-window progress strip, so this is one of the few places React4J genuinely has to author
+ * a rule rather than wrap an existing Bootstrap class. The colour deliberately comes from Bootstrap's own
+ * --bs-primary custom property, so an application that retheme s Bootstrap gets a matching indicator for free.
+ */
+
+.react4j-busy-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    /* Above page content and above a modal backdrop (1050): a request fired from inside a dialog is exactly
+       the case where a user most needs to know something is happening. */
+    z-index: 2000;
+    height: 3px;
+    /* Nothing here is interactive, so it must never intercept a click aimed at whatever sits beneath it. */
+    pointer-events: none;
+}
+
+.react4j-busy-indicator-bar {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg,
+                                rgba(0, 0, 0, 0) 0%,
+                                var(--bs-primary, #0d6efd) 50%,
+                                rgba(0, 0, 0, 0) 100%);
+    /* Indeterminate on purpose. The server cannot report progress through a single request/response, so a bar
+       that filled from 0 to 100% would be inventing a completion estimate it does not have. A sweep says
+       "working" without claiming to know how much is left. */
+    animation: react4j-busy-indicator-sweep 1.2s ease-in-out infinite;
+}
+
+@keyframes react4j-busy-indicator-sweep {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/*
+ * Respect a user who has asked for reduced motion: keep the indicator, drop the sweep. Removing the element
+ * entirely would take the information away from exactly the users most likely to need a steady signal, so this
+ * degrades to a static bar rather than to nothing.
+ */
+@media (prefers-reduced-motion: reduce) {
+    .react4j-busy-indicator-bar {
+        animation: none;
+        background: var(--bs-primary, #0d6efd);
+        opacity: 0.6;
+    }
+}

@@ -170,6 +170,12 @@ public interface UIComponentFactory
 
     public Spinner newSpinner();
 
+    /**
+     * A block that appears only while the application is waiting for the server - see {@link PendingContent} for
+     * why this cannot be expressed as a property the server sets.
+     */
+    public PendingContent newPendingContent();
+
     public Placeholder newPlaceholder();
 
     public Alert newAlert();

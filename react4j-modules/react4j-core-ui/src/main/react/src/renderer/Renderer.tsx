@@ -42,6 +42,7 @@ import { RenderingSupportHelper } from "./support/RenderingSupportHelper";
 import { ListView, ListViewNode } from "./components/ListView";
 import { ListViewElement, ListViewElementNode } from "./components/ListViewElement";
 import { Badge, BadgeNode } from "./components/Badge";
+import { PendingContent, PendingContentNode } from "./components/PendingContent";
 import { Spinner, SpinnerNode } from "./components/Spinner";
 import { Placeholder, PlaceholderNode } from "./components/Placeholder";
 import { Alert, AlertNode } from "./components/Alert";
@@ -282,6 +283,9 @@ export class Renderer {
             }
             else if (node.type === Badge.TYPE) {
                 return <Badge node={node as BadgeNode} />
+            }
+            else if (node.type === PendingContent.TYPE) {
+                return <PendingContent node={node as PendingContentNode} />
             }
             else if (node.type === Spinner.TYPE) {
                 return <Spinner node={node as SpinnerNode} />

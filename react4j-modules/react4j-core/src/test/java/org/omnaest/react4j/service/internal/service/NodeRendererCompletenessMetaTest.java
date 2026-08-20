@@ -74,6 +74,7 @@ import org.omnaest.react4j.service.internal.component.RerenderingContainerImpl;
 import org.omnaest.react4j.service.internal.component.SVGContainerImpl;
 import org.omnaest.react4j.service.internal.component.ScrollbarContainerImpl;
 import org.omnaest.react4j.service.internal.component.SizedContainerImpl;
+import org.omnaest.react4j.service.internal.component.PendingContentImpl;
 import org.omnaest.react4j.service.internal.component.SpinnerImpl;
 import org.omnaest.react4j.service.internal.component.SplitButtonImpl;
 import org.omnaest.react4j.service.internal.component.StackImpl;
@@ -174,7 +175,12 @@ public class NodeRendererCompletenessMetaTest
                                                                                         "PaddingContainer", "RatioContainer", "SizedContainer",
                                                                                         "ScrollbarContainer", "Stack", "LineBreak", "Icon", "Badge", "Spinner",
                                                                                         "Placeholder", "Alert", "Breadcrumb", "Pagination", "ListView", "IFrame",
-                                                                                        "ImageIndex", "NativeHtml", "SVGContainer");
+                                                                                        "ImageIndex", "NativeHtml", "SVGContainer",
+                                                                                        // Registers an HTML renderer that deliberately emits NOTHING: a static or
+                                                                                        // printed page has no round trip in flight, so a "waiting for a response"
+                                                                                        // block there would describe a state that medium cannot be in. Listed here so
+                                                                                        // the ratchet still catches the registration being dropped entirely.
+                                                                                        "PendingContent");
 
     private static NodeHierarchyRenderingProcessor registeredRenderers;
 
@@ -219,6 +225,7 @@ public class NodeRendererCompletenessMetaTest
                          Arguments.of("ListView", (Supplier<RenderableUIComponent<?>>) () -> new ListViewImpl(newContext())),
                          Arguments.of("Badge", (Supplier<RenderableUIComponent<?>>) () -> new BadgeImpl(newContext())),
                          Arguments.of("Spinner", (Supplier<RenderableUIComponent<?>>) () -> new SpinnerImpl(newContext())),
+                         Arguments.of("PendingContent", (Supplier<RenderableUIComponent<?>>) () -> new PendingContentImpl(newContext())),
                          Arguments.of("Placeholder", (Supplier<RenderableUIComponent<?>>) () -> new PlaceholderImpl(newContext())),
                          Arguments.of("Alert", (Supplier<RenderableUIComponent<?>>) () -> new AlertImpl(newContext())),
                          Arguments.of("Breadcrumb", (Supplier<RenderableUIComponent<?>>) () -> new BreadcrumbImpl(newContext())),

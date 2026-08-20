@@ -14,6 +14,7 @@ export type InFlightListener = (count: number) => void;
 
 export class InFlightTracker {
     private static count = 0;
+    private static claimedCount = 0;
     private static listeners: InFlightListener[] = [];
 
     public static increment(): void {
@@ -32,6 +33,38 @@ export class InFlightTracker {
 
     public static isRerenderPending(): boolean {
         return InFlightTracker.count > 0;
+    }
+
+    /**
+     * Reports that a round trip is already represented by a local indicator - a form disabling itself, a button
+     * showing a spinner - and therefore needs no page-level one.
+     *
+     * WHY THIS EXISTS. Every round trip should produce exactly ONE indicator: the most local one available. Before
+     * this, a chat submission produced three at once - the bar across the top of the window, a spinner in the
+     * button and a greyed-out field - all saying the same thing about the same request. Redundant signals are not
+     * extra reassurance; they train a user to stop reading any of them.
+     *
+     * Claiming is counted rather than flagged for the same reason the total is: several claimed requests can
+     * overlap, and a boolean would let the first to settle un-claim the rest.
+     */
+    public static claim(): void {
+        InFlightTracker.claimedCount += 1;
+        InFlightTracker.notifyListeners();
+    }
+
+    public static release(): void {
+        InFlightTracker.claimedCount = Math.max(0, InFlightTracker.claimedCount - 1);
+        InFlightTracker.notifyListeners();
+    }
+
+    /**
+     * Round trips that nothing local is reporting - what the page-level indicator shows.
+     *
+     * Never negative: a claim is made by a control that then starts a request, so for a moment the claim can
+     * outnumber the requests. Clamping keeps that ordering detail from surfacing as a flicker.
+     */
+    public static getUnclaimedCount(): number {
+        return Math.max(0, InFlightTracker.count - InFlightTracker.claimedCount);
     }
 
     /**
@@ -56,6 +89,7 @@ export class InFlightTracker {
      */
     public static resetForTests(): void {
         InFlightTracker.count = 0;
+        InFlightTracker.claimedCount = 0;
         InFlightTracker.listeners = [];
     }
 }

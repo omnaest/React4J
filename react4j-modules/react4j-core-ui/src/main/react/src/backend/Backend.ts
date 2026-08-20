@@ -105,12 +105,20 @@ export class Backend {
         });
     }
 
+    /**
+     * Tracked like every other round trip. It was not, which meant a table fetching its next page produced no
+     * feedback anywhere - the one case a page-level indicator is unambiguously for, and the one it was missing.
+     */
     public static fetchData(target: Target, pageIndex: number): Promise<DataPage> {
+        InFlightTracker.increment();
         return Axios.post(BackendUri.URI_UI_DATA_SOURCE, {
             target: target,
             pageIndex: pageIndex
         }).then((response: AxiosResponse<DataPage>) => {
             return response?.data;
+        }).finally(() => {
+            // CRITICAL: decrement in finally so a failed round-trip still settles the counter.
+            InFlightTracker.decrement();
         });
     }
 
