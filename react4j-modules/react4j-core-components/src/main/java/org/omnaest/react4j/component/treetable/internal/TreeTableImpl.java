@@ -112,6 +112,13 @@ public class TreeTableImpl extends AbstractUIComponentWithSubComponents<TreeTabl
     }
 
     @Override
+    public TreeTable withFlatMode(boolean flat)
+    {
+        this.data.flatModeRequest(flat);
+        return this;
+    }
+
+    @Override
     public TreeTable refresh()
     {
         // See TreeTable.refresh() javadoc for the full contract + documented limits (plan-76 Slice 7, AC6): this

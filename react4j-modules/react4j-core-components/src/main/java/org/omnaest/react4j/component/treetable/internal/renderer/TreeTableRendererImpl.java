@@ -1114,11 +1114,27 @@ public class TreeTableRendererImpl implements UIComponentRenderer
          * a genuinely-root {@code gridLocation == null} call site and when the field was never toggled. Mirrors
          * {@link #currentFiltersVisible(Location)} exactly.
          */
+        /**
+         * The mode this render uses, and the one place a server-side request to change it is honoured.
+         * <p>
+         * A request from {@code TreeTable.withFlatMode(boolean)} is not merely returned - it is WRITTEN into the
+         * submitted data first, under the same key the toggle handler flips. That is what makes it behave like a
+         * press of the control rather than a per-render override: it persists, and the user's next click flips
+         * from it instead of from a value the server has been quietly re-asserting underneath. Without the write,
+         * the very next round trip would read the stale field and appear to undo the change.
+         */
         private boolean currentFlatMode(Location gridLocation)
         {
             if (gridLocation == null)
             {
-                return this.data.isInitiallyFlat();
+                return Optional.ofNullable(this.data.getFlatModeRequest())
+                               .orElseGet(this.data::isInitiallyFlat);
+            }
+            Boolean requested = this.data.getFlatModeRequest();
+            if (requested != null)
+            {
+                this.submittedData.setFieldValue(this.flatModeFieldKey(gridLocation), requested);
+                return requested;
             }
             return this.submittedData.getFieldValue(this.flatModeFieldKey(gridLocation))
                                      .map(Value::asBoolean)

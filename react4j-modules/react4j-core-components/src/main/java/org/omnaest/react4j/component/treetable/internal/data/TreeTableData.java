@@ -45,4 +45,18 @@ public class TreeTableData
 
     @Default
     private boolean               initiallyFlat           = false;
+
+    /**
+     * A server-side request to SET the flat/tree mode on this render, rather than merely default it.
+     * <p>
+     * {@code null} means "no request" and is the normal case - the mode then comes from the submitted data, i.e.
+     * from whatever the user last chose. A non-null value is applied and WRITTEN BACK into the submitted data, so
+     * it behaves exactly as though the toggle had been pressed: it persists, and the user's next click flips from
+     * it rather than from a stale value.
+     * <p>
+     * Deliberately not a plain boolean with a default. A default cannot express "leave it alone", and a table
+     * rebuilt on every render - which is the ordinary React4J shape - would then re-assert the same value forever
+     * and silently undo the user's toggle on the very next round trip.
+     */
+    private Boolean               flatModeRequest;
 }

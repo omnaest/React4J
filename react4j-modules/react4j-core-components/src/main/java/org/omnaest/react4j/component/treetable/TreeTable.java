@@ -152,6 +152,29 @@ public interface TreeTable extends UIComponent<TreeTable>
     public TreeTable withInitiallyFlat(boolean flat);
 
     /**
+     * SETS the flat/tree mode now, as though the toggle had been pressed - unlike
+     * {@link #withInitiallyFlat(boolean)}, which only supplies the value used before the user has ever touched the
+     * control and is inert from that moment on.
+     * <p>
+     * <b>Why both exist.</b> The mode is server-owned: it lives in the submitted data under a key derived from the
+     * grid's location, the toggle is a server-computed flip of that field, and every render reads it. What was
+     * missing was any way for the SERVER to write it - so a table could be given a starting mode and then never
+     * changed again, and anything driving the view from the server side (an agent, a saved view, a deep link) could
+     * operate every other control and not this one.
+     * <p>
+     * <b>Call it only when you want to change the mode, not on every render.</b> The value is applied and written
+     * back into the submitted data, so it persists and the user's next click flips from it. But a React4J page is
+     * usually rebuilt from scratch on every round trip, so a caller that sets it unconditionally re-asserts it
+     * forever and silently undoes the user's toggle on the following render. Hold the request in your own state,
+     * apply it once, and clear it - which is also the honest model of what happened: something pressed the button
+     * once, rather than holding it down.
+     *
+     * @param flat
+     *            {@code true} for the flat list, {@code false} for the hierarchy.
+     */
+    public TreeTable withFlatMode(boolean flat);
+
+    /**
      * Lifecycle hook for an external data change (plan-76 &sect;2.4 extension point "refresh() (lifecycle hook for
      * external-data-change)"): documents, and reserves the name for, forcing this component's next render to
      * re-invoke {@link TreeTableDataProvider#fetch(TreeTableQuery)} with the CURRENT query state
