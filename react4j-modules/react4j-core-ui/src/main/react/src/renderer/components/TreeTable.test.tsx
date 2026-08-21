@@ -398,6 +398,7 @@ function createUIContextAccessor(): UIContextAccessor {
     };
     return {
         getUIContextById: (contextId: string) => contexts[contextId],
+        getAllUIContexts: () => Object.values(contexts),
         updateUIContext: (uiContext: UIContext) => {
             contexts[uiContext.contextId] = uiContext;
         },

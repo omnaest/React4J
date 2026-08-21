@@ -98,7 +98,8 @@ export class RenderingSupportHelper {
                     updateUIContext(uiContext);
                 }
             },
-            getUIContextById: getUIContextById
+            getUIContextById: getUIContextById,
+            getAllUIContexts: () => Object.values(uiContextsState.uiContexts)
         };
     }
 }

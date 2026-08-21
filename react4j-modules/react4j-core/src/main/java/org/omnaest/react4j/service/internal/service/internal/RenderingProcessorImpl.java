@@ -111,7 +111,7 @@ public class RenderingProcessorImpl implements RenderingProcessor
             LocationSupport locationSupport = new LocationSupportImpl(parentLocation);
             UIComponentRenderer renderer = component.asRenderer();
             Location location = renderer.getLocation(locationSupport);
-            Node node = renderer.render(this.createFilteringRenderingProcessor(currentIgnoredComponents), location, data);
+            Node node = renderer.render(this.createFilteringRenderingProcessor(currentIgnoredComponents, data), location, data);
 
             component.getUIContextInitialDataIfPresent()
                      .ifPresent(uiContextData -> node.setUiContextData(UIContextDataNode.builder()
@@ -127,13 +127,45 @@ public class RenderingProcessorImpl implements RenderingProcessor
         };
     }
 
-    private RenderingProcessor createFilteringRenderingProcessor(Set<UIComponent<?>> currentIgnoredComponents)
+    /**
+     * @param ambientData
+     *            the submitted {@link Data} the component being rendered received, inherited by any child it
+     *            processes without naming data of its own - see {@link #process(UIComponent, Location)} below.
+     */
+    private RenderingProcessor createFilteringRenderingProcessor(Set<UIComponent<?>> currentIgnoredComponents, Optional<Data> ambientData)
     {
         return new RenderingProcessor() {
             @Override
             public Node process(UIComponent<?> component, Location parentLocation, Optional<Data> data)
             {
                 return RenderingProcessorImpl.this.process(component, parentLocation, data, currentIgnoredComponents);
+            }
+
+            /**
+             * The submitted {@link Data} flows DOWN the tree: a child rendered without explicit data inherits
+             * its parent's rather than starting from nothing.
+             * <p>
+             * <b>Why this override exists.</b> The interface default hard-codes {@code Optional.empty()}, and
+             * roughly thirty renderers call this two-argument form to process their children - every container,
+             * card, composite, grid and scroll region in the library. So the submitted Data reached only the one
+             * component an event resolved to, and every descendant rendered as though nothing had been
+             * submitted: it looked its own fields up in an empty map and fell back to its defaults.
+             * <p>
+             * <b>Why it went unnoticed.</b> A component whose own control is clicked IS the resolved node, so it
+             * always saw its data. The loss showed only when the event came from somewhere else on the page -
+             * and then touching the component directly appeared to "fix" it, which reads as a refresh problem
+             * rather than a lost one. Measured live: submitting a chat message re-rendered the table beside it
+             * in default mode with no filters, discarding a view the user had chosen and a filter that had just
+             * been applied.
+             * <p>
+             * Overriding here rather than at each of the thirty call sites keeps the rule in one place: pass
+             * data explicitly to re-root it (as {@code RerenderingContainerImpl} does for its own content), say
+             * nothing to inherit it.
+             */
+            @Override
+            public Node process(UIComponent<?> component, Location parentLocation)
+            {
+                return this.process(component, parentLocation, ambientData);
             }
 
             @Override

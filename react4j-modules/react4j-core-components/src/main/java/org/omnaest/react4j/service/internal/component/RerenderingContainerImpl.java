@@ -69,7 +69,20 @@ public class RerenderingContainerImpl extends AbstractUIComponentAndContentHolde
             {
                 return new RerenderingContainerNode().setContent(Optional.ofNullable(RerenderingContainerImpl.this.content)
                                                                          .map(contentProvider -> contentProvider.apply(data.orElse(Data.newInstance())))
-                                                                         .map(content -> renderingProcessor.process(content, location))
+                                                                         // The submitted Data must travel DOWN the subtree, not stop here. The two-argument
+                                                                         // process(component, location) hard-codes Optional.empty(), so a container nested
+                                                                         // inside this one rendered as though nothing had been submitted - it read its own
+                                                                         // fields out of an empty map and fell back to its defaults.
+                                                                         //
+                                                                         // Only visible when one rerendering container encloses another, which is the
+                                                                         // documented way to make two regions update atomically in one round trip
+                                                                         // (react4j-atomic-coupdate-siblings-under-one-rerenderingcontainer). An event
+                                                                         // raised in the OUTER container resolves its re-render to the outer node, and
+                                                                         // everything below lost its state on the way down; an event raised in the inner
+                                                                         // one resolves directly to it and was always fine. That asymmetry is why the
+                                                                         // symptom looked like "the other component needs a refresh" - touching it
+                                                                         // directly always fixed it.
+                                                                         .map(content -> renderingProcessor.process(content, location, data))
                                                                          .orElse(null))
                                                      .setUiContext(Optional.ofNullable(RerenderingContainerImpl.this.uiContext)
                                                                            .map(uiContext -> UIContextDataNode.builder()

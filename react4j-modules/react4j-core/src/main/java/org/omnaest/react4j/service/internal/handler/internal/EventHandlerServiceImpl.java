@@ -17,8 +17,10 @@ package org.omnaest.react4j.service.internal.handler.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +38,7 @@ import org.omnaest.react4j.service.internal.handler.domain.ResponseBody;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.handler.domain.TargetNode;
 import org.omnaest.react4j.service.internal.rerenderer.RerenderingService;
+import org.apache.commons.lang3.StringUtils;
 import org.omnaest.utils.element.transactional.TransactionalElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -103,8 +106,7 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
     {
         Optional<Target> target = Optional.ofNullable(eventBody)
                                           .map(EventBody::getTarget);
-        Optional<Data> data = Optional.ofNullable(eventBody.getDataWithContext())
-                                      .map(dwc -> Data.of(dwc.getContextId(), dwc.getData()));
+        Optional<Data> data = this.submittedDataAcrossAllContexts(eventBody);
         Optional<Data> internalData = Optional.ofNullable(eventBody.getDataWithContext())
                                               .map(dwc -> Data.of(dwc.getContextId(), dwc.getInternalData()));
 
@@ -141,6 +143,57 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
                                                                                                         responseData.getInternalData()
                                                                                                                     .toMap()))
                                                                 .setTargetNode(rerenderedNode.orElse(null)));
+    }
+
+    /**
+     * The submitted {@link Data} a render pass sees: every ui context the page holds, flattened into one lookup.
+     *
+     * <h2>The defect this exists for</h2>
+     * A component reads its own state out of the submitted {@link Data} while rendering - {@code TreeTable} keeps
+     * its flat/tree mode, per-column filters, sort spec and load-more window under {@code treetable.<location>.*}.
+     * Those fields live in the ROOT ({@code ""}) context, while a form posts under its own context id. So an event
+     * raised in the form carried none of them, and the table was re-rendered from DEFAULTS on every such round
+     * trip - not stale, RESET. Measured live: a chat submission sent one field under
+     * {@code contextId=cardimpl.formimpl} and the response contained the page's table in tree mode with
+     * {@code activeFilterCount=0}, discarding a flat view the user had switched on and a filter the agent had just
+     * applied.
+     *
+     * <h2>Why flattening is the right shape</h2>
+     * Field lookup is already flat - {@code data.getFieldValue(key)} takes a key and ignores the context id, which
+     * only labels the map. Merging therefore needs no reader to change: a component that could find its field
+     * before still finds it, and one whose context was absent now finds it too.
+     *
+     * <h2>Collision rule, and why the originating context wins</h2>
+     * Two contexts may in principle use the same key. The originating context is applied LAST because it is the
+     * one the user just interacted with, so its value is the freshest thing in the request. In practice components
+     * namespace their keys ({@code treetable.<location>.filter.<column>}) and applications name form fields, so a
+     * collision means two components have genuinely claimed one key - a bug this cannot paper over, only order.
+     *
+     * <h2>What is deliberately NOT merged</h2>
+     * {@code internalData}, which carries per-form validation feedback. It is read only by the form that wrote it,
+     * and merging it would let one form's messages surface under another. The event's own internal data continues
+     * to travel alone.
+     */
+    private Optional<Data> submittedDataAcrossAllContexts(EventBody eventBody)
+    {
+        DataWithContext originating = eventBody.getDataWithContext();
+        if (originating == null)
+        {
+            return Optional.empty();
+        }
+
+        Map<String, Object> merged = new LinkedHashMap<>();
+        eventBody.getDataWithContexts()
+                 .stream()
+                 .filter(Objects::nonNull)
+                 .filter(context -> !StringUtils.equals(context.getContextId(), originating.getContextId()))
+                 .map(DataWithContext::getData)
+                 .filter(Objects::nonNull)
+                 .forEach(merged::putAll);
+        Optional.ofNullable(originating.getData())
+                .ifPresent(merged::putAll);
+
+        return Optional.of(Data.of(originating.getContextId(), merged));
     }
 
     /**

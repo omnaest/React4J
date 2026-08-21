@@ -32,6 +32,20 @@ export interface UIContextInternalData {
 export interface UIContextAccessor {
     getUIContextById(contextId: string): UIContext;
 
+    /**
+     * EVERY context the page currently holds.
+     *
+     * WHY THIS EXISTS. Each component keeps its own state in the submitted data under its own contextId --
+     * TreeTable's mode, filters, sort and window all live in the root ("") context, a Form's fields under its
+     * own. An event used to post only the context it came from, so the server re-rendered every OTHER component
+     * from defaults: a chat submission reset the table beside it to tree mode with no filters, discarding what
+     * the user and the agent had just set. The page's state has to travel together for a round trip to be able
+     * to render the page.
+     *
+     * NOT a snapshot: callers must treat the returned contexts as live and read them immediately.
+     */
+    getAllUIContexts(): UIContext[];
+
     updateUIContext(uiContext: UIContext): void;
 
     initializeUIContext(uiContext?: UIContextDataNode): void;

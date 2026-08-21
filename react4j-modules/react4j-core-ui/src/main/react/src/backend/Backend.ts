@@ -74,6 +74,16 @@ export class Backend {
         }).then((response: AxiosResponse<TargetNode>) => response?.data?.node);
     }
 
+    /**
+     * Posts the WHOLE page's data, not only the context the event came from.
+     *
+     * `dataWithContext` still names the originating context -- it is the event's identity, and what the response
+     * echoes back. `dataWithContexts` carries every context alongside it, because the server renders the whole
+     * page in response and each component reads its own state out of the submitted data. Sending one context
+     * meant every other component rendered from defaults: a chat submission came back with the page's TreeTable
+     * reset to tree mode and unfiltered, having discarded a view the user switched on and a filter the agent had
+     * just applied.
+     */
     public static sendEvent(target: Target, contextId: string, uiContextAccessor?: UIContextAccessor, nodeContextAccessor?: NodeContextAccessor) {
         InFlightTracker.increment();
         return Axios.post(BackendUri.URI_UI_HANDLER, {
@@ -82,7 +92,12 @@ export class Backend {
                 contextId: contextId,
                 data: uiContextAccessor?.getUIContextById(contextId).data,
                 internalData: uiContextAccessor?.getUIContextById(contextId).internalData
-            }
+            },
+            dataWithContexts: uiContextAccessor?.getAllUIContexts().map((uiContext) => ({
+                contextId: uiContext.contextId,
+                data: uiContext.data,
+                internalData: uiContext.internalData
+            }))
         }).then((response: AxiosResponse<ResponseBody>) => {
             const responseBody = response?.data;
             const dataWithContext = responseBody?.dataWithContext;
