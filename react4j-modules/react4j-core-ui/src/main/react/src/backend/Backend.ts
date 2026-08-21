@@ -39,6 +39,7 @@ interface InternalData extends ElementMap<any> { }
 
 interface ResponseBody {
     dataWithContext: DataWithContext;
+    dataWithContexts?: DataWithContext[];
     target: Target;
     targetNode: TargetNode;
 }
@@ -100,15 +101,23 @@ export class Backend {
             }))
         }).then((response: AxiosResponse<ResponseBody>) => {
             const responseBody = response?.data;
-            const dataWithContext = responseBody?.dataWithContext;
-            if (dataWithContext) {
+            // Every context the server echoed, each carrying only the fields it owns.
+            //
+            // WHY NOT JUST THE ORIGINATING ONE. A handler can change a field belonging to a component somewhere
+            // else on the page -- that is what driving another component amounts to -- and applying only the
+            // context the event came from would drop that change on the floor. The server decides which context
+            // each field belongs to; this side simply applies what it is told.
+            const echoedContexts = responseBody?.dataWithContexts?.length
+                ? responseBody.dataWithContexts
+                : (responseBody?.dataWithContext ? [responseBody.dataWithContext] : []);
+            echoedContexts.forEach((echoed) => {
                 uiContextAccessor?.updateUIContext({
-                    contextId: dataWithContext.contextId,
-                    data: dataWithContext.data,
-                    internalData: dataWithContext.internalData,
+                    contextId: echoed.contextId,
+                    data: echoed.data,
+                    internalData: echoed.internalData,
                     updateCounter: 0
                 });
-            }
+            });
 
             const targetNode = responseBody?.targetNode;
             if (targetNode) {

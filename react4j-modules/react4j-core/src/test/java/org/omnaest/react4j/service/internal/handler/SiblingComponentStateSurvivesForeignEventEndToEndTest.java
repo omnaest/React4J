@@ -204,6 +204,47 @@ public class SiblingComponentStateSurvivesForeignEventEndToEndTest
     }
 
     @SuppressWarnings("unchecked")
+    /**
+     * An event must not leave a copy of another component's field in its own context.
+     *
+     * <h2>The failure this pins</h2>
+     * A round trip reads every context as one flat lookup, and the response used to echo that flattened result
+     * back under the ORIGINATING context. Every other component's fields were therefore copied into it, the
+     * client stored them there, and from then on the same key travelled in two contexts. While the copies agreed
+     * nothing showed.
+     * <p>
+     * They stop agreeing as soon as the user touches the real one. Measured live: a chat turn set a table to
+     * flat; the user pressed the table's own toggle back to tree; the next chat message - which requested no view
+     * change at all, and whose transcript shows no such tool call - flipped it to flat again from the copy left
+     * in the chat form's context. This asserts the copy is never made.
+     */
+    @Test
+    public void testAForeignEventDoesNotLeaveACopyOfTheTablesFieldInItsOwnContext() throws Exception
+    {
+        this.registerButtonBesideTreeTable();
+
+        JsonNode treeTableNode = findTreeTableNode(this.renderUI());
+        Target flatToggleTarget = this.toTarget(treeTableNode.get("flatToggleTarget"));
+        JsonNode toggleResponse = this.clickTarget(flatToggleTarget, TABLE_CONTEXT_ID, Collections.emptyMap(), Collections.emptyList());
+        Map<String, Object> tableContextData = this.echoedData(toggleResponse);
+        assertFalse(tableContextData.isEmpty(), "precondition: the toggle must have written the table's mode into the submitted data");
+
+        Target buttonTarget = this.findFirstOnClickTarget(this.renderUI());
+        JsonNode foreignResponse = this.clickTarget(buttonTarget, FOREIGN_CONTEXT_ID, Map.of("someFormField", "hello"),
+                                                    List.of(new DataWithContext(TABLE_CONTEXT_ID, tableContextData, Collections.emptyMap()),
+                                                            new DataWithContext(FOREIGN_CONTEXT_ID, new HashMap<>(Map.of("someFormField", "hello")),
+                                                                                Collections.emptyMap())));
+
+        Map<String, Object> echoedToTheForeignContext = this.echoedData(foreignResponse);
+        assertTrue(echoedToTheForeignContext.containsKey("someFormField"), "precondition: the foreign context must still get its own field back");
+        assertTrue(echoedToTheForeignContext.keySet()
+                                            .stream()
+                                            .noneMatch(key -> key.startsWith("treetable.")),
+                   "the form's context must not be sent the TABLE's fields. Leaking them here is what puts the same key in two "
+                           + "contexts, where a later disagreement is resolved by whichever the merge happens to prefer. Got: "
+                           + echoedToTheForeignContext.keySet());
+    }
+
     private Map<String, Object> echoedData(JsonNode response) throws Exception
     {
         return OBJECT_MAPPER.convertValue(response.get("dataWithContext")

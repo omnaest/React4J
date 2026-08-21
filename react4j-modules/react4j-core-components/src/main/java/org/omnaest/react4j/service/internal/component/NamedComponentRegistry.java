@@ -49,7 +49,39 @@ import org.springframework.stereotype.Service;
 @Service
 public class NamedComponentRegistry
 {
-    private final Map<String, Location> nameToLocation = new ConcurrentHashMap<>();
+    /**
+     * The context a component dispatches under when it declares none of its own - which is what the client uses
+     * as the key for the root ui context.
+     */
+    public static final String                    ROOT_CONTEXT_ID    = "";
+
+    private final Map<String, Registration>       nameToRegistration = new ConcurrentHashMap<>();
+
+    /**
+     * Where a named component is, and which submitted-data context its fields belong to.
+     */
+    public static class Registration
+    {
+        private final Location location;
+
+        private final String   contextId;
+
+        Registration(Location location, String contextId)
+        {
+            this.location = location;
+            this.contextId = contextId;
+        }
+
+        public Location getLocation()
+        {
+            return this.location;
+        }
+
+        public String getContextId()
+        {
+            return this.contextId;
+        }
+    }
 
     /**
      * Publishes where a named component landed in this render.
@@ -58,11 +90,11 @@ public class NamedComponentRegistry
      * new location, and the old one is simply overwritten. It also means two components sharing a name silently
      * collide - a programming error the framework has no way to distinguish from a legitimate re-registration.
      */
-    public void register(String name, Location location)
+    public void register(String name, Location location, String contextId)
     {
         if (name != null && location != null)
         {
-            this.nameToLocation.put(name, location);
+            this.nameToRegistration.put(name, new Registration(location, contextId));
         }
     }
 
@@ -73,6 +105,48 @@ public class NamedComponentRegistry
     public Optional<Location> resolve(String name)
     {
         return Optional.ofNullable(name)
-                       .map(this.nameToLocation::get);
+                       .map(this.nameToRegistration::get)
+                       .map(Registration::getLocation);
+    }
+
+    public Optional<String> contextIdOf(String name)
+    {
+        return Optional.ofNullable(name)
+                       .map(this.nameToRegistration::get)
+                       .map(Registration::getContextId);
+    }
+
+    /**
+     * Which context a submitted-data field belongs to, judged by the component whose {@link Location} the key was
+     * derived from.
+     *
+     * <h2>Why this is needed at all</h2>
+     * A round trip carries every context and the render pass reads them as one flat lookup, so by the time a
+     * handler has written something the key's home is no longer obvious. Echoing the flattened result back under
+     * the originating context looks harmless and is not: the key then lives in TWO contexts, and the next request
+     * carries both. When they disagree - because the user changed the real one in between - whichever the merge
+     * prefers wins, and the stale copy is as likely as not.
+     * <p>
+     * That is not hypothetical. A chat turn set a table to flat; the merged echo left a copy of the mode in the
+     * chat form's context; the user then switched the table back; and the next chat message flipped it to flat
+     * again from the stale copy, with no tool call involved.
+     *
+     * <h2>How ownership is decided</h2>
+     * By {@link Location}. Components key their submitted fields by their own position in the tree, so a key that
+     * contains a registered component's joined location was derived from that component and belongs where that
+     * component's own controls write. Nothing here knows what a TreeTable is.
+     */
+    public Optional<String> contextIdOwning(String fieldKey)
+    {
+        if (fieldKey == null)
+        {
+            return Optional.empty();
+        }
+        return this.nameToRegistration.values()
+                                      .stream()
+                                      .filter(registration -> fieldKey.contains(String.join(".", registration.getLocation()
+                                                                                                             .get())))
+                                      .map(Registration::getContextId)
+                                      .findFirst();
     }
 }

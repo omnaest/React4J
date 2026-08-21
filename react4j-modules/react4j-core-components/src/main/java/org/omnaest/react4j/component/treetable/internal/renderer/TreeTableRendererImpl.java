@@ -43,6 +43,7 @@ import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.component.AbstractUIComponent;
 import org.omnaest.react4j.service.internal.component.ComponentContext;
+import org.omnaest.react4j.service.internal.component.NamedComponentRegistry;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 
@@ -331,7 +332,7 @@ public class TreeTableRendererImpl implements UIComponentRenderer
             // which runs BEFORE handlers - is what guarantees a handler reads a mapping from the same tree it is
             // about to affect.
             Optional.ofNullable(this.context.getNamedComponentRegistry())
-                    .ifPresent(registry -> registry.register(this.data.getName(), location));
+                    .ifPresent(registry -> registry.register(this.data.getName(), location, NamedComponentRegistry.ROOT_CONTEXT_ID));
 
             boolean flatMode = this.currentFlatMode(location);
 

@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.handler.domain;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ResponseBody extends EventBody
@@ -44,6 +46,19 @@ public class ResponseBody extends EventBody
     public ResponseBody setDataWithContext(DataWithContext dataWithContext)
     {
         super.setDataWithContext(dataWithContext);
+        return this;
+    }
+
+    /**
+     * The response carries EVERY context, each with only the fields it owns.
+     * <p>
+     * Public here, unlike on {@link EventBody}, because building a response is what this type is for - the base
+     * class's setter is protected so that an incoming request cannot be edited in place.
+     */
+    @Override
+    public ResponseBody setDataWithContexts(List<DataWithContext> dataWithContexts)
+    {
+        super.setDataWithContexts(dataWithContexts);
         return this;
     }
 }

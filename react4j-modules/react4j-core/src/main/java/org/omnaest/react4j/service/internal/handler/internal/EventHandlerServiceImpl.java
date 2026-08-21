@@ -17,11 +17,15 @@ package org.omnaest.react4j.service.internal.handler.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,6 +43,7 @@ import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.handler.domain.TargetNode;
 import org.omnaest.react4j.service.internal.rerenderer.RerenderingService;
 import org.apache.commons.lang3.StringUtils;
+import org.omnaest.react4j.service.internal.component.NamedComponentRegistry;
 import org.omnaest.utils.element.transactional.TransactionalElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -101,6 +106,9 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
         }
     }
 
+    @Autowired(required = false)
+    private NamedComponentRegistry namedComponentRegistry;
+
     @Override
     public Optional<ResponseBody> handleEvent(EventBody eventBody)
     {
@@ -135,14 +143,20 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
         Optional<TargetNode> rerenderedNode = this.executeTransactionalAndPublishStagingHandlers(() -> target.flatMap(targetNode -> this.rerenderingService.rerenderTargetNode(targetNode,
                                                                                                                                                                                renderData)));
 
-        return mappedData.map(responseData -> new ResponseBody().setTarget(eventBody.getTarget())
-                                                                .setDataWithContext(new DataWithContext(responseData.getData()
-                                                                                                                    .getContextId(),
-                                                                                                        responseData.getData()
-                                                                                                                    .toMap(),
-                                                                                                        responseData.getInternalData()
-                                                                                                                    .toMap()))
-                                                                .setTargetNode(rerenderedNode.orElse(null)));
+        return mappedData.map(responseData ->
+        {
+            Map<String, Object> postHandlerData = responseData.getData()
+                                                              .toMap();
+            String originatingContextId = responseData.getData()
+                                                      .getContextId();
+            return new ResponseBody().setTarget(eventBody.getTarget())
+                                     .setDataWithContext(new DataWithContext(originatingContextId,
+                                                                             this.keysBelongingTo(eventBody, originatingContextId, postHandlerData),
+                                                                             responseData.getInternalData()
+                                                                                         .toMap()))
+                                     .setDataWithContexts(this.echoEveryContext(eventBody, postHandlerData))
+                                     .setTargetNode(rerenderedNode.orElse(null));
+        });
     }
 
     /**
@@ -194,6 +208,140 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
                 .ifPresent(merged::putAll);
 
         return Optional.of(Data.of(originating.getContextId(), merged));
+    }
+
+    /**
+     * Splits the flattened post-handler {@link Data} back into the contexts it came from, so each context is
+     * echoed with its OWN fields and nothing else.
+     *
+     * <h2>Why the flattened map must not be echoed as-is</h2>
+     * Rendering reads every context as one lookup, which is what lets a component find its own fields no matter
+     * where the event came from. Echoing that flattened result back under the ORIGINATING context looks harmless
+     * and is not: every other component's fields are copied into it, the client stores them there, and the next
+     * request carries the same key in two contexts. While the copies agree nothing shows. When they disagree -
+     * because the user changed the real one in between - the merge's tie-break decides, and it has no way to know
+     * which copy is the live one.
+     * <p>
+     * Measured: a chat turn switched a table to flat, leaving a copy of the mode in the chat form's context; the
+     * user switched the table back with its own toggle; the next chat message flipped it to flat again from that
+     * stale copy, with no view-mode tool call in the turn at all.
+     *
+     * <h2>Where a newly-written field goes</h2>
+     * A handler can create a field that arrived in no context - that is exactly what driving another component
+     * through {@code UIComponents} does. It is routed to the context of the component whose {@code Location} the
+     * key was derived from, and falls back to the originating context only when no component claims it.
+     */
+    private List<DataWithContext> echoEveryContext(EventBody eventBody, Map<String, Object> postHandlerData)
+    {
+        DataWithContext originating = eventBody.getDataWithContext();
+        String originatingContextId = originating != null ? originating.getContextId() : null;
+
+        List<DataWithContext> echoed = new ArrayList<>();
+        eventBody.getDataWithContexts()
+                 .stream()
+                 .filter(Objects::nonNull)
+                 .forEach(context -> echoed.add(new DataWithContext(context.getContextId(),
+                                                                    this.keysBelongingTo(eventBody, context.getContextId(), postHandlerData),
+                                                                    context.getInternalData() != null ? context.getInternalData()
+                                                                            : Collections.emptyMap())));
+
+        boolean originatingAlreadyEchoed = echoed.stream()
+                                                 .anyMatch(context -> StringUtils.equals(context.getContextId(), originatingContextId));
+        if (!originatingAlreadyEchoed && originating != null)
+        {
+            echoed.add(new DataWithContext(originatingContextId, this.keysBelongingTo(eventBody, originatingContextId, postHandlerData),
+                                           originating.getInternalData() != null ? originating.getInternalData() : Collections.emptyMap()));
+        }
+
+        // A context that OWNS something the handler just wrote, but that the request never carried, still has to
+        // be echoed - otherwise the write is silently dropped. That happens whenever a component's own context
+        // does not exist yet on the client: the very first event on a freshly loaded page, or any caller that
+        // posts only the context it is acting in. Without this the write lands nowhere and looks precisely like
+        // a handler that did not run.
+        Set<String> alreadyEchoed = echoed.stream()
+                                          .map(DataWithContext::getContextId)
+                                          .collect(Collectors.toSet());
+        this.contextsOwningNewKeys(eventBody, postHandlerData)
+            .stream()
+            .filter(contextId -> !alreadyEchoed.contains(contextId))
+            .forEach(contextId -> echoed.add(new DataWithContext(contextId, this.keysBelongingTo(eventBody, contextId, postHandlerData),
+                                                                 Collections.emptyMap())));
+        return echoed;
+    }
+
+    /**
+     * The contexts that own a field the handler created and that the request did not carry.
+     */
+    private Set<String> contextsOwningNewKeys(EventBody eventBody, Map<String, Object> postHandlerData)
+    {
+        Set<String> submittedAnywhere = Stream.concat(eventBody.getDataWithContexts()
+                                                               .stream(),
+                                                      Stream.ofNullable(eventBody.getDataWithContext()))
+                                              .filter(Objects::nonNull)
+                                              .map(DataWithContext::getData)
+                                              .filter(Objects::nonNull)
+                                              .flatMap(data -> data.keySet()
+                                                                   .stream())
+                                              .collect(Collectors.toSet());
+
+        return postHandlerData.keySet()
+                              .stream()
+                              .filter(key -> !submittedAnywhere.contains(key))
+                              .map(key -> Optional.ofNullable(this.namedComponentRegistry)
+                                                  .flatMap(registry -> registry.contextIdOwning(key)))
+                              .filter(Optional::isPresent)
+                              .map(Optional::get)
+                              .collect(Collectors.toSet());
+    }
+
+    /**
+     * The post-handler values of the fields that belong to ONE context: those it submitted, plus any the handler
+     * created that this context owns.
+     */
+    private Map<String, Object> keysBelongingTo(EventBody eventBody, String contextId, Map<String, Object> postHandlerData)
+    {
+        Set<String> submittedHere = new HashSet<>();
+        Set<String> submittedAnywhere = new HashSet<>();
+        Stream.concat(eventBody.getDataWithContexts()
+                               .stream(),
+                      Stream.ofNullable(eventBody.getDataWithContext()))
+              .filter(Objects::nonNull)
+              .forEach(context ->
+              {
+                  Map<String, Object> contextData = context.getData();
+                  if (contextData != null)
+                  {
+                      submittedAnywhere.addAll(contextData.keySet());
+                      if (StringUtils.equals(context.getContextId(), contextId))
+                      {
+                          submittedHere.addAll(contextData.keySet());
+                      }
+                  }
+              });
+
+        String originatingContextId = eventBody.getDataWithContext() != null ? eventBody.getDataWithContext()
+                                                                                        .getContextId()
+                : null;
+
+        Map<String, Object> owned = new LinkedHashMap<>();
+        postHandlerData.forEach((key, value) ->
+        {
+            if (submittedHere.contains(key))
+            {
+                owned.put(key, value);
+            }
+            else if (!submittedAnywhere.contains(key))
+            {
+                String home = Optional.ofNullable(this.namedComponentRegistry)
+                                      .flatMap(registry -> registry.contextIdOwning(key))
+                                      .orElse(originatingContextId);
+                if (StringUtils.equals(home, contextId))
+                {
+                    owned.put(key, value);
+                }
+            }
+        });
+        return owned;
     }
 
     /**
