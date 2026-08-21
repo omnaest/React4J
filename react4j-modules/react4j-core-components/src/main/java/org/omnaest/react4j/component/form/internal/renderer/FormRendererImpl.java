@@ -65,19 +65,27 @@ public class FormRendererImpl implements UIComponentRenderer
      * {@link #eventHandlerRegistry}, preserving pre-conversion behavior for callers that supply no real
      * {@link HandlerEmitter}.
      * <p>
-     * <b>The returned {@link Handler} is unconditionally non-null</b> - deliberately deviating from the
-     * null-propagating idiom used at the other Group B sites ({@code FileUploadFormElementImpl},
-     * {@code InputFormElementImpl}). {@code FormData#eventHandler} has no {@code @Builder.Default}, so it is
-     * {@code null} whenever an application builds a {@code Form} without ever calling
-     * {@code Form.onChange(...)} - the common case of a form whose only interactivity is its submit button.
-     * {@code Form.tsx} on the client dispatches the rendered {@code onChange} node field through
-     * {@code HandlerFactory.handleEvent(...)} WITHOUT a null guard, so a {@code null} here throws client-side
-     * on every input change in such a form. Both the emitter-present branch (falling back to
-     * {@code new ServerHandler(target)} when {@link HandlerEmitter#emitDataEventHandler(Target, DataEventHandler)}
-     * yields {@code null}) and the no-emitter fallback branch therefore always return a {@link ServerHandler},
-     * matching this class's pre-conversion shape where there was no {@code eventHandler != null} gate. Do
-     * NOT "clean this up" back into the shared null-propagating shape - that reintroduces the client-side
-     * throw.
+     * <b>Returns {@code null} when the application never called {@code Form.onChange(...)}</b>, so no handler is
+     * registered and the rendered node carries no {@code onChange} target.
+     * <p>
+     * <b>Why this is now safe, and was not before.</b> {@code FormData#eventHandler} has no
+     * {@code @Builder.Default}, so it is null for the common form whose only interactivity is its submit button.
+     * This method used to emit a {@link ServerHandler} anyway, because {@code Form.tsx} dispatched the rendered
+     * {@code onChange} field without a null guard and would throw client-side on every keystroke. That guard now
+     * exists, which is what this change is paired with - see {@code Form.tsx#handleInputChange}.
+     * <p>
+     * <b>What it costs to emit one anyway.</b> A round trip per keystroke. Measured on a chat box: typing five
+     * characters put three requests in flight at once, and the count stayed above zero through any real burst of
+     * typing. For a form with no change handler that traffic notifies nobody - the client already writes the
+     * value into its own data context in the same method, and that context travels with the next real event. The
+     * pitfall recorded in memory {@code react4j-gate-optin-handler-on-existing-node} is exactly this: registering
+     * and emitting unconditionally makes every existing form pay for a capability it never asked for.
+     * <p>
+     * Both branches still return a {@link ServerHandler} when a handler IS registered - the emitter-present one
+     * falling back to {@code new ServerHandler(target)} when
+     * {@link HandlerEmitter#emitDataEventHandler(Target, DataEventHandler)} yields null (a raw Mockito mock, or
+     * production's no-op emitter), and the no-emitter branch registering directly against the field-held
+     * {@link #eventHandlerRegistry}.
      *
      * @param renderingProcessor
      * @param target
@@ -85,6 +93,11 @@ public class FormRendererImpl implements UIComponentRenderer
      */
     private Handler emitOnChangeHandler(RenderingProcessor renderingProcessor, Target target)
     {
+        if (this.formData.getEventHandler() == null)
+        {
+            return null;
+        }
+
         HandlerEmitter handlerEmitter = renderingProcessor != null ? renderingProcessor.handlers() : null;
         if (handlerEmitter != null)
         {

@@ -2,6 +2,7 @@ package org.omnaest.react4j.component.form.internal.renderer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
@@ -26,11 +27,26 @@ import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.handler.ServerHandler;
 
 /**
- * plan-78 Cliff C1-A corrective round: covers the regression found at review - a {@code Form} that never calls
- * {@code Form.onChange(...)} has a {@code null} {@code FormData#eventHandler} (no {@code @Builder.Default}),
- * and the client-side {@code Form.tsx} dispatches the rendered {@code onChange} node field WITHOUT a null
- * guard. Both scenarios below build such a handler-less Form and assert the emitted {@code onChange} field is
- * non-null - the exact condition a null-propagating emission would violate.
+ * Whether a {@code Form} emits an {@code onChange} target, and therefore whether typing in it costs a round
+ * trip.
+ *
+ * <h2>What these tests used to assert, and why they were right to</h2>
+ * That a handler-less form emits an {@code onChange} anyway. {@code FormData#eventHandler} has no
+ * {@code @Builder.Default}, so it is null for the common form whose only interactivity is its submit button -
+ * and {@code Form.tsx} dispatched the rendered field without a null guard, throwing client-side on every
+ * keystroke if it was absent. Emitting unconditionally was the only thing that worked.
+ *
+ * <h2>Why they now assert the opposite</h2>
+ * The client guard exists. With it, emitting a target nobody registered a handler for buys nothing and costs a
+ * request per keystroke - measured on a chat box at three in flight at once while typing five characters. The
+ * value itself never depended on that traffic: {@code Form.tsx} writes it into the form's own data context
+ * locally, and that context travels with the next real event.
+ *
+ * <h2>The pairing is the fragile part</h2>
+ * Server emission and client guard have to move together. Drop the guard and a handler-less form throws on
+ * every keystroke; emit unconditionally again and every form silently pays for a capability it never asked for
+ * (memory {@code react4j-gate-optin-handler-on-existing-node}). The tests below pin both directions: absent
+ * when no handler is registered, present and routable when one is.
  */
 public class FormRendererImplTest
 {
@@ -49,15 +65,14 @@ public class FormRendererImplTest
     }
 
     /**
-     * The decisive regression scenario: a real (non-mock) {@link RenderingProcessor} that does not override
-     * {@link RenderingProcessor#handlers()} exercises production's no-op {@code HandlerEmitter}, whose
-     * {@code emitDataEventHandler(...)} always returns {@code null} - exactly the channel the null-propagating
-     * conversion routed the Form's {@code onChange} through. The emitted node field must still be a non-null
-     * {@link ServerHandler} carrying the rendered {@link Target}, not the {@code null} that would make
-     * {@code Form.tsx}'s unguarded dispatch throw client-side.
+     * A form nobody registered a change handler on emits no {@code onChange} - so typing in it reaches no
+     * server.
+     * <p>
+     * Rendered through a real (non-mock) {@link RenderingProcessor} that does not override
+     * {@link RenderingProcessor#handlers()}, which exercises production's no-op {@code HandlerEmitter}.
      */
     @Test
-    public void testRenderWithoutOnChangeHandlerEmitsNonNullServerHandlerThroughEmitter()
+    public void testRenderWithoutOnChangeHandlerEmitsNoOnChangeThroughEmitter()
     {
         FormRendererImpl renderer = this.newRenderer(this.formDataWithoutOnChangeHandler());
         Location location = Location.of("form");
@@ -75,20 +90,18 @@ public class FormRendererImplTest
         Node node = renderer.render(renderingProcessor, location, Optional.empty());
 
         FormNode formNode = (FormNode) node;
-        assertNotNull(formNode.getOnChange(), "onChange must be emitted unconditionally, even without a registered handler");
-        assertTrue(formNode.getOnChange() instanceof ServerHandler);
-        ServerHandler onChange = (ServerHandler) formNode.getOnChange();
-        assertEquals(Target.from(location), onChange.getTarget());
-        assertNotNull(onChange.getContextId());
+        assertNull(formNode.getOnChange(),
+                   "a form with no registered change handler must emit no onChange target - emitting one makes every "
+                           + "keystroke a round trip that notifies nobody");
     }
 
     /**
-     * The no-{@link RenderingProcessor} fallback branch (e.g. a raw Mockito mock, or {@code null}) must produce
-     * the same unconditionally non-null {@link ServerHandler}, registering directly against the field-held
-     * {@link EventHandlerRegistry}.
+     * Same on the no-{@link RenderingProcessor} fallback branch (a raw Mockito mock, or {@code null}): nothing
+     * emitted, and nothing registered against the {@link EventHandlerRegistry} either. Registering a handler for
+     * a target the node never carries would be a leak with no way to fire it.
      */
     @Test
-    public void testRenderWithoutOnChangeHandlerEmitsNonNullServerHandlerThroughRegistryFallback()
+    public void testRenderWithoutOnChangeHandlerRegistersNothingOnTheFallbackBranch()
     {
         FormRendererImpl renderer = this.newRenderer(this.formDataWithoutOnChangeHandler());
         Location location = Location.of("form");
@@ -96,12 +109,39 @@ public class FormRendererImplTest
         Node node = renderer.render(null, location, Optional.empty());
 
         FormNode formNode = (FormNode) node;
-        assertNotNull(formNode.getOnChange(), "onChange must be emitted unconditionally, even without a registered handler");
+        assertNull(formNode.getOnChange(), "a form with no registered change handler must emit no onChange target");
+        assertTrue(this.eventHandlerRegistry.handlers.isEmpty(), "and must register no handler for a target it never emits");
+    }
+
+    /**
+     * THE other direction, and the one that stops this becoming "onChange never works": a form that DID call
+     * {@code Form.onChange(...)} must still emit a routable {@link ServerHandler}.
+     * <p>
+     * Without this, gating emission on a null check would pass every test above while silently disabling the
+     * feature for every application that actually uses it.
+     */
+    @Test
+    public void testRenderWithAnOnChangeHandlerStillEmitsARoutableServerHandler()
+    {
+        FormData formData = FormData.builder()
+                                    .document(new FakeDocument())
+                                    .eventHandler((data, internalData) -> DataEventHandler.MappedData.builder()
+                                                                                                     .data(data)
+                                                                                                     .internalData(internalData)
+                                                                                                     .build())
+                                    .build();
+        FormRendererImpl renderer = this.newRenderer(formData);
+        Location location = Location.of("form");
+
+        Node node = renderer.render(null, location, Optional.empty());
+
+        FormNode formNode = (FormNode) node;
+        assertNotNull(formNode.getOnChange(), "a form WITH a change handler must still emit one");
         assertTrue(formNode.getOnChange() instanceof ServerHandler);
         ServerHandler onChange = (ServerHandler) formNode.getOnChange();
         assertEquals(Target.from(location), onChange.getTarget());
         assertNotNull(onChange.getContextId());
-        assertTrue(this.eventHandlerRegistry.handlers.containsKey(onChange.getTarget()));
+        assertTrue(this.eventHandlerRegistry.handlers.containsKey(onChange.getTarget()), "and must register the handler so the target routes");
     }
 
     private static class FakeEventHandlerRegistry implements EventHandlerRegistry

@@ -164,6 +164,21 @@ export class Form extends React.Component<Props, State> {
         const updateCounter = DataContextManager.updateFieldByContext(element.contextId, element.field, value, renderingSupport?.uiContextAccessor);
         this.setState({ updateCounter: updateCounter });
 
+        // No handler, no round trip.
+        //
+        // The value is already where it needs to be: updateFieldByContext above wrote it into this form's own
+        // data context, and that context travels with the next real event. The dispatch below exists only to
+        // notify an application that asked to be notified, via Form.onChange(...). A form whose only
+        // interactivity is its submit button asked for nothing, and used to pay a request per keystroke for it -
+        // measured at three in flight at once while typing five characters.
+        //
+        // The guard is also what lets the server stop emitting the field at all. It used to have to emit one
+        // unconditionally because this dispatch had no guard and threw on a missing handler; that constraint is
+        // this line. See FormRendererImpl#emitOnChangeHandler.
+        if (!this.props.node?.onChange) {
+            return;
+        }
+
         // In the background: this fires on every keystroke, and a busy indicator that reports typing is a busy
         // indicator nobody reads. See InFlightTracker.incrementBackground.
         HandlerFactory.handleEventInBackground(this.props.node?.onChange as Handler, renderingSupport?.uiContextAccessor,
