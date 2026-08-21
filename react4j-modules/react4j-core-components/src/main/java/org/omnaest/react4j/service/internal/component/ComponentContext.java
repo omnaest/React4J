@@ -32,8 +32,14 @@ public class ComponentContext
     protected UploadChannelRegistry        uploadChannelRegistry;
     protected Supplier<UIComponentFactory> uiComponentFactory;
     protected ContextFactory               contextFactory;
+    protected NamedComponentRegistry       namedComponentRegistry;
 
     public ComponentContext(UILocale defaultLocale, LocalizedTextResolverService textResolver, EventHandlerRegistry eventHandlerRegistry, UploadChannelRegistry uploadChannelRegistry, Supplier<UIComponentFactory> uiComponentFactory, ContextFactory contextFactory)
+    {
+        this(defaultLocale, textResolver, eventHandlerRegistry, uploadChannelRegistry, uiComponentFactory, contextFactory, null);
+    }
+
+    public ComponentContext(UILocale defaultLocale, LocalizedTextResolverService textResolver, EventHandlerRegistry eventHandlerRegistry, UploadChannelRegistry uploadChannelRegistry, Supplier<UIComponentFactory> uiComponentFactory, ContextFactory contextFactory, NamedComponentRegistry namedComponentRegistry)
     {
         super();
         this.defaultLocale = defaultLocale;
@@ -42,6 +48,20 @@ public class ComponentContext
         this.uploadChannelRegistry = uploadChannelRegistry;
         this.uiComponentFactory = uiComponentFactory;
         this.contextFactory = contextFactory;
+        this.namedComponentRegistry = namedComponentRegistry;
+    }
+
+    /**
+     * Where a component publishes the {@link org.omnaest.react4j.domain.Location} it rendered at, so a handler
+     * can address it by name later.
+     * <p>
+     * Null in a hand-constructed context - several tests build one directly, and none of them needs naming. A
+     * caller must therefore null-check rather than assume; a component that cannot publish its location simply
+     * is not addressable, which is the same outcome as never having been named.
+     */
+    public NamedComponentRegistry getNamedComponentRegistry()
+    {
+        return this.namedComponentRegistry;
     }
 
     public UILocale getDefaultLocale()

@@ -43,6 +43,12 @@ public class TreeTableData
 
     private String                ariaLabel;
 
+    /**
+     * The name this table answers to when something OTHER than the user drives it. Null when unnamed, which is
+     * the default and means the table is simply not addressable from a handler.
+     */
+    private String                name;
+
     @Default
     private boolean               initiallyFlat           = false;
 

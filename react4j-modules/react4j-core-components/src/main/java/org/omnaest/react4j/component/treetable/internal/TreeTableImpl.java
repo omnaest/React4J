@@ -105,6 +105,13 @@ public class TreeTableImpl extends AbstractUIComponentWithSubComponents<TreeTabl
     }
 
     @Override
+    public TreeTable withName(String name)
+    {
+        this.data.name(name);
+        return this;
+    }
+
+    @Override
     public TreeTable withInitiallyFlat(boolean flat)
     {
         this.data.initiallyFlat(flat);

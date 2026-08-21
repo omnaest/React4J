@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.omnaest.react4j.component.treetable.TreeTableStateKeys;
 import org.omnaest.react4j.component.treetable.internal.data.TreeTableData;
 import org.omnaest.react4j.component.treetable.internal.renderer.node.TreeTableNode;
 import org.omnaest.react4j.component.treetable.internal.renderer.node.TreeTableNode.ColumnNode;
@@ -324,6 +325,14 @@ public class TreeTableRendererImpl implements UIComponentRenderer
             // BOTH the query shape (empty parentNodeId + isFlat==true, always at the root) AND how the returned rows
             // are flattened (see appendFlatRows vs appendRows below). The expanded-node-id set is ignored entirely
             // while flatMode is true (AC-per-brief: "the expanded-node-id set is ignored in flat mode").
+            // Publish where this grid landed, so a handler elsewhere on the page can address it by name later
+            // (TreeTable.withName / UIComponents). Done on every render rather than once: the location is
+            // positional, so a table that moves must correct the mapping, and handleEvent's first render pass -
+            // which runs BEFORE handlers - is what guarantees a handler reads a mapping from the same tree it is
+            // about to affect.
+            Optional.ofNullable(this.context.getNamedComponentRegistry())
+                    .ifPresent(registry -> registry.register(this.data.getName(), location));
+
             boolean flatMode = this.currentFlatMode(location);
 
             // Cliff C1a mechanism (a): the load-more window state is carried as a field on the submitted Data
@@ -655,8 +664,8 @@ public class TreeTableRendererImpl implements UIComponentRenderer
          */
         private String windowFieldKey(Location location, String parentNodeId)
         {
-            String group = parentNodeId != null ? parentNodeId : "root";
-            return "treetable." + String.join(".", location.get()) + "." + group + ".windowLimit";
+            return TreeTableStateKeys.of(location)
+                                     .window(parentNodeId);
         }
 
         private int currentWindowLimit(Location gridLocation, String parentNodeId)
@@ -678,7 +687,8 @@ public class TreeTableRendererImpl implements UIComponentRenderer
          */
         private String expandedNodesFieldKey(Location location)
         {
-            return "treetable." + String.join(".", location.get()) + ".expandedNodes";
+            return TreeTableStateKeys.of(location)
+                                     .expandedNodes();
         }
 
         private Set<String> readExpandedNodeIds(Location location)
@@ -704,7 +714,8 @@ public class TreeTableRendererImpl implements UIComponentRenderer
          */
         private String filterFieldKey(Location gridLocation, String columnKey)
         {
-            return "treetable." + String.join(".", gridLocation.get()) + ".filter." + columnKey;
+            return TreeTableStateKeys.of(gridLocation)
+                                     .filter(columnKey);
         }
 
         /**
@@ -716,7 +727,8 @@ public class TreeTableRendererImpl implements UIComponentRenderer
          */
         private String sortFieldKey(Location gridLocation)
         {
-            return "treetable." + String.join(".", gridLocation.get()) + ".sort";
+            return TreeTableStateKeys.of(gridLocation)
+                                     .sort();
         }
 
         private String currentFilterValue(Location gridLocation, String columnKey)
@@ -977,7 +989,8 @@ public class TreeTableRendererImpl implements UIComponentRenderer
          */
         private String sortPriorityFieldKey(Location gridLocation, String columnKey)
         {
-            return "treetable." + String.join(".", gridLocation.get()) + ".sortpriority." + columnKey;
+            return TreeTableStateKeys.of(gridLocation)
+                                     .sortPriority(columnKey);
         }
 
         /**
@@ -1052,7 +1065,8 @@ public class TreeTableRendererImpl implements UIComponentRenderer
          */
         private String filtersVisibleFieldKey(Location gridLocation)
         {
-            return "treetable." + String.join(".", gridLocation.get()) + ".filtersVisible";
+            return TreeTableStateKeys.of(gridLocation)
+                                     .filtersVisible();
         }
 
         /**
@@ -1105,7 +1119,8 @@ public class TreeTableRendererImpl implements UIComponentRenderer
          */
         private String flatModeFieldKey(Location gridLocation)
         {
-            return "treetable." + String.join(".", gridLocation.get()) + ".flatMode";
+            return TreeTableStateKeys.of(gridLocation)
+                                     .flatMode();
         }
 
         /**

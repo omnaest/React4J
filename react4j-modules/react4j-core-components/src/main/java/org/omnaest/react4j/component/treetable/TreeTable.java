@@ -78,6 +78,23 @@ public interface TreeTable extends UIComponent<TreeTable>
     public TreeTable withAriaLabel(String ariaLabel);
 
     /**
+     * Names this table so a handler elsewhere on the page can drive it - see {@code UIComponents}.
+     * <p>
+     * <b>Why a name rather than the object.</b> The component is rebuilt on every render, so an application
+     * cannot hold on to the instance it configured and expect a later handler to be talking about the same
+     * table. A name survives that, and the framework resolves it to whatever {@code Location} the table
+     * currently occupies.
+     * <p>
+     * Unnamed tables stay unaddressable. That is deliberate: being drivable from a distance is a capability a
+     * page opts into, not something every table acquires by existing.
+     *
+     * @param name
+     *            unique within the page. Two tables sharing a name is a programming error the framework cannot
+     *            detect - the second registration simply wins.
+     */
+    public TreeTable withName(String name);
+
+    /**
      * Enables or disables per-column sorting entirely (default {@code true}). When {@code false}, no sort toggles
      * are rendered or registered at all.
      *

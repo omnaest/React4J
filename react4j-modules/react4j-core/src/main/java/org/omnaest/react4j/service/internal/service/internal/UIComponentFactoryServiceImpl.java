@@ -74,6 +74,7 @@ import org.omnaest.react4j.service.internal.component.CardImpl;
 import org.omnaest.react4j.service.internal.component.CarouselImpl;
 import org.omnaest.react4j.service.internal.component.CollapseImpl;
 import org.omnaest.react4j.service.internal.component.ComponentContext;
+import org.omnaest.react4j.service.internal.component.NamedComponentRegistry;
 import org.omnaest.react4j.service.internal.component.CompositeImpl;
 import org.omnaest.react4j.service.internal.component.DropdownImpl;
 import org.omnaest.react4j.service.internal.component.FigureImpl;
@@ -152,13 +153,16 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
     @Autowired
     protected CustomUIComponentFactoryManager customUIComponentFactoryManager;
 
+    @Autowired
+    protected NamedComponentRegistry           namedComponentRegistry;
+
     @Override
     public UIComponentFactory newInstanceFor(UILocale locale)
     {
         CachedElement<UIComponentFactory> factoryHolder = CachedElement.of(() -> null);
         UIComponentFactoryImpl uiComponentFactoryImpl = new UIComponentFactoryImpl(new ComponentContext(locale, this.textResolver, this.eventHandlerRegistry,
                                                                                                         this.uploadChannelRegistry, factoryHolder,
-                                                                                                        this.contextFactory),
+                                                                                                        this.contextFactory, this.namedComponentRegistry),
                                                                                    this.contentService, this.markdownService,
                                                                                    this.customUIComponentFactoryManager);
         return factoryHolder.setAndGet(uiComponentFactoryImpl);
