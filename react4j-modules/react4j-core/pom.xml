@@ -72,10 +72,13 @@
         </dependency>
         <dependency>
             <!-- CommonsTest wires junit-jupiter-engine directly (not the junit-jupiter aggregator), so params is not
-                 transitive; needed for @ParameterizedTest in NodeRendererCompletenessMetaTest (plan-74 Goal-4 C4 meta-test). -->
+                 transitive; needed for @ParameterizedTest in NodeRendererCompletenessMetaTest (plan-74 Goal-4 C4 meta-test).
+                 Workspace JUnit pin sweep (infrastructure-operator): this literal was stale at 5.10.2 -
+                 the same "independently pinned, drifts from CommonsTest" defect fixed workspace-wide in
+                 the NodeDB reactor and in CommonsTest itself. Left unspecified, it now resolves from
+                 CommonsParent's junit-bom 5.14.4 import. Do not reintroduce a literal <version> here. -->
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -89,6 +92,23 @@
                 <exclusion>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+                <!-- Workspace JUnit pin sweep (infrastructure-operator): spring-boot-starter-test:3.2.3's
+                     own (flattened) pom pins the bare junit-jupiter aggregator to a literal 5.10.2. This
+                     module parents CommonsParent directly (not CommonsSpringBootParent), so CommonsParent's
+                     dependencyManagement junit-bom import (5.14.4) OVERRIDES that literal for the whole
+                     reactor build - forcing resolution of org.junit.jupiter:junit-jupiter:5.14.4, an
+                     artifact never previously downloaded (only junit-jupiter-api/-engine/-params 5.14.4
+                     were cached), which fails outright in this workspace's offline (-o) builds:
+                     "Cannot access ossrh ... in offline mode". Measured BUILD FAILURE before this
+                     exclusion (zero tests discovered - dependency resolution never got far enough to
+                     compile). CommonsTest + this module's own junit-jupiter-params dependency already
+                     supply the full JUnit 5 stack (api/engine/params, all resolving to 5.14.4), so the
+                     aggregator artifact is never actually needed - excluding it removes the only path
+                     that pulls it in. -->
+                <exclusion>
+                    <groupId>org.junit.jupiter</groupId>
+                    <artifactId>junit-jupiter</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

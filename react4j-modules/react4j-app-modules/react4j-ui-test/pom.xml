@@ -37,6 +37,17 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-logging</artifactId>
                 </exclusion>
+                <!-- Workspace JUnit pin sweep (infrastructure-operator): same fix as react4j-core's pom.xml -
+                     this module also parents CommonsParent directly, so CommonsParent's junit-bom import
+                     (5.14.4) forces spring-boot-starter-test:3.2.3's own literal junit-jupiter aggregator
+                     pin (5.10.2) up to 5.14.4, an artifact never downloaded to this offline workspace's
+                     .m2 (only junit-jupiter-api/-engine/-params 5.14.4 were cached), failing dependency
+                     resolution outright. CommonsTest already supplies the full JUnit 5 stack, so the
+                     aggregator is never actually needed. -->
+                <exclusion>
+                    <groupId>org.junit.jupiter</groupId>
+                    <artifactId>junit-jupiter</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -50,6 +61,22 @@
 
     <build>
         <plugins>
+            <plugin>
+                <!-- plan-154 AC-R3: UnbufferedUploadTransportEndToEndTest/UnbufferedUploadTransportGlobalCeilingTest
+                     redirect java.io.tmpdir to a fresh, empty directory so their in-process temp-tree sampler can
+                     watch it cheaply (a walk of the real system temp is infeasible - measured 3.3-3.6s per round).
+                     This MUST be a JVM launch argument, not a runtime System.setProperty in the test itself: the
+                     JDK's temp-file helpers (both java.io.File and java.nio.file.Files) cache java.io.tmpdir in a
+                     static field on FIRST USE within the JVM, and Surefire reuses one JVM across every test class
+                     in this module by default (forkCount=1, reuseForks=true) - so a class-local override could
+                     silently lose the race against whatever earlier class already touched a temp file. Harmless to
+                     every other test in this module: it only relocates where temp files land, under target/, which
+                     `mvn clean` already owns. -->
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Djava.io.tmpdir=${project.build.directory}/surefire-java-io-tmpdir</argLine>
+                </configuration>
+            </plugin>
             <plugin>
                 <!-- Binds *IT classes (ToggleButtonRoundTripIT) to integration-test/verify so
                      `mvn verify` runs them, gated by the same ${excludedGroups} property as
