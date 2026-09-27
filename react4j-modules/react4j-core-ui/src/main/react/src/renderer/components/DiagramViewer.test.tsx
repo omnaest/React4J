@@ -41,6 +41,10 @@ function getHost(container: HTMLElement): HTMLElement {
     return container.querySelector(".diagram-viewer-svg-host") as HTMLElement;
 }
 
+function getViewport(container: HTMLElement): HTMLElement {
+    return container.querySelector(".diagram-viewer-viewport") as HTMLElement;
+}
+
 /**
  * The scale as it actually reaches the stylesheet - the `--diagram-viewer-scale` custom property on the
  * scroll host, which is the whole of seam D1 (component to stylesheet). An EMPTY string is the meaningful
@@ -227,6 +231,109 @@ describe("DiagramViewer", () => {
         expect(host.getAttribute("tabindex")).toBe("0");
         expect(host.getAttribute("role")).toBe("region");
         expect(host.getAttribute("aria-label")).toBe("Scrollable diagram");
+    });
+
+    // ------------------------------------------------------------------------------------------------
+    // plan-266 S1 - the control band. These four are the jest-expressible half of AC-6/AC-7: DOM
+    // PRESENCE, DOM ORDER and DOM CONTAINMENT, all of which jsdom answers truthfully because none of
+    // them is a layout measurement. The GEOMETRIC half of AC-6 - that the band's rect does not intersect
+    // the host's, and does not move when the host is scrolled - is measured in real Chromium by
+    // DiagramViewerZoomOverflowIT, and is deliberately NOT stubbed here (see the file note above: two
+    // zero rects make a non-intersection assertion vacuously true, which is worse than its absence).
+    // ------------------------------------------------------------------------------------------------
+
+    // AC-6, DOM half. "Above the host" is DOM order, because DiagramViewer.css lays .diagram-viewer out as
+    // a column flex container with no "order" property anywhere - so document order IS visual order, and
+    // pinning it here is pinning the real mechanism rather than a proxy for it. Asserts the INDEX pair, not
+    // merely "both exist": a band emitted after the host would satisfy any presence-only assertion while
+    // rendering below the diagram.
+    test("the control band is a direct child of the viewer, rendered BEFORE the scroll viewport", () => {
+        const node = createNode(SVG_WITH_VIEWBOX);
+        const { container } = render(<DiagramViewer node={node} />);
+
+        const root = container.firstElementChild as HTMLElement;
+        const children = Array.from(root.children);
+        const band = root.querySelector(".diagram-viewer-controls") as HTMLElement;
+        const viewport = getViewport(container);
+
+        expect(band).not.toBeNull();
+        expect(band.parentElement).toBe(root);
+        expect(children.indexOf(band)).toBe(0);
+        expect(children.indexOf(viewport)).toBe(1);
+        expect(children.indexOf(band)).toBeLessThan(children.indexOf(viewport));
+    });
+
+    // The viewport is not decoration and is not an arbitrary wrapper - it is the element that carries the
+    // ROW flex axis the host's percentage-sized svg needs (plan-266 S1, hypothesis H-COL falsified by
+    // measurement; the full mechanism is in DiagramViewer.css). What jest can pin is the SHAPE that
+    // mechanism requires: the viewport sits strictly between the viewer and the host, and the host is its
+    // only child. Flatten the two back into one and this reds; the browser consequence - the svg taking
+    // its intrinsic aspect-ratio height instead of the host's - is measured by the IT.
+    test("the scroll host sits inside the viewport, which sits inside the viewer", () => {
+        const node = createNode(SVG_WITH_VIEWBOX);
+        const { container } = render(<DiagramViewer node={node} />);
+
+        const root = container.firstElementChild as HTMLElement;
+        const viewport = getViewport(container);
+        const host = getHost(container);
+
+        expect(viewport.parentElement).toBe(root);
+        expect(host.parentElement).toBe(viewport);
+        expect(viewport.children.length).toBe(1);
+    });
+
+    // AC-6, the "outside the scroll region" half that does not need a layout engine. The band scrolling away
+    // with the diagram is exactly what happens if it is nested INSIDE the overflow:auto host, and that is a
+    // containment fact, not a geometric one - so it is provable here and the assertion bites: move the JSX
+    // block inside the host div and this reds immediately.
+    test("the control band is NOT inside the scroll host, so it cannot scroll away with the diagram", () => {
+        const node = createNode(SVG_WITH_VIEWBOX);
+        const { container } = render(<DiagramViewer node={node} />);
+
+        const band = container.querySelector(".diagram-viewer-controls") as HTMLElement;
+        const host = getHost(container);
+
+        expect(host.contains(band)).toBe(false);
+        expect(band.contains(host)).toBe(false);
+    });
+
+    // AC-7, jest half. The existing non-interactive tests assert the absence of each CONTROL by its label;
+    // this asserts the absence of the BAND ELEMENT ITSELF, which is the thing that would reserve height.
+    // A band rendered empty (or rendered with its children gated instead of the band gated) would pass
+    // every label-absence assertion above and still cost a 220px thumbnail the band's height.
+    test("a non-interactive viewer emits no band element at all, so it reserves no band height", () => {
+        const node = createNode(SVG_WITH_VIEWBOX, { interactive: false });
+        const { container } = render(<DiagramViewer node={node} />);
+
+        const root = container.firstElementChild as HTMLElement;
+        expect(root.querySelector(".diagram-viewer-controls")).toBeNull();
+        // The scroll viewport must be the viewer's ONLY child - that is what makes "flex: 1 1 auto" give it
+        // the whole box, and it is the property the IT then measures in pixels.
+        expect(root.children.length).toBe(1);
+        expect(root.children[0]).toBe(getViewport(container));
+    });
+
+    // Same guarantee on the other gate: hasViewBox, not interactive. Both halves of `showControls` must
+    // suppress the whole band, not just its contents.
+    test("an SVG with no viewBox emits no band element either", () => {
+        const node = createNode(SVG_WITHOUT_VIEWBOX);
+        const { container } = render(<DiagramViewer node={node} />);
+
+        const root = container.firstElementChild as HTMLElement;
+        expect(root.querySelector(".diagram-viewer-controls")).toBeNull();
+        expect(root.children.length).toBe(1);
+    });
+
+    // The band is a real landmark now that it is a real element rather than a floating overlay, so it is
+    // named for a screen reader. Its four controls keep their own labels, asserted throughout this file.
+    test("the control band is an accessible, named group", () => {
+        const node = createNode(SVG_WITH_VIEWBOX);
+        const { container } = render(<DiagramViewer node={node} />);
+
+        const band = container.querySelector(".diagram-viewer-controls") as HTMLElement;
+        expect(band.getAttribute("role")).toBe("group");
+        expect(band.getAttribute("aria-label")).toBe("Diagram zoom controls");
+        expect(screen.getByLabelText("Diagram zoom controls")).toBe(band);
     });
 
     describe("fixed zoom-ratio control", () => {

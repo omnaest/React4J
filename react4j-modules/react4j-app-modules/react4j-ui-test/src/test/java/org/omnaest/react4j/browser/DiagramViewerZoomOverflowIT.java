@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
@@ -69,6 +71,15 @@ import com.microsoft.playwright.options.ViewportSize;
  * there was no scroll position at all; and every synthesized keyboard/wheel gesture is followed by
  * {@link #waitForScrollToSettle(Locator)}, because Chromium animates such a scroll over several frames
  * while the dispatch call returns immediately. The S0 predictions recorded below are left as written.
+ *
+ * <p>
+ * <b>plan-266 S1 extended this class on 2026-09-27</b> with the control band, the column flex chain and the
+ * ancestor-chain guard (AC-1, AC-4, AC-5, AC-6, AC-7). Nothing above was weakened or removed: the plan-265
+ * assertions are untouched, and {@code .diagram-viewer-controls} is still the locator
+ * {@link #setZoomRatio(Locator, String)} waits on, because the cluster kept its class when it stopped being
+ * an overlay and became a band. The plan-266 tests are grouped together lower down under their own section
+ * header, which also records WHY the chain guard is scoped to the component's own boundary on this page and
+ * which limb of plan-266's AC-1 is not satisfiable in this repo at all.
  *
  * <p>
  * <b>Predictions, not instructions (plan-265 S0 brief).</b> Against unmodified code: AC-1, AC-3, AC-10 and
@@ -763,9 +774,647 @@ public class DiagramViewerZoomOverflowIT
         }
     }
 
+    // ================================================================================================
+    // plan-266 S1 - the control band, the column flex chain, and the ancestor-chain guard.
+    //
+    // WHY AN ANCESTOR-CHAIN ENUMERATION AND NOT A GEOMETRY READING. plan-265's whole acceptance set
+    // measured the HOST and never walked up from it, and that is the sole reason every one of its 19
+    // tests was green over a defect (the consuming application's .modal-body overflowing by exactly
+    // 38px) that was present at Fit on every single overlay open. The instrument that would have caught
+    // it is not a sharper measurement of the host - it is looking somewhere the host's own numbers
+    // cannot reach. So these tests ENUMERATE the chain and assert a SET, by identity and count.
+    //
+    // WHICH LIMB OF plan-266 AC-1 THIS IS, AND WHICH IS NOT SATISFIABLE HERE. plan-266's AC-1 names
+    // `.modal-body` and the card dialog; there is NO modal on this showcase page, so those limbs belong
+    // to KanbanBoardServer's own DiagramViewerScrollSeamIT (plan-266 S2) and are deliberately absent
+    // here rather than approximated. What IS provable in this repo, and is exactly this slice's own
+    // regression risk, is that ADDING A FLEX ITEM TO THIS CHAIN INTRODUCES NO NEW OVERFLOWING ANCESTOR.
+    //
+    // THE SET IS SCOPED TO THE COMPONENT'S OWN BOUNDARY, AND THAT SCOPE IS NOT A WEAKENING - it is what
+    // makes the assertion falsifiable at all. This showcase page is a long list of cards, so the PAGE
+    // legitimately scrolls: an unscoped "no ancestor anywhere overflows" assertion would be red at HEAD,
+    // red after this change, and red after any conceivable future change - a permanently-red assertion
+    // proves nothing about anything. The scope taken is "every ancestor from .diagram-viewer up to and
+    // INCLUDING the containing .card", which is precisely the positional analogue of `.modal-body` in
+    // the consuming application: the consumer's own box, between the component and the page's scroller.
+    // The full chain up to documentElement is DUMPED regardless, so the page-level entries are visible
+    // in the output and can be compared by eye rather than being hidden by the scope.
+    // ================================================================================================
+
+    @Test
+    void plan266_atFit_noOverflowingAncestorWithinComponentBoundary_tallNarrow() throws Exception
+    {
+        this.assertNoOverflowingAncestor(ComponentShowcaseUI.DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE, "tall-narrow", "1", "Fit");
+    }
+
+    @Test
+    void plan266_atFit_noOverflowingAncestorWithinComponentBoundary_wideFlat() throws Exception
+    {
+        this.assertNoOverflowingAncestor(ComponentShowcaseUI.DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE, "wide-flat", "1", "Fit");
+    }
+
+    @Test
+    void plan266_at400Percent_noOverflowingAncestorWithinComponentBoundary_tallNarrow() throws Exception
+    {
+        this.assertNoOverflowingAncestor(ComponentShowcaseUI.DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE, "tall-narrow", "4", "400%");
+    }
+
+    @Test
+    void plan266_at400Percent_noOverflowingAncestorWithinComponentBoundary_wideFlat() throws Exception
+    {
+        this.assertNoOverflowingAncestor(ComponentShowcaseUI.DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE, "wide-flat", "4", "400%");
+    }
+
+    private void assertNoOverflowingAncestor(String cardTitle, String fixtureLabel, String ratioValue, String ratioLabel) throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, cardTitle);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, ratioValue);
+
+            JsonNode chain = this.measureAncestorChain(card);
+
+            System.out.println("[plan-266 S1 AC-1] " + fixtureLabel + " @" + ratioLabel + " - FULL ancestor chain from .diagram-viewer-svg-host to "
+                               + "documentElement (" + chain.size() + " elements):");
+            List<String> overflowingWithinBoundary = new ArrayList<>();
+            for (JsonNode element : chain)
+            {
+                System.out.println("[plan-266 S1 AC-1]   " + this.describeChainElement(element));
+                if (element.get("withinComponentBoundary")
+                           .asBoolean()
+                    && (element.get("overflowsX")
+                               .asBoolean()
+                        || element.get("overflowsY")
+                                  .asBoolean()))
+                {
+                    overflowingWithinBoundary.add(this.describeChainElement(element));
+                }
+            }
+
+            JsonNode viewer = this.chainElementByClass(chain, "diagram-viewer");
+            System.out.println("[plan-266 S1 AC-1] " + fixtureLabel + " @" + ratioLabel + " - overflowing ancestors WITHIN the component boundary = "
+                               + overflowingWithinBoundary);
+
+            JsonNode band = this.measureBandAndHost(card);
+            JsonNode host = this.measureGeometry(card);
+            System.out.println("[plan-266 S1 BAND SUBTRACTION] " + fixtureLabel + " @" + ratioLabel + " @viewport 1600x1000 - band rendered height="
+                               + band.get("bandHeight")
+                                     .asDouble()
+                               + "px; .diagram-viewer content box=" + band.get("viewerClientWidth")
+                                                                          .asDouble()
+                               + "x" + band.get("viewerClientHeight")
+                                           .asDouble()
+                               + "; host CONTENT box (the box percentages resolve against)=" + host.get("clientWidth")
+                                                                                                   .asDouble()
+                               + "x" + host.get("clientHeight")
+                                           .asDouble());
+
+            assertAll(fixtureLabel + " @" + ratioLabel + " plan-266 AC-1",
+                      () -> assertEquals(List.of(), overflowingWithinBoundary,
+                                         fixtureLabel + " @" + ratioLabel
+                                                                               + ": plan-266 AC-1 - the set of ancestors between .diagram-viewer-svg-host and its containing .card whose "
+                                                                               + "scrollWidth exceeds clientWidth or scrollHeight exceeds clientHeight must be EMPTY"),
+                      // Called out separately from the set above because .diagram-viewer is THE element this slice
+                      // added a flex item to, so it is the one a broken column chain overflows first. A set
+                      // assertion reports "something overflowed"; this names the element the mutation reds.
+                      () -> assertNotNull(viewer, fixtureLabel + ": the chain must contain .diagram-viewer"),
+                      () -> assertEquals(viewer.get("clientWidth")
+                                               .asDouble(),
+                                         viewer.get("scrollWidth")
+                                               .asDouble(),
+                                         0.5, fixtureLabel + " @" + ratioLabel + ": plan-266 AC-1 - .diagram-viewer itself must not overflow horizontally"),
+                      () -> assertEquals(viewer.get("clientHeight")
+                                               .asDouble(),
+                                         viewer.get("scrollHeight")
+                                               .asDouble(),
+                                         0.5, fixtureLabel + " @" + ratioLabel + ": plan-266 AC-1 - .diagram-viewer itself must not overflow vertically"));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // plan-266 AC-4 - the svg's percentage still resolves against the host's NEW, band-reduced content
+    // box. This is hypothesis H-COL (plan-266 section 2.8) measured rather than assumed: DiagramViewer.css's
+    // three recorded layout failures were all taken on a ROW flex chain, and this slice turned it into a
+    // COLUMN one with an extra item. The ratio, not the absolute size, is the invariant - it holds only
+    // if "calc(100% * scale)" resolves against the box the host actually ended up with.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void plan266_at400Percent_svgPercentageResolvesAgainstBandReducedHostBox_tallNarrow() throws Exception
+    {
+        this.assertScaleRatioIsFour(ComponentShowcaseUI.DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE, "tall-narrow");
+    }
+
+    @Test
+    void plan266_at400Percent_svgPercentageResolvesAgainstBandReducedHostBox_wideFlat() throws Exception
+    {
+        this.assertScaleRatioIsFour(ComponentShowcaseUI.DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE, "wide-flat");
+    }
+
+    private void assertScaleRatioIsFour(String cardTitle, String fixtureLabel) throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, cardTitle);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "4");
+
+            JsonNode g = this.measureGeometry(card);
+            double scrollWidth = g.get("scrollWidth")
+                                  .asDouble();
+            double clientWidth = g.get("clientWidth")
+                                  .asDouble();
+            double scrollHeight = g.get("scrollHeight")
+                                   .asDouble();
+            double clientHeight = g.get("clientHeight")
+                                   .asDouble();
+            double horizontalRatio = scrollWidth / clientWidth;
+            double verticalRatio = scrollHeight / clientHeight;
+            JsonNode band = this.measureBandAndHost(card);
+
+            System.out.println("[plan-266 S1 AC-4] " + fixtureLabel + " @400% - host content box " + clientWidth + "x" + clientHeight + ", scroll box "
+                               + scrollWidth + "x" + scrollHeight + " => ratios " + horizontalRatio + " / " + verticalRatio + "; band height="
+                               + band.get("bandHeight")
+                                     .asDouble()
+                               + "px, .diagram-viewer content box " + band.get("viewerClientWidth")
+                                                                          .asDouble()
+                               + "x" + band.get("viewerClientHeight")
+                                           .asDouble());
+
+            // Stated as its own line, in its own terms, rather than left to be read out of the chain dump: a
+            // following card computes a cover-fit scale factor from exactly these three numbers, and a
+            // misreading here propagates straight into that scale. CONTENT box (clientWidth/clientHeight),
+            // not the border box - the content box is what the svg's percentages actually resolve against.
+            System.out.println("[plan-266 S1 BAND SUBTRACTION] " + fixtureLabel + " @viewport 1600x1000 - band rendered height="
+                               + band.get("bandHeight")
+                                     .asDouble()
+                               + "px; .diagram-viewer content box=" + band.get("viewerClientWidth")
+                                                                          .asDouble()
+                               + "x" + band.get("viewerClientHeight")
+                                           .asDouble()
+                               + "; host CONTENT box (the box percentages resolve against)=" + clientWidth + "x" + clientHeight);
+
+            assertAll(fixtureLabel + " plan-266 AC-4",
+                      () -> assertEquals(4.0, horizontalRatio, 0.05,
+                                         fixtureLabel + ": plan-266 AC-4 - scrollWidth/clientWidth must be 4.0 at 400%; measured " + horizontalRatio),
+                      () -> assertEquals(4.0, verticalRatio, 0.05,
+                                         fixtureLabel + ": plan-266 AC-4 - scrollHeight/clientHeight must be 4.0 at 400%; measured " + verticalRatio),
+                      // Without this the ratio assertions above would also pass in the degenerate world where the
+                      // band reserved no height at all, i.e. where the band was never rendered - the criterion is
+                      // "resolves against the BAND-REDUCED box", so the reduction has to be shown to exist.
+                      () -> assertTrue(band.get("bandHeight")
+                                           .asDouble() > 0,
+                                       fixtureLabel + ": plan-266 AC-4 - the band must actually occupy height, otherwise "
+                                                            + "\"resolves against the band-reduced content box\" is vacuous; measured " + band.get("bandHeight")
+                                                                                                                                              .asDouble()));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // plan-266 AC-5 - the host's flex declarations, read from getComputedStyle rather than from the
+    // stylesheet source. "min-height: 0" is load-bearing on the NEW column axis for a second, independent
+    // reason from the one DiagramViewer.css originally recorded it for: flexbox's default
+    // "min-height: auto" floor would stop the host shrinking to make room for the band, and the overflow
+    // would then escape onto .diagram-viewer. plan-266's pre-mortem names forgetting it as a predicted
+    // failure; AC-11's mutation proves the pairing bites.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void plan266_hostKeepsItsFlexShrinkFloorsOnTheColumnAxis_tallNarrow() throws Exception
+    {
+        this.assertHostFlexDeclarations(ComponentShowcaseUI.DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE, "tall-narrow");
+    }
+
+    @Test
+    void plan266_hostKeepsItsFlexShrinkFloorsOnTheColumnAxis_wideFlat() throws Exception
+    {
+        this.assertHostFlexDeclarations(ComponentShowcaseUI.DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE, "wide-flat");
+    }
+
+    private void assertHostFlexDeclarations(String cardTitle, String fixtureLabel) throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, cardTitle);
+            this.waitForDiagramMounted(card);
+
+            String json = (String) card.locator(".diagram-viewer-svg-host")
+                                       .evaluate("(host) => {" + "  const cs = getComputedStyle(host);"
+                                                 + "  const viewport = host.parentElement;"
+                                                 + "  const vs = getComputedStyle(viewport);"
+                                                 + "  const viewer = getComputedStyle(viewport.parentElement);" + "  return JSON.stringify({"
+                                                 + "    minHeight: cs.minHeight, minWidth: cs.minWidth,"
+                                                 + "    flexGrow: cs.flexGrow, flexShrink: cs.flexShrink, flexBasis: cs.flexBasis,"
+                                                 + "    viewportClassName: String(viewport.className || ''),"
+                                                 + "    viewportDisplay: vs.display, viewportFlexDirection: vs.flexDirection,"
+                                                 + "    viewportMinHeight: vs.minHeight, viewportFlexGrow: vs.flexGrow, viewportFlexShrink: vs.flexShrink,"
+                                                 + "    viewerClassName: String(viewport.parentElement.className || ''),"
+                                                 + "    parentDisplay: viewer.display, parentFlexDirection: viewer.flexDirection" + "  });" + "}");
+            JsonNode f = OBJECT_MAPPER.readTree(json);
+
+            System.out.println("[plan-266 S1 AC-5] " + fixtureLabel + " - host min-height=" + f.get("minHeight")
+                                                                                               .asText()
+                               + " min-width=" + f.get("minWidth")
+                                                  .asText()
+                               + " flex=" + f.get("flexGrow")
+                                             .asText()
+                               + " " + f.get("flexShrink")
+                                        .asText()
+                               + " " + f.get("flexBasis")
+                                        .asText()
+                               + "; viewport=." + f.get("viewportClassName")
+                                                   .asText()
+                               + " display=" + f.get("viewportDisplay")
+                                                .asText()
+                               + " flex-direction=" + f.get("viewportFlexDirection")
+                                                       .asText()
+                               + " min-height=" + f.get("viewportMinHeight")
+                                                   .asText()
+                               + " flex=" + f.get("viewportFlexGrow")
+                                             .asText()
+                               + " " + f.get("viewportFlexShrink")
+                                        .asText()
+                               + "; viewer=." + f.get("viewerClassName")
+                                                 .asText()
+                               + " display=" + f.get("parentDisplay")
+                                                .asText()
+                               + " flex-direction=" + f.get("parentFlexDirection")
+                                                       .asText());
+
+            assertAll(fixtureLabel + " plan-266 AC-5",
+                      () -> assertEquals("0px", f.get("minHeight")
+                                                 .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - the host must compute min-height: 0px"),
+                      () -> assertEquals("0px", f.get("minWidth")
+                                                 .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - the host must compute min-width: 0px"),
+                      () -> assertEquals("1", f.get("flexGrow")
+                                               .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - the host must compute flex-grow: 1"),
+                      () -> assertEquals("1", f.get("flexShrink")
+                                               .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - the host must compute flex-shrink: 1"),
+                      () -> assertEquals("auto", f.get("flexBasis")
+                                                  .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - the host must compute flex-basis: auto"),
+                      // The flex declarations above are inert unless the chain around them is right, and the
+                      // shape of that chain is the one thing a CSS-only reader of the host's own rules cannot
+                      // see. Both levels are asserted because they do DIFFERENT jobs and swapping them is the
+                      // arrangement that measurably failed: .diagram-viewer is the COLUMN that stacks the band
+                      // over the diagram, and .diagram-viewer-viewport is the ROW whose cross-axis stretch is
+                      // what makes the host's height definite for the svg's percentage (see DiagramViewer.css,
+                      // "WHY .diagram-viewer-viewport EXISTS AT ALL").
+                      () -> assertEquals("flex", f.get("parentDisplay")
+                                                  .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - .diagram-viewer must be a flex container"),
+                      () -> assertEquals("column", f.get("parentFlexDirection")
+                                                    .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - .diagram-viewer must be flex-direction: column"),
+                      () -> assertEquals("diagram-viewer-viewport", f.get("viewportClassName")
+                                                                     .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - the host's direct parent must be .diagram-viewer-viewport"),
+                      () -> assertEquals("diagram-viewer", f.get("viewerClassName")
+                                                            .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - the viewport's direct parent must be .diagram-viewer"),
+                      () -> assertEquals("flex", f.get("viewportDisplay")
+                                                  .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - .diagram-viewer-viewport must be a flex container"),
+                      () -> assertEquals("row", f.get("viewportFlexDirection")
+                                                 .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - .diagram-viewer-viewport must be flex-direction: row, which is what puts the "
+                                                            + "host's HEIGHT on the cross axis and therefore makes it definite"),
+                      () -> assertEquals("0px", f.get("viewportMinHeight")
+                                                 .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - .diagram-viewer-viewport must compute min-height: 0px so it can shrink to make "
+                                                            + "room for the band"),
+                      () -> assertEquals("1", f.get("viewportFlexGrow")
+                                               .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - .diagram-viewer-viewport must compute flex-grow: 1"),
+                      () -> assertEquals("1", f.get("viewportFlexShrink")
+                                               .asText(),
+                                         fixtureLabel + ": plan-266 AC-5 - .diagram-viewer-viewport must compute flex-shrink: 1"));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // plan-266 AC-6 - the band is OUTSIDE the scroll region, and there is exactly ONE scroll bar in the
+    // component. Three independent limbs, because each catches a different way of getting this wrong:
+    // rect non-intersection catches a band still painted over the diagram; rect-invariance-under-scroll
+    // catches a band nested inside the scrolling element (where it would look right until the user
+    // scrolls); and the bar COUNT catches an extra scroll region introduced anywhere in between.
+    //
+    // The count is scoped to the component boundary for the reason given at the top of this section - the
+    // showcase page itself legitimately scrolls, and counting that would make the criterion permanently
+    // unsatisfiable rather than strict.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void plan266_at400Percent_bandIsOutsideTheScrollRegionAndExactlyOneBarExists_tallNarrow() throws Exception
+    {
+        this.assertBandOutsideScrollRegion(ComponentShowcaseUI.DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE, "tall-narrow");
+    }
+
+    @Test
+    void plan266_at400Percent_bandIsOutsideTheScrollRegionAndExactlyOneBarExists_wideFlat() throws Exception
+    {
+        this.assertBandOutsideScrollRegion(ComponentShowcaseUI.DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE, "wide-flat");
+    }
+
+    private void assertBandOutsideScrollRegion(String cardTitle, String fixtureLabel) throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, cardTitle);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "4");
+            this.setScroll(card, 0.0, 0.0);
+
+            JsonNode before = this.measureBandAndHost(card);
+            double bandTop = before.get("bandTop")
+                                   .asDouble();
+            double bandBottom = before.get("bandBottom")
+                                      .asDouble();
+            double bandLeft = before.get("bandLeft")
+                                    .asDouble();
+            double bandRight = before.get("bandRight")
+                                     .asDouble();
+            double hostTop = before.get("hostTop")
+                                   .asDouble();
+            double hostBottom = before.get("hostBottom")
+                                      .asDouble();
+            double hostLeft = before.get("hostLeft")
+                                    .asDouble();
+            double hostRight = before.get("hostRight")
+                                     .asDouble();
+            boolean intersects = bandRight > hostLeft + 0.5 && bandLeft < hostRight - 0.5 && bandBottom > hostTop + 0.5 && bandTop < hostBottom - 0.5;
+
+            // Drive the host to its maximum on BOTH axes - the state in which a band placed inside the scroll
+            // region would have travelled furthest, i.e. the state that most cheaply falsifies the claim.
+            JsonNode g = this.measureGeometry(card);
+            this.setScroll(card, g.get("scrollWidth")
+                                  .asDouble(),
+                           g.get("scrollHeight")
+                            .asDouble());
+            JsonNode scrolled = this.measureScroll(card);
+            JsonNode after = this.measureBandAndHost(card);
+
+            JsonNode chain = this.measureAncestorChain(card);
+            List<String> scrollRegions = new ArrayList<>();
+            JsonNode hostEntry = this.measureHostAsChainElement(card);
+            if (this.isActiveScrollRegion(hostEntry))
+            {
+                scrollRegions.add(this.describeChainElement(hostEntry));
+            }
+            for (JsonNode element : chain)
+            {
+                if (element.get("withinComponentBoundary")
+                           .asBoolean()
+                    && this.isActiveScrollRegion(element))
+                {
+                    scrollRegions.add(this.describeChainElement(element));
+                }
+            }
+
+            System.out.println("[plan-266 S1 AC-6] " + fixtureLabel + " @400% - band rect=[" + bandLeft + "," + bandTop + "," + bandRight + "," + bandBottom
+                               + "], host rect=[" + hostLeft + "," + hostTop + "," + hostRight + "," + hostBottom + "], intersects=" + intersects);
+            System.out.println("[plan-266 S1 AC-6] " + fixtureLabel + " @400% - band rect after scrolling host to scrollLeft=" + scrolled.get("left")
+                                                                                                                                         .asDouble()
+                               + " scrollTop=" + scrolled.get("top")
+                                                         .asDouble()
+                               + " => [" + after.get("bandLeft")
+                                                .asDouble()
+                               + "," + after.get("bandTop")
+                                            .asDouble()
+                               + "," + after.get("bandRight")
+                                            .asDouble()
+                               + "," + after.get("bandBottom")
+                                            .asDouble()
+                               + "]");
+            System.out.println("[plan-266 S1 AC-6] " + fixtureLabel + " @400% - active scroll regions within the component boundary = " + scrollRegions);
+
+            assertAll(fixtureLabel + " plan-266 AC-6",
+                      () -> assertTrue(!intersects,
+                                       fixtureLabel + ": plan-266 AC-6 - the band's rect must not intersect the host's; band=[" + bandLeft + "," + bandTop
+                                                    + "," + bandRight + "," + bandBottom + "] host=[" + hostLeft + "," + hostTop + "," + hostRight + ","
+                                                    + hostBottom + "]"),
+                      () -> assertTrue(bandBottom <= hostTop + 0.5,
+                                       fixtureLabel + ": plan-266 AC-6 - the band must sit ABOVE the host, not merely beside it; band bottom=" + bandBottom
+                                                                    + " host top=" + hostTop),
+                      // The precondition for the invariance limb below: if the host did not actually move, an
+                      // unchanged band rect proves nothing at all.
+                      () -> assertTrue(scrolled.get("left")
+                                               .asDouble() > 0
+                                       && scrolled.get("top")
+                                                  .asDouble() > 0,
+                                       fixtureLabel + ": plan-266 AC-6 precondition - the host must genuinely have scrolled on both axes; scrollLeft="
+                                                                   + scrolled.get("left")
+                                                                             .asDouble()
+                                                                   + " scrollTop=" + scrolled.get("top")
+                                                                                             .asDouble()),
+                      () -> assertEquals(bandTop, after.get("bandTop")
+                                                       .asDouble(),
+                                         0.5, fixtureLabel + ": plan-266 AC-6 - the band must not move vertically when the host is scrolled"),
+                      () -> assertEquals(bandLeft, after.get("bandLeft")
+                                                        .asDouble(),
+                                         0.5, fixtureLabel + ": plan-266 AC-6 - the band must not move horizontally when the host is scrolled"),
+                      () -> assertEquals(1, scrollRegions.size(),
+                                         fixtureLabel + ": plan-266 AC-6 - exactly ONE element in the component must be an active scroll region (the host); "
+                                                                  + "found " + scrollRegions),
+                      () -> assertTrue(scrollRegions.size() == 1 && scrollRegions.get(0)
+                                                                                 .contains("diagram-viewer-svg-host"),
+                                       fixtureLabel + ": plan-266 AC-6 - the single active scroll region must be .diagram-viewer-svg-host itself; found "
+                                                                                                                       + scrollRegions));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // plan-266 AC-7 - the non-interactive thumbnail. It renders no cluster today and must render no band
+    // element and reserve no height: on a 220px on-card thumbnail a 38px band is a 17% loss. Asserting
+    // ".diagram-viewer's height is unchanged" alone would NOT catch that - the viewer is max-height-bound
+    // and would stay 600px while the host inside it silently shrank. The biting assertion is that the
+    // HOST still gets the viewer's whole content box.
+    //
+    // The 600.0px baseline is not a figure taken from a document: it was measured in this same harness,
+    // at this same viewport, on UNMODIFIED HEAD (commit 7be4771) before this slice's first edit.
+    // ------------------------------------------------------------------------------------------------
+
+    private static final double THUMBNAIL_HOST_HEIGHT_AT_HEAD = 600.0;
+
+    @Test
+    void plan266_nonInteractiveThumbnail_hasNoBandAndReservesNoBandHeight() throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_NON_INTERACTIVE_CARD_TITLE);
+            this.waitForDiagramMounted(card);
+
+            String json = (String) card.locator(".diagram-viewer")
+                                       .evaluate("(viewer) => {" + "  const host = viewer.querySelector('.diagram-viewer-svg-host');" + "  return JSON.stringify({"
+                                                 + "    bandCount: viewer.querySelectorAll('.diagram-viewer-controls').length,"
+                                                 + "    childCount: viewer.children.length," + "    viewerClientHeight: viewer.clientHeight,"
+                                                 + "    viewerClientWidth: viewer.clientWidth," + "    hostClientHeight: host.clientHeight,"
+                                                 + "    hostClientWidth: host.clientWidth," + "    hostOffsetHeight: host.offsetHeight" + "  });" + "}");
+            JsonNode t = OBJECT_MAPPER.readTree(json);
+
+            System.out.println("[plan-266 S1 AC-7] non-interactive thumbnail - band elements=" + t.get("bandCount")
+                                                                                                  .asInt()
+                               + ", .diagram-viewer children=" + t.get("childCount")
+                                                                  .asInt()
+                               + ", .diagram-viewer content box " + t.get("viewerClientWidth")
+                                                                     .asDouble()
+                               + "x" + t.get("viewerClientHeight")
+                                        .asDouble()
+                               + ", host content box " + t.get("hostClientWidth")
+                                                          .asDouble()
+                               + "x" + t.get("hostClientHeight")
+                                        .asDouble()
+                               + " (measured at HEAD before this slice: " + THUMBNAIL_HOST_HEIGHT_AT_HEAD + "px tall)");
+
+            assertAll("non-interactive thumbnail plan-266 AC-7",
+                      () -> assertEquals(0, t.get("bandCount")
+                                             .asInt(),
+                                         "plan-266 AC-7 - a non-interactive thumbnail must contain no .diagram-viewer-controls element"),
+                      () -> assertEquals(1, t.get("childCount")
+                                             .asInt(),
+                                         "plan-266 AC-7 - a non-interactive .diagram-viewer must have exactly one child, the scroll viewport"),
+                      () -> assertEquals(t.get("viewerClientHeight")
+                                          .asDouble(),
+                                         t.get("hostOffsetHeight")
+                                          .asDouble(),
+                                         0.5,
+                                         "plan-266 AC-7 - the host must still occupy .diagram-viewer's whole content height; no band height may be reserved"),
+                      () -> assertEquals(THUMBNAIL_HOST_HEIGHT_AT_HEAD, t.get("hostClientHeight")
+                                                                         .asDouble(),
+                                         0.5, "plan-266 AC-7 - the thumbnail's rendered host height must equal the value measured at HEAD"));
+        }
+    }
+
     // ------------------------------------------------------------------------------------------------
     // helpers
     // ------------------------------------------------------------------------------------------------
+
+    /**
+     * Every ancestor of {@code .diagram-viewer-svg-host}, innermost first, up to and including
+     * {@code documentElement}. {@code withinComponentBoundary} marks the prefix from {@code .diagram-viewer}
+     * up to and including the containing {@code .card} - see the plan-266 section header for why the
+     * assertions are scoped to that prefix while the whole chain is still dumped.
+     */
+    private JsonNode measureAncestorChain(Locator card) throws Exception
+    {
+        String json = (String) card.locator(".diagram-viewer-svg-host")
+                                   .evaluate("(host) => {" + "  const describe = (el) => {" + "    const cs = getComputedStyle(el);"
+                                             + "    const cls = (el.className && el.className.baseVal !== undefined) ? el.className.baseVal : el.className;"
+                                             + "    return { tag: el.tagName, className: String(cls || ''),"
+                                             + "             overflowX: cs.overflowX, overflowY: cs.overflowY,"
+                                             + "             clientWidth: el.clientWidth, clientHeight: el.clientHeight,"
+                                             + "             scrollWidth: el.scrollWidth, scrollHeight: el.scrollHeight,"
+                                             + "             overflowsX: el.scrollWidth > el.clientWidth,"
+                                             + "             overflowsY: el.scrollHeight > el.clientHeight," + "             withinComponentBoundary: false };"
+                                             + "  };" + "  const chain = [];" + "  let withinBoundary = true;" + "  let el = host.parentElement;"
+                                             + "  while (el) {" + "    const entry = describe(el);" + "    entry.withinComponentBoundary = withinBoundary;"
+                                             + "    if (el.classList && el.classList.contains('card')) { withinBoundary = false; }" + "    chain.push(entry);"
+                                             + "    el = el.parentElement;" + "  }" + "  return JSON.stringify(chain);" + "}");
+        return OBJECT_MAPPER.readTree(json);
+    }
+
+    /** The host itself, described in the same shape {@link #measureAncestorChain(Locator)} uses, so the bar count can include it. */
+    private JsonNode measureHostAsChainElement(Locator card) throws Exception
+    {
+        String json = (String) card.locator(".diagram-viewer-svg-host")
+                                   .evaluate("(el) => {" + "  const cs = getComputedStyle(el);" + "  return JSON.stringify({ tag: el.tagName,"
+                                             + "    className: String(el.className || ''), overflowX: cs.overflowX, overflowY: cs.overflowY,"
+                                             + "    clientWidth: el.clientWidth, clientHeight: el.clientHeight,"
+                                             + "    scrollWidth: el.scrollWidth, scrollHeight: el.scrollHeight,"
+                                             + "    overflowsX: el.scrollWidth > el.clientWidth, overflowsY: el.scrollHeight > el.clientHeight,"
+                                             + "    withinComponentBoundary: true });" + "}");
+        return OBJECT_MAPPER.readTree(json);
+    }
+
+    /** The band's and the host's border-box rects plus {@code .diagram-viewer}'s content box - for AC-4 and AC-6. */
+    private JsonNode measureBandAndHost(Locator card) throws Exception
+    {
+        String json = (String) card.locator(".diagram-viewer")
+                                   .evaluate("(viewer) => {" + "  const band = viewer.querySelector('.diagram-viewer-controls');"
+                                             + "  const host = viewer.querySelector('.diagram-viewer-svg-host');" + "  const b = band.getBoundingClientRect();"
+                                             + "  const h = host.getBoundingClientRect();" + "  return JSON.stringify({"
+                                             + "    bandLeft: b.left, bandTop: b.top, bandRight: b.right, bandBottom: b.bottom, bandHeight: b.height,"
+                                             + "    hostLeft: h.left, hostTop: h.top, hostRight: h.right, hostBottom: h.bottom,"
+                                             + "    viewerClientWidth: viewer.clientWidth, viewerClientHeight: viewer.clientHeight" + "  });" + "}");
+        return OBJECT_MAPPER.readTree(json);
+    }
+
+    /**
+     * An element is a scroll BAR, not merely a scroll-capable box, only when both halves hold: its computed
+     * overflow arms a bar on that axis AND it genuinely overflows on it. {@code auto} paints nothing at zero
+     * overflow, which is exactly why the count has to be a conjunction rather than a reading of either half.
+     */
+    private boolean isActiveScrollRegion(JsonNode element)
+    {
+        boolean armedX = this.arms(element.get("overflowX")
+                                          .asText());
+        boolean armedY = this.arms(element.get("overflowY")
+                                          .asText());
+        return (armedX && element.get("overflowsX")
+                                 .asBoolean())
+               || (armedY && element.get("overflowsY")
+                                    .asBoolean());
+    }
+
+    private boolean arms(String overflowValue)
+    {
+        return "auto".equals(overflowValue) || "scroll".equals(overflowValue);
+    }
+
+    private String describeChainElement(JsonNode element)
+    {
+        return element.get("tag")
+                      .asText()
+               + (element.get("className")
+                         .asText()
+                         .isEmpty() ? ""
+                                 : "." + element.get("className")
+                                                .asText()
+                                                .trim()
+                                                .replace(" ", "."))
+               + " overflow=" + element.get("overflowX")
+                                       .asText()
+               + "/" + element.get("overflowY")
+                              .asText()
+               + " client=" + element.get("clientWidth")
+                                     .asDouble()
+               + "x" + element.get("clientHeight")
+                              .asDouble()
+               + " scroll=" + element.get("scrollWidth")
+                                     .asDouble()
+               + "x" + element.get("scrollHeight")
+                              .asDouble()
+               + " overflows=" + element.get("overflowsX")
+                                        .asBoolean()
+               + "/" + element.get("overflowsY")
+                              .asBoolean()
+               + (element.get("withinComponentBoundary")
+                         .asBoolean() ? " [within component boundary]" : "");
+    }
+
+    private JsonNode chainElementByClass(JsonNode chain, String className)
+    {
+        for (JsonNode element : chain)
+        {
+            if (element.get("className")
+                       .asText()
+                       .equals(className))
+            {
+                return element;
+            }
+        }
+        return null;
+    }
 
     private BrowserContext newContext()
     {

@@ -119,9 +119,17 @@ const SCALE_CSS_PROPERTY = "--diagram-viewer-scale";
  * DiagramViewer.css); stripping them while leaving `viewBox` alone renders at roughly 9x natural size,
  * a measured workspace finding.
  *
+ * The zoom controls are a BAND ABOVE THE SCROLL REGION, not an overlay on it (plan-266 Cliff N2-B,
+ * answering the ruling "the dropdown and the zoom tooling should stay on top"). They are rendered as a
+ * normal-flow sibling emitted BEFORE the host, and `.diagram-viewer` is a column flex container - so the
+ * band cannot overlap the diagram and cannot scroll away with it, structurally rather than by a z-index
+ * or an inset somebody has to keep correct. They were absolutely positioned at the viewer's top-left
+ * until plan-266; see DiagramViewer.css for what that arrangement cost and what replaced it.
+ *
  * An SVG with no `viewBox` degrades to a static render: `hasViewBox` stays `false`, so the zoom/pan
  * controls are never shown and the scale never leaves 1 - the diagram itself still renders normally, and
- * with no overflow there is nothing for a drag or a key press to move.
+ * with no overflow there is nothing for a drag or a key press to move. The same `showControls` flag gates
+ * the band, so a non-interactive thumbnail emits no band element and reserves no height for one.
  */
 export class DiagramViewer extends React.Component<Props, State> {
     public static TYPE: string = "DIAGRAMVIEWER";
@@ -356,23 +364,16 @@ export class DiagramViewer extends React.Component<Props, State> {
 
         return (
             <div className="diagram-viewer" style={style}>
-                <div
-                    ref={this.svgHostRef}
-                    className="diagram-viewer-svg-host"
-                    style={hostStyle}
-                    // The scroll host must be genuinely drivable, not merely scrollable: a tabIndex is what
-                    // makes the browser's own arrow-key scrolling reach it, and the labelled region is what
-                    // names it for a screen reader. Non-interactive thumbnails get none of this - they have
-                    // no overflow to traverse and must stay byte-identically unchanged.
-                    tabIndex={node.interactive ? 0 : undefined}
-                    role={node.interactive ? "region" : undefined}
-                    aria-label={node.interactive ? "Scrollable diagram" : undefined}
-                    onMouseDown={node.interactive ? this.handleMouseDown : undefined}
-                    // eslint-disable-next-line react/no-danger -- server-rendered SVG markup; see class doc
-                    dangerouslySetInnerHTML={{ __html: node.svg || "" }}
-                />
+                {/*
+                  * The control band, emitted BEFORE the scroll host and as a normal-flow sibling of it, so
+                  * DiagramViewer.css's column flex chain lays it out as a row above the diagram rather than
+                  * on top of it (plan-266 Cliff N2-B). DOM order IS the visual order here - there is no
+                  * "order" property and no absolute positioning left to override it - so this block must
+                  * stay first. It renders only when `showControls` holds, which is what keeps a
+                  * non-interactive thumbnail free of any band and of the height one would reserve.
+                  */}
                 {showControls && (
-                    <div className="diagram-viewer-controls">
+                    <div className="diagram-viewer-controls" role="group" aria-label="Diagram zoom controls">
                         <select
                             className="form-select form-select-sm"
                             aria-label="Zoom ratio"
@@ -389,6 +390,33 @@ export class DiagramViewer extends React.Component<Props, State> {
                         <button type="button" aria-label="Reset zoom" onClick={this.resetZoom}>Reset</button>
                     </div>
                 )}
+                {/*
+                  * The viewport: a ROW flex container wrapping the scroll host, and it exists for exactly one
+                  * measured reason (plan-266 S1, hypothesis H-COL falsified - see DiagramViewer.css). The svg
+                  * is sized "calc(100% * scale)", and a percentage height only resolves against a containing
+                  * block whose height is DEFINITE. Until plan-266 the host got that definiteness from being
+                  * cross-axis stretched by .diagram-viewer's row layout. Making .diagram-viewer a COLUMN
+                  * container to stack the band moved height onto the MAIN axis, where it is not definite, and
+                  * the svg silently fell back to its intrinsic aspect-ratio height (measured 11745px in a
+                  * 560px host). This element restores the row axis the host needs, one level in.
+                  */}
+                <div className="diagram-viewer-viewport">
+                    <div
+                        ref={this.svgHostRef}
+                        className="diagram-viewer-svg-host"
+                        style={hostStyle}
+                        // The scroll host must be genuinely drivable, not merely scrollable: a tabIndex is what
+                        // makes the browser's own arrow-key scrolling reach it, and the labelled region is what
+                        // names it for a screen reader. Non-interactive thumbnails get none of this - they have
+                        // no overflow to traverse and must stay byte-identically unchanged.
+                        tabIndex={node.interactive ? 0 : undefined}
+                        role={node.interactive ? "region" : undefined}
+                        aria-label={node.interactive ? "Scrollable diagram" : undefined}
+                        onMouseDown={node.interactive ? this.handleMouseDown : undefined}
+                        // eslint-disable-next-line react/no-danger -- server-rendered SVG markup; see class doc
+                        dangerouslySetInnerHTML={{ __html: node.svg || "" }}
+                    />
+                </div>
             </div>
         );
     }

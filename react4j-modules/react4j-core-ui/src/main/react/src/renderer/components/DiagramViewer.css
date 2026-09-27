@@ -50,6 +50,12 @@
  * .diagram-viewer-controls (the zoom/pan buttons) is unaffected by this: it is already
  * "position: absolute", which removes it from flex layout entirely, so making its sibling's parent
  * "display: flex" does not move it.
+ *   >>> SUPERSEDED BY plan-266 S1 (2026-09-27). The sentence above is FALSE of the configuration this
+ *   >>> file now describes: .diagram-viewer-controls is no longer absolutely positioned, it IS a flex
+ *   >>> item of .diagram-viewer, and it is therefore fully subject to that flex layout. It is kept
+ *   >>> above, not deleted, because it remains a true statement about the plan-229-S3-through-plan-265
+ *   >>> configuration in which the three findings above were measured. See "THE CONTROL BAND" below for
+ *   >>> the arrangement that replaced it and the numbers it was verified at.
  *
  * Verified fixed by getComputedStyle in a real headless-Chromium drive: .diagram-viewer-svg-host now
  * renders at exactly its ancestor's clamped height (220px on-card thumbnail / 75vh maximized overlay),
@@ -97,6 +103,11 @@
  * so an absolutely-positioned cluster at "right: 4px" would sit on top of the vertical scrollbar's
  * track. Top-left is the only corner clear of BOTH scrollbars. Guarded by AC-8b, which is green before
  * and after only because of this declaration.
+ *   >>> SUPERSEDED BY plan-266 S1 (2026-09-27). There is no corner any more: the cluster left the scroll
+ *   >>> region entirely and became a band above it, so "which corner clears both scrollbars" is not a
+ *   >>> question this component has. plan-265's Cliff C3 DISSOLVED rather than being re-answered. AC-8b
+ *   >>> stays green for a different and stronger reason - the cluster is now wholly above the host's top
+ *   >>> edge, not merely inside its content box.
  *
  * MEASURED 2026-09-27 in real headless Chromium (plan-265 S1), appended to the record above rather than
  * replacing it - the three findings above are still true of the pre-plan-265 configuration and are why
@@ -124,6 +135,113 @@
  *     cluster would clear the gutter at top-right too, so the top-left move above is justified by the
  *     reviewed screenshot and by classic-scrollbar platforms, not by that numeric check passing here.
  *
+ * THE CONTROL BAND, AND THE COLUMN FLEX CHAIN IT LIVES IN (plan-266 S1, Cliff N2-B). The zoom cluster
+ * is no longer painted ON the diagram. .diagram-viewer is now "flex-direction: column" and holds exactly
+ * two children in this order: .diagram-viewer-controls ("flex: none" - the band, which therefore takes
+ * its own content height and never shrinks) and .diagram-viewer-viewport ("flex: 1 1 auto" - a ROW flex
+ * container which absorbs whatever is left and whose sole child is .diagram-viewer-svg-host, the scroll
+ * region). The user's ruling was that "the dropdown and the zoom tooling
+ * should stay on top": a band outside the scroll region satisfies it structurally - the controls cannot
+ * overlap the diagram, and they cannot scroll away with it, because they are not inside the thing that
+ * scrolls. No React4J API was added for this and none is needed (plan-266 Cliff N2: the consuming
+ * application's own dropdown is already a sibling ABOVE .diagram-viewer in its modal body, so the two
+ * read as one control area without the framework having to offer a slot).
+ *
+ * WHY .diagram-viewer-viewport EXISTS AT ALL - H-COL, MEASURED AND FALSIFIED. plan-266 section 2.8
+ * carried "the three findings at the top of this file were measured on a ROW flex chain, and they do not
+ * automatically transfer to a COLUMN one" as a hypothesis to be measured rather than assumed. It was
+ * measured, and it is FALSE: the findings do NOT transfer, and the first arrangement tried for this slice
+ * - band and scroll host as the only two children of a column .diagram-viewer - resurrected the exact
+ * failure class the 616.5px finding at the top of this file records.
+ *
+ * The mechanism, stated so nobody re-derives it. The svg is "height: calc(100% * scale)", and a
+ * PERCENTAGE HEIGHT RESOLVES ONLY AGAINST A CONTAINING BLOCK WHOSE HEIGHT IS DEFINITE. In the row chain
+ * the host's height was its CROSS-axis size, handed to it by "align-items: stretch" against the
+ * container's actual rendered box - which is precisely the mechanism the FIX paragraph above credits, and
+ * it is definite. Making .diagram-viewer a column container moves height onto the host's MAIN axis, where
+ * it is produced by the flex-grow/shrink algorithm from a content-based "flex-basis: auto" - and Chromium
+ * does not treat that as definite for a percentage child, because the child's own height is one of the
+ * inputs that produced it. The percentage therefore fell back to "auto" and the svg took its intrinsic
+ * aspect-ratio height. MEASURED at 1600x1000, with the band present and the host correctly shrunk to
+ * 560px: tall-narrow (viewBox 0 0 120 900) svg scrollHeight 11745 = 1566 * 900/120; non-interactive
+ * thumbnail (0 0 200 200) 1566 = 1566 * 200/200; wide-flat (0 0 900 120) 209 = 1566 * 120/900, which
+ * COINCIDES with the correct value and is why the wide-flat fixture alone stayed green - a fixture set
+ * with only that aspect ratio would have shipped this.
+ *
+ * Two dead ends, recorded because each looks right on paper. (a) Giving the host a definite flex-basis
+ * ("flex: 1 1 0" / "height: 0") does make the used main size definite - and collapses every
+ * auto-height consumer, because .diagram-viewer's own auto height is then the band's height alone. That
+ * is the "every box in the chain measured height 0" failure at the top of this file, reached by a
+ * different road. (b) Wrapping .diagram-viewer's two children onto two flex LINES ("flex-wrap: wrap",
+ * band at "flex: 0 0 100%") keeps height on the cross axis - but flex lines have no shrink mechanism at
+ * all, so the host's line would simply overflow the container instead of shrinking into it.
+ *
+ * So .diagram-viewer-viewport is the row container .diagram-viewer used to be, reinstated one level in.
+ * .diagram-viewer owns the column stack; the viewport owns the row axis the host needs; the host is
+ * unchanged and its height is once again a cross-axis stretch. Every finding at the top of this file
+ * transfers to it verbatim, which is the point of resolving it this way rather than a cleverer one.
+ *
+ * "min-height: 0" IS LOAD-BEARING ON THE COLUMN AXIS TOO - BUT ON THE VIEWPORT, NOT ON THE HOST, AND
+ * THAT DISTINCTION IS MEASURED. The band occupies real height on the axis the diagram has to fill, so
+ * flexbox's default "min-height: auto" floor - which sizes a flex item at its own content's minimum -
+ * would refuse to let that height be given up and would push the total past .diagram-viewer's box, making
+ * .diagram-viewer itself a NEW overflowing element. That is strictly worse than the failure the original
+ * finding describes, because the overflow ESCAPES THE COMPONENT into whatever box the consumer put it in.
+ * The element that must therefore carry "min-height: 0" is the one whose MAIN axis is vertical, i.e. the
+ * viewport as a child of the column container. On the HOST, vertical is now the CROSS axis, where
+ * "min-height: auto" already behaves as 0 - so the host's own "min-height: 0" is kept for continuity with
+ * the finding above and for any future re-orientation, but it is NOT what holds this axis.
+ *
+ * Both halves of that were measured by mutation, and the naive expectation was wrong:
+ *   - delete "min-height: 0" from the HOST -> only plan-266 AC-5 reds, i.e. only the criterion that names
+ *     the declaration. AC-1 and AC-4 stay GREEN. The declaration is inert on this axis.
+ *   - delete "min-height: 0" from the VIEWPORT -> 9 of 30 tests red: AC-1 at Fit and at 400%, AC-6 on both
+ *     fixtures, AC-7, AC-5, and plan-265's AC-11. The chain dump shows exactly the predicted escape -
+ *     .diagram-viewer +11185px, then .card-inner-body, then .card-body, which is the positional analogue
+ *     of the consuming application's .modal-body.
+ * NOTE WHICH CRITERION DID NOT CATCH IT: AC-4 stayed green under the viewport mutation, because the svg's
+ * box and the host's box grew together and the RATIO is still 4.0. A ratio criterion is structurally blind
+ * to this failure, which is the whole argument for the ancestor-chain enumeration existing beside it.
+ *
+ * "flex-wrap: wrap" ON THE BAND IS A GUARD, NOT COSMETIC. The band is not a scroll container, so a
+ * cluster wider than a narrow overlay would overflow it horizontally, and .diagram-viewer's own
+ * "overflow: visible" would then report scrollWidth > clientWidth - i.e. the component would hand its
+ * consumer exactly the extra scroll region plan-266 exists to remove. Wrapping to a second row costs
+ * height (which the flex chain absorbs correctly) instead of costing a scrollbar.
+ *
+ * THE BAND'S 4px PADDING REPLACES THE OLD "top: 4px; left: 4px" INSET, deliberately at the same value so
+ * the controls sit the same distance from the component's edge as they did when they were an overlay -
+ * the change is meant to be a relocation, not a restyle. Nothing beyond that: plan-266 Cliff N2 accepts
+ * the band's ~38px vertical cost explicitly and asks for it to be kept tight.
+ *
+ * THE THUMBNAIL RESERVES NO BAND HEIGHT, and that is structural rather than a rule in this file:
+ * DiagramViewer.tsx renders the band only under "interactive && hasViewBox", so a non-interactive
+ * thumbnail has ONE flex item and the host still gets the whole box. A band that cost a 220px thumbnail
+ * 38px would be a 17% loss, so plan-266 AC-7 pins both halves - no band element in the subtree, and the
+ * host's content box still equal to .diagram-viewer's.
+ *
+ * MEASURED 2026-09-27 in real headless Chromium (plan-266 S1, viewport 1600x1000), because the three
+ * findings at the top of this file were all taken on a ROW flex chain and plan-266 section 2.8 carries their
+ * transfer to a COLUMN chain as hypothesis H-COL, to be measured and not assumed. All three fixtures are
+ * on a card whose .diagram-viewer resolves to a 1566x600 content box:
+ *   - band rendered height 40px (4+4 padding, a ~31px form-select-sm, a 1px bottom border), so the host's
+ *     CONTENT box - the box the svg's percentages resolve against - is 1566x560 for both interactive
+ *     fixtures, down from 1566x600 before the band existed.
+ *   - tall-narrow @400%: host content 1566x560, scroll box 6264x2240 - exactly 4.0x on BOTH axes. Same for
+ *     wide-flat. So "calc(100% * s)" resolves against the band-REDUCED box, which was the open risk.
+ *   - tall-narrow @Fit: 1566x560 == 1566x560, no scroll region. wide-flat @Fit: host content 1566x209
+ *     inside a 1566x249 .diagram-viewer - this fixture sets no height, so its auto height grew by exactly
+ *     the band's 40px rather than shrinking the diagram, which is the correct behaviour for an auto box.
+ *   - non-interactive thumbnail: no band element, one flex child, host content box 1566x600 - byte-for-byte
+ *     the 600px measured on unmodified HEAD before this slice. The thumbnail reserves nothing.
+ *   - ancestor chain from the host to documentElement is 10 elements, and the set of those between the host
+ *     and its containing .card that overflow on either axis is EMPTY at Fit and at 400% on both fixtures.
+ *     .card-body is "overflow: auto/auto" and clean at 1598x664 - i.e. the guard is watching an element of
+ *     exactly the kind that was found overflowing in the consuming application, and it is quiet here.
+ *   - exactly ONE active scroll region in the component (armed overflow AND actual overflow): the host.
+ *     The band's rect does not intersect the host's and does not move when the host is driven to its
+ *     maximum on both axes.
+ *
  * WHITE BACKGROUND (plan-261 S2 / 3.1): explicit and here, in the framework component's own stylesheet,
  * NOT in an application's custom.css. custom.css is the slot an application customises - anything
  * structural placed there is lost the moment an app ships its own copy, silently, with only a layout
@@ -137,7 +255,19 @@
 .diagram-viewer {
     position: relative;
     display: flex;
+    flex-direction: column;
     background-color: #ffffff;
+}
+
+/* Rules below are ordered OUTSIDE-IN by nesting depth - viewer, viewport, host, svg - and the band's rules
+ * follow at the end because it is a leaf. That is deliberately NOT the DOM order (the band is emitted
+ * first): nesting depth is what a reader needs to follow the flex chain, which is what this file is about,
+ * and DiagramViewer.tsx is where the emission order is stated. */
+.diagram-viewer-viewport {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
 }
 
 .diagram-viewer-svg-host {
@@ -158,10 +288,26 @@
 }
 
 .diagram-viewer-controls {
-    position: absolute;
-    top: 4px;
-    left: 4px;
+    flex: none;
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 4px;
-    z-index: 1;
+    padding: 4px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/*
+ * Bootstrap's own ".form-select { width: 100% }" has to be neutralised HERE, and this rule is a direct
+ * consequence of the band replacing the overlay rather than an independent style choice. While the
+ * cluster was "position: absolute" its box was shrink-to-fit, so the select's "width: 100%" resolved
+ * against a width the select itself had just determined and was therefore self-cancelling. The band is a
+ * normal flex item of .diagram-viewer and is as wide as the component, so the SAME declaration would now
+ * stretch the ratio control across the whole viewer and wrap the three buttons onto a second row. "width:
+ * auto" restores the select's intrinsic width and "flex: none" stops the flex line stretching or
+ * shrinking it back.
+ */
+.diagram-viewer-controls > select {
+    flex: none;
+    width: auto;
 }
