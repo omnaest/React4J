@@ -1,0 +1,7 @@
+.react4j-draggable {
+    cursor: grab;
+}
+
+.react4j-draggable:active {
+    cursor: grabbing;
+}

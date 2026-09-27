@@ -92,7 +92,7 @@ public class FormRendererImplTest
         FormNode formNode = (FormNode) node;
         assertNull(formNode.getOnChange(),
                    "a form with no registered change handler must emit no onChange target - emitting one makes every "
-                           + "keystroke a round trip that notifies nobody");
+                                           + "keystroke a round trip that notifies nobody");
     }
 
     /**

@@ -168,7 +168,6 @@ public interface TreeTable extends UIComponent<TreeTable>
      */
     public TreeTable withInitiallyFlat(boolean flat);
 
-
     /**
      * Lifecycle hook for an external data change (plan-76 &sect;2.4 extension point "refresh() (lifecycle hook for
      * external-data-change)"): documents, and reserves the name for, forcing this component's next render to

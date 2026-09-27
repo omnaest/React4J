@@ -1141,7 +1141,6 @@ public class TreeTableRendererImpl implements UIComponentRenderer
                                      .orElse(this.data.isInitiallyFlat());
         }
 
-
         /**
          * Builds the flat/tree toggle's click handler (plan-80): a server-computed FLIP of the shared
          * {@code flatMode} boolean field (Cliff C1a mechanism (a), mirrors {@link #buildFilterToggleHandler(Location)}'s

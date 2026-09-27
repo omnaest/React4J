@@ -47,12 +47,12 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
     private TextValueSource featuredTitle;
     private TextValueSource title;
     private I18nText        subTitle;
-    private Optional<Image> image  = Optional.empty();
+    private Optional<Image> image      = Optional.empty();
     private String          locator;
     private UIComponent<?>  header;
     private UIComponent<?>  content;
     private UIComponent<?>  footer;
-    private boolean         adjust = false;
+    private boolean         adjust     = false;
     private boolean         fullHeight = false;
     private String          ariaLabel;
 
@@ -61,14 +61,12 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
         super(context);
     }
 
-    public CardImpl(ComponentContext context, TextValueSource featuredTitle, TextValueSource title, I18nText subTitle, Optional<Image> image, String locator,
-                    UIComponent<?> content, boolean adjust)
+    public CardImpl(ComponentContext context, TextValueSource featuredTitle, TextValueSource title, I18nText subTitle, Optional<Image> image, String locator, UIComponent<?> content, boolean adjust)
     {
         this(context, featuredTitle, title, subTitle, image, locator, null, content, null, adjust);
     }
 
-    public CardImpl(ComponentContext context, TextValueSource featuredTitle, TextValueSource title, I18nText subTitle, Optional<Image> image, String locator,
-                    UIComponent<?> header, UIComponent<?> content, UIComponent<?> footer, boolean adjust)
+    public CardImpl(ComponentContext context, TextValueSource featuredTitle, TextValueSource title, I18nText subTitle, Optional<Image> image, String locator, UIComponent<?> header, UIComponent<?> content, UIComponent<?> footer, boolean adjust)
     {
         super(context);
         this.featuredTitle = featuredTitle;

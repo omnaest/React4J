@@ -1,5 +1,6 @@
 package org.omnaest.react4j.service.internal.component;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +31,12 @@ import org.omnaest.react4j.service.internal.nodes.PaginationItemNode;
 import org.omnaest.react4j.service.internal.nodes.PaginationNode;
 import org.omnaest.react4j.service.internal.nodes.handler.ServerHandler;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 /**
  * @see PaginationImpl
@@ -210,6 +218,7 @@ public class PaginationImplTest
         PaginationItemImpl item = new PaginationItemImpl(context, 2);
         item.withActiveState(true);
         item.withDisabledState(true);
+        item.withAriaLabel("Switch to BACKLOG view");
         item.onClick(mock(EventHandler.class));
 
         PaginationItemImpl templated = (PaginationItemImpl) item.asTemplateProvider()
@@ -223,7 +232,89 @@ public class PaginationImplTest
 
         assertTrue(((PaginationItemNode) node).isActive());
         assertTrue(((PaginationItemNode) node).isDisabled());
+        assertEquals("Switch to BACKLOG view", ((PaginationItemNode) node).getAriaLabel());
         assertNotNull(((PaginationItemNode) node).getOnClick());
         assertEquals(item.getId(), templated.getId());
+    }
+
+    /**
+     * AC-1/AC-2 (plan-255 S1): {@code withAriaLabel} sets the field into the node unconditionally - null stays
+     * null, mirroring {@link org.omnaest.react4j.service.internal.component.ButtonImpl}'s shape.
+     */
+    @Test
+    public void testItemWithoutAriaLabelHasNullAriaLabel()
+    {
+        ComponentContext context = this.newContext();
+        PaginationItemImpl item = new PaginationItemImpl(context, 0);
+
+        Location location = mock(Location.class);
+        when(location.get()).thenReturn(Arrays.asList("root", item.getId()));
+
+        Node node = item.asRenderer()
+                        .render(mock(RenderingProcessor.class), location, Optional.empty());
+
+        assertNull(((PaginationItemNode) node).getAriaLabel());
+    }
+
+    @Test
+    public void testItemWithAriaLabelRendersItOnTheNode()
+    {
+        ComponentContext context = this.newContext();
+        PaginationItemImpl item = new PaginationItemImpl(context, 0);
+        item.withAriaLabel("Currently viewing BOARD view");
+
+        Location location = mock(Location.class);
+        when(location.get()).thenReturn(Arrays.asList("root", item.getId()));
+
+        Node node = item.asRenderer()
+                        .render(mock(RenderingProcessor.class), location, Optional.empty());
+
+        assertEquals("Currently viewing BOARD view", ((PaginationItemNode) node).getAriaLabel());
+    }
+
+    /**
+     * AC-6 (plan-255 S1): mirroring {@code ButtonNode} means the serialized node GAINS an {@code ariaLabel} key
+     * with a {@code null} value when unset - not an absent key - exactly as every {@code BUTTON} node already
+     * does (verified at source: neither {@code ButtonNode} nor {@code PaginationItemNode} carries a class- or
+     * field-level {@code @JsonInclude}).
+     * <p>
+     * Serializes with a plain {@link ObjectMapper} plus a minimal ad-hoc {@link Optional} serializer rather than
+     * {@code JSONHelper.serialize(...)}: this module carries no {@code jackson-datatype-jdk8} module (that is
+     * pulled in only by {@code react4j-core}'s Spring auto-configuration), so a bare {@code ObjectMapper} trying
+     * to introspect {@code AbstractNode#uiContextData}'s {@code Optional<UIContextDataNode>} as a plain bean
+     * recurses into a {@link StackOverflowError} - a pre-existing landmine on every {@code Node} subtype, not
+     * specific to this change, and out of this slice's additive-only scope to fix.
+     */
+    @Test
+    public void testUnsetAriaLabelSerializesAsExplicitNullKeyMatchingButtonNode()
+    {
+        ComponentContext context = this.newContext();
+        PaginationItemImpl item = new PaginationItemImpl(context, 0);
+
+        Location location = mock(Location.class);
+        when(location.get()).thenReturn(Arrays.asList("root", item.getId()));
+
+        Node node = item.asRenderer()
+                        .render(mock(RenderingProcessor.class), location, Optional.empty());
+
+        SimpleModule optionalAsNullableValueModule = new SimpleModule();
+        optionalAsNullableValueModule.addSerializer(Optional.class, new JsonSerializer<Optional>() {
+            @Override
+            public void serialize(Optional value, JsonGenerator gen, SerializerProvider serializers) throws IOException
+            {
+                if (value.isPresent())
+                {
+                    serializers.defaultSerializeValue(value.get(), gen);
+                }
+                else
+                {
+                    gen.writeNull();
+                }
+            }
+        });
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(optionalAsNullableValueModule);
+
+        String json = assertDoesNotThrow(() -> objectMapper.writeValueAsString(node));
+        assertTrue(json.contains("\"ariaLabel\":null"), () -> "expected an explicit null ariaLabel key in: " + json);
     }
 }

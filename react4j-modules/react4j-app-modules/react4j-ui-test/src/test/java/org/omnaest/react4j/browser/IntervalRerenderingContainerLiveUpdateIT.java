@@ -1,5 +1,6 @@
 package org.omnaest.react4j.browser;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -103,5 +104,69 @@ public class IntervalRerenderingContainerLiveUpdateIT
         String updatedText = serverTimeText.textContent();
         assertNotEquals(initialText, updatedText, "Server time text must have changed after the interval refresh");
         assertTrue(updatedText.contains("Server time:"), "Refreshed content must still render the 'Server time:' label");
+    }
+
+    /**
+     * plan-235 S3 AC-BROWSER-6: the interval-wrapped subtree both TICKS on its own timer AND still HANDLES a
+     * click, observed across at least two ticks. The two halves need two DIFFERENT waits (see
+     * {@code ComponentShowcaseUI#createIntervalContent}, which is what added the clickable
+     * {@code Button} this test exercises - the original wiring had no clickable child at all):
+     * <ul>
+     * <li>the tick half does NOT go through {@code /ui/event} ({@code Backend.getUISubNode} is not wrapped by
+     * {@code InFlightTracker}), so it is observed with a bounded {@code page.waitForFunction} on the rendered DOM
+     * text, exactly like {@link #serverTimeTextUpdatesOnItsOwnIntervalWithoutUserInteraction()} above;</li>
+     * <li>the click half DOES go through {@code /ui/event}, so it is observed via the
+     * {@code .App[data-inflight-count]==="0"} settle signal ({@link #waitForSettled()}).</li>
+     * </ul>
+     * Mixing these up produces a flaky test that gets blamed on the fix under test rather than on the test itself.
+     */
+    @Test
+    public void intervalTicksAcrossTwoRefreshesAndStillHandlesClicks()
+    {
+        this.page.navigate("http://localhost:" + this.port + "/");
+
+        Locator card = this.page.locator(".card", new Page.LocatorOptions().setHasText("IntervalRerenderingContainer"));
+        Locator serverTimeText = card.locator(".card-inner-body p");
+        serverTimeText.waitFor(new Locator.WaitForOptions().setTimeout(10000));
+
+        String textAfterLoad = serverTimeText.textContent();
+
+        // Tick 1: bounded wait on the rendered DOM text itself, no settle signal (does not go through /ui/event).
+        this.page.waitForFunction(
+                                  "(expected) => { const p = Array.from(document.querySelectorAll('p')).find(el => el.textContent.startsWith('Server time:')); return !!p && p.textContent !== expected; }",
+                                  textAfterLoad, new Page.WaitForFunctionOptions().setTimeout(5000));
+        String textAfterTick1 = serverTimeText.textContent();
+        assertNotEquals(textAfterLoad, textAfterTick1, "Server time text must change after the FIRST tick");
+
+        // Tick 2: same bounded-wait technique, relative to tick 1's text.
+        this.page.waitForFunction(
+                                  "(expected) => { const p = Array.from(document.querySelectorAll('p')).find(el => el.textContent.startsWith('Server time:')); return !!p && p.textContent !== expected; }",
+                                  textAfterTick1, new Page.WaitForFunctionOptions().setTimeout(5000));
+        String textAfterTick2 = serverTimeText.textContent();
+        assertNotEquals(textAfterTick1, textAfterTick2, "Server time text must change AGAIN after the SECOND tick");
+
+        // Click half: goes through /ui/event, so wait on the settle signal, never the DOM-text waitForFunction
+        // used for the ticks above.
+        Locator counterButton = card.locator(".card-inner-body button", new Locator.LocatorOptions().setHasText("Bump Interval Counter"));
+        assertEquals(1, counterButton.count(), "Expected exactly one 'Bump Interval Counter' button inside the IntervalRerenderingContainer card");
+        assertTrue(counterButton.textContent()
+                                .contains("(0)"),
+                   "Counter button must start at 0 clicks");
+
+        counterButton.click();
+        this.waitForSettled();
+
+        Locator counterButtonAfterClick = card.locator(".card-inner-body button", new Locator.LocatorOptions().setHasText("Bump Interval Counter"));
+        assertTrue(counterButtonAfterClick.textContent()
+                                          .contains("(1)"),
+                   "Counter button must read 1 click after the settled round trip - the interval-wrapped subtree "
+                                                            + "must still handle a click while it keeps ticking on its own timer");
+    }
+
+    private void waitForSettled()
+    {
+        this.page.waitForFunction("document.querySelector('.App')?.getAttribute('data-inflight-count') === '0'");
+        assertEquals("0", this.page.locator(".App")
+                                   .getAttribute("data-inflight-count"));
     }
 }

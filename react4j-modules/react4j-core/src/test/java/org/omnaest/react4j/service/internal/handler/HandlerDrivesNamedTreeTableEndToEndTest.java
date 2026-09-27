@@ -61,13 +61,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @AutoConfigureMockMvc
 public class HandlerDrivesNamedTreeTableEndToEndTest
 {
-    private static final ObjectMapper OBJECT_MAPPER  = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final String       TABLE_NAME     = "partners";
+    private static final String       TABLE_NAME    = "partners";
 
-    private static final String       FORM_CONTEXT   = "someform.context";
+    private static final String       FORM_CONTEXT  = "someform.context";
 
-    private static final String       TABLE_CONTEXT  = "";
+    private static final String       TABLE_CONTEXT = "";
 
     @Autowired
     private MockMvc                   mockMvc;
@@ -148,7 +148,7 @@ public class HandlerDrivesNamedTreeTableEndToEndTest
         assertTrue(tableAfter.get("flatMode")
                              .asBoolean(),
                    "the table must be flat because a handler on ANOTHER component asked it to be - by name, "
-                           + "without knowing its location or the field key it keeps that mode under");
+                                           + "without knowing its location or the field key it keeps that mode under");
     }
 
     /**
@@ -171,7 +171,7 @@ public class HandlerDrivesNamedTreeTableEndToEndTest
                                                   .get("node")).get("activeFilterCount")
                                                                .asInt(),
                      "the renderer must count the filter the handler set - which only happens if the write landed "
-                             + "under the key the renderer reads, at the table's own location");
+                                                                         + "under the key the renderer reads, at the table's own location");
     }
 
     /**
@@ -210,8 +210,7 @@ public class HandlerDrivesNamedTreeTableEndToEndTest
      * The handler is registered against the page rather than passed through the request, because that is where an
      * application would put it - and because the write has to happen INSIDE the round trip to be carried by it.
      */
-    private JsonNode clickDrivingTheTable(Target target,
-                                          java.util.function.Consumer<UIComponents.TreeTableAccess> drive) throws Exception
+    private JsonNode clickDrivingTheTable(Target target, java.util.function.Consumer<UIComponents.TreeTableAccess> drive) throws Exception
     {
         this.reactUIService.createDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newRerenderingContainer()
                                                                                                    .enableStaticNodeRerendering()

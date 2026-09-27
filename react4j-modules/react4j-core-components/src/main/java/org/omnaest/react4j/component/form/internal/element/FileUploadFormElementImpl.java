@@ -26,14 +26,18 @@ import org.omnaest.react4j.service.internal.upload.UploadChannelRegistry;
 
 public class FileUploadFormElementImpl extends AbstractFormElementImpl<FileUploadFormElement> implements FileUploadFormElement
 {
+    private static final String         MULTIPART_UPLOAD_URL  = "ui/upload";
+    private static final String         UNBUFFERED_UPLOAD_URL = "ui/upload/raw";
+
     private final UploadChannelRegistry uploadChannelRegistry;
 
     private UploadChannel               uploadChannel;
     private String                      accept;
-    private DataEventHandler            eventHandler = (data, internalData) -> MappedData.builder()
-                                                                                         .data(data)
-                                                                                         .internalData(internalData)
-                                                                                         .build();
+    private boolean                     unbufferedTransport;
+    private DataEventHandler            eventHandler          = (data, internalData) -> MappedData.builder()
+                                                                                                  .data(data)
+                                                                                                  .internalData(internalData)
+                                                                                                  .build();
 
     public FileUploadFormElementImpl(Function<Class<?>, String> identityProvider, LocalizedTextResolverService textResolver, Function<String, I18nText> i18nTextMapper, EventHandlerRegistry eventHandlerRegistry, Supplier<? extends DataContext> parentDataContext, UploadChannelRegistry uploadChannelRegistry)
     {
@@ -57,11 +61,12 @@ public class FileUploadFormElementImpl extends AbstractFormElementImpl<FileUploa
         return node.toBuilder()
                    .type("FILE_UPLOAD")
                    .fileUpload(FormFileUploadNode.builder()
-                                                 .uploadUrl("ui/upload")
+                                                 .uploadUrl(this.unbufferedTransport ? UNBUFFERED_UPLOAD_URL : MULTIPART_UPLOAD_URL)
                                                  .uploadId(uploadId)
                                                  .accept(this.accept)
                                                  .maxSize(this.uploadChannel.maxSizeBytes())
                                                  .onComplete(onComplete)
+                                                 .unbufferedTransport(this.unbufferedTransport)
                                                  .build())
                    .build();
     }
@@ -77,6 +82,13 @@ public class FileUploadFormElementImpl extends AbstractFormElementImpl<FileUploa
     public FileUploadFormElement withAccept(String accept)
     {
         this.accept = accept;
+        return this;
+    }
+
+    @Override
+    public FileUploadFormElement withUnbufferedTransport()
+    {
+        this.unbufferedTransport = true;
         return this;
     }
 

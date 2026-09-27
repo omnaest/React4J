@@ -50,6 +50,9 @@ import org.omnaest.react4j.service.internal.component.CarouselImpl;
 import org.omnaest.react4j.service.internal.component.CollapseImpl;
 import org.omnaest.react4j.service.internal.component.ComponentContext;
 import org.omnaest.react4j.service.internal.component.CompositeImpl;
+import org.omnaest.react4j.service.internal.component.DiagramViewerImpl;
+import org.omnaest.react4j.service.internal.component.DraggableImpl;
+import org.omnaest.react4j.service.internal.component.DropTargetImpl;
 import org.omnaest.react4j.service.internal.component.DropdownImpl;
 import org.omnaest.react4j.service.internal.component.GridContainerImpl;
 import org.omnaest.react4j.service.internal.component.HeadingImpl;
@@ -67,6 +70,7 @@ import org.omnaest.react4j.service.internal.component.OffcanvasImpl;
 import org.omnaest.react4j.service.internal.component.PaddingContainerImpl;
 import org.omnaest.react4j.service.internal.component.PaginationImpl;
 import org.omnaest.react4j.service.internal.component.ParagraphImpl;
+import org.omnaest.react4j.service.internal.component.PendingContentImpl;
 import org.omnaest.react4j.service.internal.component.PlaceholderImpl;
 import org.omnaest.react4j.service.internal.component.PopoverImpl;
 import org.omnaest.react4j.service.internal.component.RatioContainerImpl;
@@ -74,7 +78,6 @@ import org.omnaest.react4j.service.internal.component.RerenderingContainerImpl;
 import org.omnaest.react4j.service.internal.component.SVGContainerImpl;
 import org.omnaest.react4j.service.internal.component.ScrollbarContainerImpl;
 import org.omnaest.react4j.service.internal.component.SizedContainerImpl;
-import org.omnaest.react4j.service.internal.component.PendingContentImpl;
 import org.omnaest.react4j.service.internal.component.SpinnerImpl;
 import org.omnaest.react4j.service.internal.component.SplitButtonImpl;
 import org.omnaest.react4j.service.internal.component.StackImpl;
@@ -175,7 +178,8 @@ public class NodeRendererCompletenessMetaTest
                                                                                         "PaddingContainer", "RatioContainer", "SizedContainer",
                                                                                         "ScrollbarContainer", "Stack", "LineBreak", "Icon", "Badge", "Spinner",
                                                                                         "Placeholder", "Alert", "Breadcrumb", "Pagination", "ListView", "IFrame",
-                                                                                        "ImageIndex", "NativeHtml", "SVGContainer",
+                                                                                        "ImageIndex", "NativeHtml", "SVGContainer", "DiagramViewer",
+                                                                                        "Draggable", "DropTarget",
                                                                                         // Registers an HTML renderer that deliberately emits NOTHING: a static or
                                                                                         // printed page has no round trip in flight, so a "waiting for a response"
                                                                                         // block there would describe a state that medium cannot be in. Listed here so
@@ -209,6 +213,9 @@ public class NodeRendererCompletenessMetaTest
                          Arguments.of("VerticalContentSwitcher",
                                       (Supplier<RenderableUIComponent<?>>) () -> new VerticalContentSwitcherImpl(newContext())),
                          Arguments.of("ScrollbarContainer", (Supplier<RenderableUIComponent<?>>) () -> new ScrollbarContainerImpl(newContext())),
+                         Arguments.of("DiagramViewer", (Supplier<RenderableUIComponent<?>>) () -> new DiagramViewerImpl(newContext())),
+                         Arguments.of("Draggable", (Supplier<RenderableUIComponent<?>>) () -> new DraggableImpl(newContext())),
+                         Arguments.of("DropTarget", (Supplier<RenderableUIComponent<?>>) () -> new DropTargetImpl(newContext())),
                          Arguments.of("Text", (Supplier<RenderableUIComponent<?>>) () -> new TextImpl(newContext())),
                          Arguments.of("LineBreak", (Supplier<RenderableUIComponent<?>>) () -> new LineBreakImpl(newContext())),
                          Arguments.of("Toaster", (Supplier<RenderableUIComponent<?>>) () -> new ToasterImpl(newContext())),

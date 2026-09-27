@@ -37,7 +37,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 @SpringBootTest(classes = MarkdownIssueHandlerSeamTest.TestApplication.class, webEnvironment = WebEnvironment.MOCK)
 public class MarkdownIssueHandlerSeamTest
 {
-    private static final String       SOURCE = "discord";
+    private static final String SOURCE = "discord";
 
     @SpringBootApplication
     @EnableReactUI

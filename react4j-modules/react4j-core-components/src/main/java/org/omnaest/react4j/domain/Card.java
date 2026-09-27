@@ -93,5 +93,4 @@ public interface Card extends UIComponentWithContent<Card>
      */
     public Card withAriaLabel(String ariaLabel);
 
-
 }

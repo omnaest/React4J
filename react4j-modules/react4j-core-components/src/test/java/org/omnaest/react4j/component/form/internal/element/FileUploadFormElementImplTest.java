@@ -1,6 +1,7 @@
 package org.omnaest.react4j.component.form.internal.element;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -63,6 +64,35 @@ public class FileUploadFormElementImplTest
         assertNotNull(node.getFileUpload()
                           .getOnComplete());
         assertNotNull(node.getContextId());
+    }
+
+    @Test
+    public void testDefaultElementDoesNotOptIntoUnbufferedTransport()
+    {
+        FileUploadFormElementImpl element = this.newElement();
+        element.withUploadChannel(ByteArrayChannel.create());
+
+        FormElementNode node = element.render(Location.of("form"));
+
+        assertEquals("ui/upload", node.getFileUpload()
+                                      .getUploadUrl());
+        assertFalse(node.getFileUpload()
+                        .isUnbufferedTransport());
+    }
+
+    @Test
+    public void testWithUnbufferedTransportSwitchesUploadUrlAndSetsNodeFlag()
+    {
+        FileUploadFormElementImpl element = this.newElement();
+        element.withUploadChannel(ByteArrayChannel.create())
+               .withUnbufferedTransport();
+
+        FormElementNode node = element.render(Location.of("form"));
+
+        assertEquals("ui/upload/raw", node.getFileUpload()
+                                          .getUploadUrl());
+        assertTrue(node.getFileUpload()
+                       .isUnbufferedTransport());
     }
 
     @Test

@@ -74,4 +74,47 @@ public class BreadcrumbStaticRenderTest
         assertTrue(html.contains("breadcrumb-item active"), () -> "expected the active entry class in: " + html);
         assertTrue(html.contains("Current"), () -> "expected the active entry's resolved text in: " + html);
     }
+
+    /**
+     * plan-262 AC-6 (S1), the criterion-2a drift guard: a {@code Breadcrumb} that calls neither
+     * {@code withLinkLocator} nor {@code onClick} must render its {@code <nav>} with NO {@code id} attribute at
+     * all - not {@code id=""}, not {@code id="null"}. Demonstrated to actually bite: temporarily emitting the
+     * {@code id} unconditionally in {@link org.omnaest.react4j.service.internal.component.BreadcrumbImpl} turns
+     * this RED naming the {@code id} attribute (reported verbatim in the implementer's report), then GREEN again
+     * once reverted.
+     */
+    @Test
+    public void testUnsetLinkLocatorRendersNoIdAttributeOnTheNav() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newBreadcrumb()
+                                                                                              .addEntry(entry -> entry.withText("Home")
+                                                                                                                      .withLink("/home"))));
+
+        String html = uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML);
+
+        assertFalse(html.contains("<nav aria-label=\"breadcrumb\" id="), () -> "expected NO id attribute on the <nav> when withLinkLocator was never "
+                                                                               + "called, in: " + html);
+    }
+
+    /**
+     * plan-262 AC-7 (S1): with {@code withLinkLocator("x")} set, the HTML renderer emits {@code id="x"} on the
+     * {@code <nav>}.
+     */
+    @Test
+    public void testLinkLocatorRendersAsIdAttributeOnTheNav() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newBreadcrumb()
+                                                                                              .withLinkLocator("ancestor-trail")
+                                                                                              .addEntry(entry -> entry.withText("Home")
+                                                                                                                      .withLink("/home"))));
+
+        String html = uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML);
+
+        assertTrue(html.contains("<nav aria-label=\"breadcrumb\" id=\"ancestor-trail\">"),
+                   () -> "expected the withLinkLocator value rendered as the <nav>'s id attribute, in: " + html);
+    }
 }

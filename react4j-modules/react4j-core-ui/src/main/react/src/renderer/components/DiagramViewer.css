@@ -1,0 +1,95 @@
+/*
+ * DiagramViewer's own fit-to-container mechanics (plan-229 Cliff 3, sizing corrected by plan-229 Slice S3).
+ *
+ * Lives beside the component and is imported by DiagramViewer.tsx, so it is bundled with the framework
+ * rather than shipped in /css/custom.css - see ScrollbarContainer.css for the convention this follows.
+ * custom.css is the slot an APPLICATION customises; anything structural placed there is lost the moment
+ * an app ships its own copy of that file, and the component then breaks with no error - only a layout
+ * that quietly stops working. (KanbanBoardServer's plan-229 S2 round shipped exactly that workaround in
+ * its own custom.css because this file was frozen mid-slice; S3 moved the fix here and removed it there -
+ * see plan-229's plan file for the history if it matters to a future reader.)
+ *
+ * The mechanism: the host stays a max-height-bounded box (sizing itself arrives per-instance as an
+ * inline style on .diagram-viewer, not here - see Cliff 2 in plan-229). The injected root <svg> KEEPS
+ * its own width/height attributes untouched (DiagramViewer.tsx never strips them - doing so while
+ * leaving viewBox alone renders the diagram at roughly 9x natural size, a measured workspace finding).
+ * This stylesheet OVERRIDES those attributes with width:100%/height:100% on the <svg> itself (below) -
+ * CSS always beats a presentation attribute, regardless of what the source SVG's own attributes say.
+ * Combined with the preserveAspectRatio="xMidYMid meet" DiagramViewer.tsx sets on mount, SVG's own
+ * viewBox scaling letterboxes the whole diagram into the box - no measurement, no race with a modal's
+ * mount/animation.
+ *
+ * WHY .diagram-viewer-svg-host ITSELF IS SIZED WITH FLEXBOX, NOT A CSS PERCENTAGE (plan-229 S2 finding,
+ * fixed here in S3 - verified at source and by getComputedStyle in a real browser). A percentage height
+ * ("height: 100%") only resolves against an ancestor whose OWN "height" property is explicitly set.
+ * .diagram-viewer's bound comes from "max-height" alone (the inline style above, e.g. "220px" for an
+ * on-card thumbnail, "75vh" for a maximized overlay) - a DIFFERENT property, which does not count. So a
+ * naive "height: 100%" on the host silently falls back to the host's own intrinsic (aspect-ratio-scaled)
+ * content size instead of resolving against the clamped box. Measured: with
+ * ".diagram-viewer { max-height: 220px }", .diagram-viewer correctly rendered at 220px while a
+ * percentage-sized .diagram-viewer-svg-host came back 616.5px - the SVG then rendered at that oversized,
+ * unclamped scale and visually overflowed both the on-card thumbnail and the maximized overlay.
+ *
+ * FIRST ATTEMPT, RECORDED because it failed instructively: absolute-positioning the host with all four
+ * insets pinned to 0 (a common trick for exactly this class of bug) was tried first and made things
+ * WORSE, not better - taking the host out of normal flow removes the only thing that was giving
+ * .diagram-viewer ANY auto-computed height to clamp in the first place, so .diagram-viewer's own height
+ * collapsed to 0 and the whole diagram disappeared (every box in the chain measured height 0).
+ *
+ * THE FIX: make .diagram-viewer a flex container and the host a flex item with "flex: 1 1 auto" and
+ * "min-height: 0" (the latter is load-bearing - flexbox's default "min-height: auto" would let the
+ * item's own content re-establish its natural, oversized height and defeat the shrink exactly as the
+ * original percentage-height bug did; "min-width: 0" guards the same failure mode on the main axis).
+ * Flexbox's own stretch-sizing algorithm (the default "align-items: stretch") resolves a flex item's
+ * cross-axis size against the flex container's ACTUAL rendered box - including one clamped by
+ * "max-height" - which is a DIFFERENT algorithm from percentage-height resolution on a normal-flow child
+ * and does not share its "ancestor height must be explicitly specified" restriction. Unlike the
+ * absolute-positioning attempt, the host stays in normal flow, so it still participates in establishing
+ * .diagram-viewer's own auto height (the thing "max-height" then clamps) rather than removing it.
+ *
+ * .diagram-viewer-controls (the zoom/pan buttons) is unaffected by this: it is already
+ * "position: absolute", which removes it from flex layout entirely, so making its sibling's parent
+ * "display: flex" does not move it.
+ *
+ * Verified fixed by getComputedStyle in a real headless-Chromium drive: .diagram-viewer-svg-host now
+ * renders at exactly its ancestor's clamped height (220px on-card thumbnail / 75vh maximized overlay),
+ * never the SVG's oversized intrinsic height, and the on-card thumbnail and maximized overlay both show
+ * the correctly scaled-down whole diagram rather than a cropped top slice.
+ *
+ * WHITE BACKGROUND (plan-261 S2 / 3.1): explicit and here, in the framework component's own stylesheet,
+ * NOT in an application's custom.css. custom.css is the slot an application customises - anything
+ * structural placed there is lost the moment an app ships its own copy, silently, with only a layout
+ * that quietly stops working as the symptom. KanbanBoardServer's plan-229 S2 round shipped exactly that
+ * workaround once already (see the file-level history above); S3 moved the fix back here. Without an
+ * explicit background the viewer host is transparent, so a dark app theme (or a dark page behind a
+ * transparent modal backdrop) shows through behind a diagram whose own SVG rarely paints its own
+ * background - white is chosen to match Mermaid's own default diagram background so nothing visibly
+ * changes for a diagram already targeting a light theme.
+ */
+.diagram-viewer {
+    position: relative;
+    display: flex;
+    background-color: #ffffff;
+}
+
+.diagram-viewer-svg-host {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.diagram-viewer-svg-host > svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.diagram-viewer-controls {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    gap: 4px;
+    z-index: 1;
+}

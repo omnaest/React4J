@@ -19,8 +19,12 @@ import org.omnaest.react4j.domain.Breadcrumb;
 import org.omnaest.react4j.domain.Button;
 import org.omnaest.react4j.domain.Card;
 import org.omnaest.react4j.domain.Carousel;
+import org.omnaest.react4j.domain.ClipboardCopyButton;
 import org.omnaest.react4j.domain.Collapse;
 import org.omnaest.react4j.domain.Composite;
+import org.omnaest.react4j.domain.DiagramViewer;
+import org.omnaest.react4j.domain.Draggable;
+import org.omnaest.react4j.domain.DropTarget;
 import org.omnaest.react4j.domain.Dropdown;
 import org.omnaest.react4j.domain.Figure;
 import org.omnaest.react4j.domain.GridContainer;
@@ -39,6 +43,7 @@ import org.omnaest.react4j.domain.Offcanvas;
 import org.omnaest.react4j.domain.PaddingContainer;
 import org.omnaest.react4j.domain.Pagination;
 import org.omnaest.react4j.domain.Paragraph;
+import org.omnaest.react4j.domain.PendingContent;
 import org.omnaest.react4j.domain.Placeholder;
 import org.omnaest.react4j.domain.Popover;
 import org.omnaest.react4j.domain.ProgressBar;
@@ -47,7 +52,6 @@ import org.omnaest.react4j.domain.RerenderingContainer;
 import org.omnaest.react4j.domain.SVGContainer;
 import org.omnaest.react4j.domain.ScrollbarContainer;
 import org.omnaest.react4j.domain.SizedContainer;
-import org.omnaest.react4j.domain.PendingContent;
 import org.omnaest.react4j.domain.Spinner;
 import org.omnaest.react4j.domain.SplitButton;
 import org.omnaest.react4j.domain.Stack;
@@ -61,9 +65,9 @@ import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.UIComponentFactory.MarkdownComponentFactory;
 import org.omnaest.react4j.domain.UnsortedList;
-import org.omnaest.react4j.domain.markdown.MarkdownIssue;
 import org.omnaest.react4j.domain.VerticalContentSwitcher;
 import org.omnaest.react4j.domain.i18n.UILocale;
+import org.omnaest.react4j.domain.markdown.MarkdownIssue;
 import org.omnaest.react4j.service.internal.component.AccordionImpl;
 import org.omnaest.react4j.service.internal.component.AlertImpl;
 import org.omnaest.react4j.service.internal.component.BadgeImpl;
@@ -72,10 +76,13 @@ import org.omnaest.react4j.service.internal.component.BreadcrumbImpl;
 import org.omnaest.react4j.service.internal.component.ButtonImpl;
 import org.omnaest.react4j.service.internal.component.CardImpl;
 import org.omnaest.react4j.service.internal.component.CarouselImpl;
+import org.omnaest.react4j.service.internal.component.ClipboardCopyButtonImpl;
 import org.omnaest.react4j.service.internal.component.CollapseImpl;
 import org.omnaest.react4j.service.internal.component.ComponentContext;
-import org.omnaest.react4j.service.internal.component.NamedComponentRegistry;
 import org.omnaest.react4j.service.internal.component.CompositeImpl;
+import org.omnaest.react4j.service.internal.component.DiagramViewerImpl;
+import org.omnaest.react4j.service.internal.component.DraggableImpl;
+import org.omnaest.react4j.service.internal.component.DropTargetImpl;
 import org.omnaest.react4j.service.internal.component.DropdownImpl;
 import org.omnaest.react4j.service.internal.component.FigureImpl;
 import org.omnaest.react4j.service.internal.component.GridContainerImpl;
@@ -88,12 +95,14 @@ import org.omnaest.react4j.service.internal.component.IntervalRerenderingContain
 import org.omnaest.react4j.service.internal.component.JumbotronImpl;
 import org.omnaest.react4j.service.internal.component.LineBreakImpl;
 import org.omnaest.react4j.service.internal.component.ModalImpl;
+import org.omnaest.react4j.service.internal.component.NamedComponentRegistry;
 import org.omnaest.react4j.service.internal.component.NativeHtmlImpl;
 import org.omnaest.react4j.service.internal.component.NavigationBarImpl;
 import org.omnaest.react4j.service.internal.component.OffcanvasImpl;
 import org.omnaest.react4j.service.internal.component.PaddingContainerImpl;
 import org.omnaest.react4j.service.internal.component.PaginationImpl;
 import org.omnaest.react4j.service.internal.component.ParagraphImpl;
+import org.omnaest.react4j.service.internal.component.PendingContentImpl;
 import org.omnaest.react4j.service.internal.component.PlaceholderImpl;
 import org.omnaest.react4j.service.internal.component.PopoverImpl;
 import org.omnaest.react4j.service.internal.component.ProgressBarImpl;
@@ -102,7 +111,6 @@ import org.omnaest.react4j.service.internal.component.RerenderingContainerImpl;
 import org.omnaest.react4j.service.internal.component.SVGContainerImpl;
 import org.omnaest.react4j.service.internal.component.ScrollbarContainerImpl;
 import org.omnaest.react4j.service.internal.component.SizedContainerImpl;
-import org.omnaest.react4j.service.internal.component.PendingContentImpl;
 import org.omnaest.react4j.service.internal.component.SpinnerImpl;
 import org.omnaest.react4j.service.internal.component.SplitButtonImpl;
 import org.omnaest.react4j.service.internal.component.StackImpl;
@@ -154,7 +162,7 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
     protected CustomUIComponentFactoryManager customUIComponentFactoryManager;
 
     @Autowired
-    protected NamedComponentRegistry           namedComponentRegistry;
+    protected NamedComponentRegistry          namedComponentRegistry;
 
     @Override
     public UIComponentFactory newInstanceFor(UILocale locale)
@@ -186,6 +194,12 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         public Button newButton()
         {
             return new ButtonImpl(this.context);
+        }
+
+        @Override
+        public ClipboardCopyButton newClipboardCopyButton()
+        {
+            return new ClipboardCopyButtonImpl(this.context);
         }
 
         @Override
@@ -294,6 +308,24 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         public ScrollbarContainer newScrollbarContainer()
         {
             return new ScrollbarContainerImpl(this.context);
+        }
+
+        @Override
+        public DiagramViewer newDiagramViewer()
+        {
+            return new DiagramViewerImpl(this.context);
+        }
+
+        @Override
+        public Draggable newDraggable()
+        {
+            return new DraggableImpl(this.context);
+        }
+
+        @Override
+        public DropTarget newDropTarget()
+        {
+            return new DropTargetImpl(this.context);
         }
 
         @Override

@@ -10,6 +10,7 @@ export interface PaginationItemNode {
     label: I18nTextValue;
     active: boolean;
     disabled: boolean;
+    ariaLabel?: string;
     onClick?: Handler;
 }
 
@@ -34,6 +35,7 @@ export class Pagination extends React.Component<Props, {}> {
                         key={index}
                         active={entry.active}
                         disabled={entry.disabled}
+                        aria-label={entry.ariaLabel || undefined}
                         onClick={entry.onClick ? HandlerFactory.onClick(entry.onClick as Handler, renderingSupport?.uiContextAccessor, renderingSupport?.nodeContextAccessor) : undefined}
                     >
                         {I18nRenderer.render(entry.label)}

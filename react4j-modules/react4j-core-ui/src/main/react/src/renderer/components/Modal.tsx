@@ -13,6 +13,7 @@ export interface ModalNode extends Node {
     visible: boolean;
     size?: string;
     centered: boolean;
+    fullscreen: boolean;
     onClose?: Handler;
 }
 
@@ -34,6 +35,7 @@ export class Modal extends React.Component<Props, {}> {
                 onHide={node.onClose ? () => HandlerFactory.handleEvent(node.onClose as Handler, renderingSupport?.uiContextAccessor, renderingSupport?.nodeContextAccessor) : () => { }}
                 size={node.size ? (node.size as "sm" | "lg" | "xl") : undefined}
                 centered={node.centered}
+                fullscreen={node.fullscreen ? true : undefined}
             >
                 <BSModal.Header closeButton>
                     <BSModal.Title>{I18nRenderer.render(node.title)}</BSModal.Title>

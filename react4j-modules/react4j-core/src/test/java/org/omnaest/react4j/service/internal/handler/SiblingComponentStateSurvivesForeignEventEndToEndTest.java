@@ -165,7 +165,7 @@ public class SiblingComponentStateSurvivesForeignEventEndToEndTest
         assertEquals(1, clicks.get(), "precondition: the button's own handler must have fired, or this proves nothing about its round trip");
         assertTrue(this.renderedTableIsFlat(foreignResponse),
                    "the table must still be FLAT after a click on a sibling component. If it is not, the round trip "
-                           + "re-rendered it from defaults because its context was not in the request - the state was not stale, it was discarded.");
+                                                              + "re-rendered it from defaults because its context was not in the request - the state was not stale, it was discarded.");
     }
 
     /**
@@ -191,7 +191,7 @@ public class SiblingComponentStateSurvivesForeignEventEndToEndTest
 
         assertFalse(this.renderedTableIsFlat(foreignResponse),
                     "with only the originating context in the request the table has nothing to read its mode from and falls back to the "
-                            + "default - the behaviour the sibling test above exists to rule out");
+                                                               + "default - the behaviour the sibling test above exists to rule out");
     }
 
     private boolean renderedTableIsFlat(JsonNode eventResponse)
@@ -241,8 +241,8 @@ public class SiblingComponentStateSurvivesForeignEventEndToEndTest
                                             .stream()
                                             .noneMatch(key -> key.startsWith("treetable.")),
                    "the form's context must not be sent the TABLE's fields. Leaking them here is what puts the same key in two "
-                           + "contexts, where a later disagreement is resolved by whichever the merge happens to prefer. Got: "
-                           + echoedToTheForeignContext.keySet());
+                                                                                             + "contexts, where a later disagreement is resolved by whichever the merge happens to prefer. Got: "
+                                                                                             + echoedToTheForeignContext.keySet());
     }
 
     private Map<String, Object> echoedData(JsonNode response) throws Exception

@@ -46,8 +46,7 @@ public class UIComponentsImpl implements UIComponents
     @Override
     public ComponentAccess in(Data data)
     {
-        return new ComponentAccess()
-        {
+        return new ComponentAccess() {
             @Override
             public TreeTableAccess treeTable(String name)
             {

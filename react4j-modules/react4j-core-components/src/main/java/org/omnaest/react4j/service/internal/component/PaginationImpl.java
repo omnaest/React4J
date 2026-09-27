@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Pagination;
 import org.omnaest.react4j.domain.Pagination.PaginationItem;
@@ -91,8 +92,11 @@ public class PaginationImpl extends AbstractUIComponentWithSubComponents<Paginat
                 registry.register(PaginationItemNode.class, NodeRenderType.HTML, (node, nodeRenderingProcessor) ->
                 {
                     String stateClass = (node.isActive() ? " active" : "") + (node.isDisabled() ? " disabled" : "");
-                    return "<li class=\"page-item" + stateClass + "\"><span class=\"page-link\">" + nodeRenderingProcessor.render(node.getLabel())
-                           + "</span></li>";
+                    String ariaLabelAttribute = node.getAriaLabel() != null
+                            ? " aria-label=\"" + StringEscapeUtils.escapeHtml4(node.getAriaLabel()) + "\""
+                            : "";
+                    return "<li class=\"page-item" + stateClass + "\"><span class=\"page-link\"" + ariaLabelAttribute + ">"
+                           + nodeRenderingProcessor.render(node.getLabel()) + "</span></li>";
                 });
             }
 

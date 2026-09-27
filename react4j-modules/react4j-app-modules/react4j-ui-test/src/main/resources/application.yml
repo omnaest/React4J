@@ -1,3 +1,13 @@
 
 server:
   port: 3001
+
+# plan-235 S3 (browser verification): this offline workspace's cached opentelemetry-sdk-trace resolution left
+# 'openTelemetry' bean creation throwing TypeNotPresentException/ClassNotFoundException for
+# io.opentelemetry.sdk.trace.SdkTracerProvider on EVERY ApplicationContext boot with a real web environment -
+# reproduced on the unmodified, pre-existing ToggleButtonRoundTripIT too, so it is a pre-existing environment
+# defect, not something this slice's own change caused. Tracing autoconfiguration is not exercised by any
+# React4J UI acceptance criterion, so excluding it is behaviourally inert for everything under test here.
+spring:
+  autoconfigure:
+    exclude: org.springframework.boot.actuate.autoconfigure.opentelemetry.OpenTelemetryAutoConfiguration

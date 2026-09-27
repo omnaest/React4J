@@ -56,6 +56,7 @@ public class ModalImplTest
         assertFalse(((ModalNode) node).isVisible());
         assertNull(((ModalNode) node).getSize());
         assertFalse(((ModalNode) node).isCentered());
+        assertFalse(((ModalNode) node).isFullscreen());
         assertNull(((ModalNode) node).getFooter());
         assertNull(((ModalNode) node).getOnClose());
     }
@@ -69,6 +70,7 @@ public class ModalImplTest
         modal.withSize(Size.LARGE);
         modal.withCentered(true);
         modal.withVisible(true);
+        modal.withFullscreen(true);
 
         UIComponentRenderer renderer = modal.asRenderer();
         RenderingProcessor renderingProcessor = mock(RenderingProcessor.class);
@@ -79,6 +81,7 @@ public class ModalImplTest
         assertEquals("lg", ((ModalNode) node).getSize());
         assertTrue(((ModalNode) node).isCentered());
         assertTrue(((ModalNode) node).isVisible());
+        assertTrue(((ModalNode) node).isFullscreen());
     }
 
     @Test
@@ -118,6 +121,7 @@ public class ModalImplTest
         modal.withSize(Size.EXTRA_LARGE);
         modal.withCentered(true);
         modal.withVisible(true);
+        modal.withFullscreen(true);
 
         ModalImpl templated = (ModalImpl) modal.asTemplateProvider()
                                                .get();
@@ -135,6 +139,7 @@ public class ModalImplTest
         assertEquals("xl", ((ModalNode) node).getSize());
         assertTrue(((ModalNode) node).isCentered());
         assertTrue(((ModalNode) node).isVisible());
+        assertTrue(((ModalNode) node).isFullscreen());
         assertNotNull(((ModalNode) node).getContent());
         assertNotNull(((ModalNode) node).getFooter());
     }

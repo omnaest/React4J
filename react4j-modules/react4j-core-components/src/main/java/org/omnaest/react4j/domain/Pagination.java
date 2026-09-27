@@ -31,6 +31,21 @@ public interface Pagination extends UIComponent<Pagination>
 
         public PaginationItem withDisabledState(boolean disabled);
 
+        /**
+         * An accessible name for this pagination item, announced by a screen reader in place of its visible text.
+         * <p>
+         * Necessary whenever the visible text does not identify the action on its own - a bare page number does not
+         * say which of several paginated views it switches, and several items reading the same label are
+         * indistinguishable to someone who cannot see which strip they sit in. Leave unset when the visible text
+         * already says what the item does; a redundant label that drifts out of step with the text is worse than
+         * none.
+         *
+         * @param ariaLabel
+         *            the accessible name, or {@code null} to announce the visible text
+         * @return this
+         */
+        public PaginationItem withAriaLabel(String ariaLabel);
+
         public PaginationItem onClick(EventHandler eventHandler);
     }
 }

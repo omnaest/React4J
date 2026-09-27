@@ -18,17 +18,19 @@ package org.omnaest.react4j.service.internal.nodes;
 import java.util.List;
 
 import org.omnaest.react4j.domain.raw.Node;
-import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class BreadcrumbNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String      type = "BREADCRUMB";
+    private String                    type = "BREADCRUMB";
 
     @JsonProperty
-    private List<Entry> entries;
+    private List<BreadcrumbEntryNode> entries;
+
+    @JsonProperty
+    private String                    locator;
 
     @Override
     public String getType()
@@ -36,73 +38,26 @@ public class BreadcrumbNode extends AbstractNode implements Node
         return this.type;
     }
 
-    public List<Entry> getEntries()
+    public List<BreadcrumbEntryNode> getEntries()
     {
         return this.entries;
     }
 
-    public BreadcrumbNode setEntries(List<Entry> entries)
+    public BreadcrumbNode setEntries(List<BreadcrumbEntryNode> entries)
     {
         this.entries = entries;
         return this;
     }
 
-    public static class Entry
+    public String getLocator()
     {
-        @JsonProperty
-        private I18nTextValue text;
-
-        @JsonProperty
-        private String        link;
-
-        @JsonProperty
-        private String        linkedId;
-
-        @JsonProperty
-        private boolean       active;
-
-        public I18nTextValue getText()
-        {
-            return this.text;
-        }
-
-        public Entry setText(I18nTextValue text)
-        {
-            this.text = text;
-            return this;
-        }
-
-        public String getLink()
-        {
-            return this.link;
-        }
-
-        public Entry setLink(String link)
-        {
-            this.link = link;
-            return this;
-        }
-
-        public String getLinkedId()
-        {
-            return this.linkedId;
-        }
-
-        public Entry setLinkedId(String linkedId)
-        {
-            this.linkedId = linkedId;
-            return this;
-        }
-
-        public boolean isActive()
-        {
-            return this.active;
-        }
-
-        public Entry setActive(boolean active)
-        {
-            this.active = active;
-            return this;
-        }
+        return this.locator;
     }
+
+    public BreadcrumbNode setLocator(String locator)
+    {
+        this.locator = locator;
+        return this;
+    }
+
 }

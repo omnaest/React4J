@@ -19,28 +19,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.omnaest.react4j.domain.Breadcrumb;
 import org.omnaest.react4j.domain.Location;
-import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.context.data.Data;
-import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
-import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
+import org.omnaest.react4j.service.internal.nodes.BreadcrumbEntryNode;
 import org.omnaest.react4j.service.internal.nodes.BreadcrumbNode;
 
-public class BreadcrumbImpl extends AbstractUIComponent<Breadcrumb> implements Breadcrumb
+public class BreadcrumbImpl extends AbstractUIComponentWithSubComponents<Breadcrumb> implements Breadcrumb
 {
     private List<BreadcrumbEntryImpl> entries = new ArrayList<>();
+    private String                    locator;
 
     public BreadcrumbImpl(ComponentContext context)
     {
@@ -51,6 +50,20 @@ public class BreadcrumbImpl extends AbstractUIComponent<Breadcrumb> implements B
     {
         super(context);
         this.entries = entries;
+    }
+
+    public BreadcrumbImpl(ComponentContext context, List<BreadcrumbEntryImpl> entries, String locator)
+    {
+        super(context);
+        this.entries = entries;
+        this.locator = locator;
+    }
+
+    @Override
+    public Breadcrumb withLinkLocator(String locator)
+    {
+        this.locator = locator;
+        return this;
     }
 
     @Override
@@ -67,46 +80,47 @@ public class BreadcrumbImpl extends AbstractUIComponent<Breadcrumb> implements B
             public Node render(RenderingProcessor renderingProcessor, Location location, Optional<Data> data)
             {
                 return new BreadcrumbNode().setEntries(BreadcrumbImpl.this.entries.stream()
-                                                                                  .map(entry -> new BreadcrumbNode.Entry().setActive(entry.isActive())
-                                                                                                                          .setLink(entry.getLink())
-                                                                                                                          .setLinkedId(entry.getLinkedId())
-                                                                                                                          .setText(BreadcrumbImpl.this.getTextResolver()
-                                                                                                                                                      .apply(entry.getText(),
-                                                                                                                                                             location)))
-                                                                                  .collect(Collectors.toList()));
+                                                                                  .map(entry -> (BreadcrumbEntryNode) renderingProcessor.process(entry,
+                                                                                                                                                 location))
+                                                                                  .collect(Collectors.toList()))
+                                           .setLocator(BreadcrumbImpl.this.locator);
             }
 
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
                 registry.register(BreadcrumbNode.class, NodeRenderType.HTML,
-                                  (node, nodeRenderingProcessor) -> "<nav aria-label=\"breadcrumb\"><ol class=\"breadcrumb\">" + node.getEntries()
-                                                                                                                                     .stream()
-                                                                                                                                     .map(entry -> this.renderEntry(entry,
-                                                                                                                                                                    nodeRenderingProcessor))
-                                                                                                                                     .collect(Collectors.joining())
+                                  (node, nodeRenderingProcessor) -> "<nav aria-label=\"breadcrumb\""
+                                                                    + (node.getLocator() != null
+                                                                            ? " id=\"" + StringEscapeUtils.escapeHtml4(node.getLocator()) + "\""
+                                                                            : "")
+                                                                    + "><ol class=\"breadcrumb\">" + node.getEntries()
+                                                                                                         .stream()
+                                                                                                         .map(nodeRenderingProcessor::render)
+                                                                                                         .collect(Collectors.joining())
                                                                     + "</ol></nav>");
-            }
-
-            private String renderEntry(BreadcrumbNode.Entry entry, NodeRenderingProcessor nodeRenderingProcessor)
-            {
-                String text = nodeRenderingProcessor.render(entry.getText());
-                String link = Optional.ofNullable(entry.getLinkedId())
-                                      .map(linkedId -> "#" + linkedId)
-                                      .orElse(entry.getLink());
-                String body = entry.isActive() ? text : "<a href=\"" + link + "\">" + text + "</a>";
-                return "<li class=\"breadcrumb-item" + (entry.isActive() ? " active" : "") + "\">" + body + "</li>";
+                registry.register(BreadcrumbEntryNode.class, NodeRenderType.HTML, (entryNode, nodeRenderingProcessor) ->
+                {
+                    String text = nodeRenderingProcessor.render(entryNode.getText());
+                    String link = Optional.ofNullable(entryNode.getLinkedId())
+                                          .map(linkedId -> "#" + linkedId)
+                                          .orElse(entryNode.getLink());
+                    String body = entryNode.isActive() ? text : "<a href=\"" + link + "\">" + text + "</a>";
+                    return "<li class=\"breadcrumb-item" + (entryNode.isActive() ? " active" : "") + "\">" + body + "</li>";
+                });
             }
 
             @Override
             public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
             {
+                // each entry registers its own handler in its own manageEventHandler (see BreadcrumbEntryImpl)
             }
 
             @Override
             public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
-                return Stream.empty();
+                return BreadcrumbImpl.this.entries.stream()
+                                                  .map(entry -> ParentLocationAndComponent.of(parentLocation, entry));
             }
 
         };
@@ -115,94 +129,17 @@ public class BreadcrumbImpl extends AbstractUIComponent<Breadcrumb> implements B
     @Override
     public Breadcrumb addEntry(Consumer<BreadcrumbEntry> breadcrumbEntryConsumer)
     {
-        BreadcrumbEntryImpl entry = new BreadcrumbEntryImpl(text -> this.toI18nText(text));
+        BreadcrumbEntryImpl entry = new BreadcrumbEntryImpl(this.context, this.entries.size());
         breadcrumbEntryConsumer.accept(entry);
         this.entries.add(entry);
         return this;
-    }
-
-    private static class BreadcrumbEntryImpl implements BreadcrumbEntry
-    {
-        private Function<String, I18nText> i18nTextResolver;
-
-        private I18nText                   text;
-        private String                     link;
-        private String                     linkedId;
-        private boolean                    active;
-
-        public BreadcrumbEntryImpl(Function<String, I18nText> i18nTextResolver)
-        {
-            super();
-            this.i18nTextResolver = i18nTextResolver;
-        }
-
-        @Override
-        public BreadcrumbEntry withText(String text)
-        {
-            this.text = this.i18nTextResolver.apply(text);
-            return this;
-        }
-
-        @Override
-        public BreadcrumbEntry withLink(String link)
-        {
-            this.link = link;
-            return this;
-        }
-
-        @Override
-        public BreadcrumbEntry withLinkedLocator(String id)
-        {
-            this.linkedId = id;
-            return this;
-        }
-
-        @Override
-        public BreadcrumbEntry withLinked(UIComponent component)
-        {
-            return this.withLinkedLocator(component.getId());
-        }
-
-        @Override
-        public BreadcrumbEntry withActiveState(boolean active)
-        {
-            this.active = active;
-            return this;
-        }
-
-        public I18nText getText()
-        {
-            return this.text;
-        }
-
-        public String getLink()
-        {
-            return this.link;
-        }
-
-        public String getLinkedId()
-        {
-            return this.linkedId;
-        }
-
-        public boolean isActive()
-        {
-            return this.active;
-        }
-
-        @Override
-        public String toString()
-        {
-            return "BreadcrumbEntryImpl [i18nTextResolver=" + this.i18nTextResolver + ", text=" + this.text + ", link=" + this.link + ", linkedId="
-                   + this.linkedId + ", active=" + this.active + "]";
-        }
-
     }
 
     @Override
     public UIComponentProvider<Breadcrumb> asTemplateProvider()
     {
         return () -> new BreadcrumbImpl(this.context, this.entries.stream()
-                                                                  .collect(Collectors.toList()));
+                                                                  .collect(Collectors.toList()),
+                                        this.locator);
     }
 }

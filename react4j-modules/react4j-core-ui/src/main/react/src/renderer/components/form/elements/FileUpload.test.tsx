@@ -12,6 +12,7 @@ import { NodeContextAccessor } from "../../../Renderer";
 jest.mock("../../../../backend/Backend", () => ({
     Backend: {
         uploadFile: jest.fn(),
+        uploadFileRaw: jest.fn(),
         sendEvent: jest.fn(),
         getUI: jest.fn(),
         getUISubNode: jest.fn(),
@@ -27,6 +28,7 @@ jest.mock("../../../../backend/Backend", () => ({
 }));
 
 const mockedUploadFile = Backend.uploadFile as jest.MockedFunction<typeof Backend.uploadFile>;
+const mockedUploadFileRaw = Backend.uploadFileRaw as jest.MockedFunction<typeof Backend.uploadFileRaw>;
 const mockedSendEvent = Backend.sendEvent as jest.MockedFunction<typeof Backend.sendEvent>;
 
 function createUIContextAccessor(): UIContextAccessor {
@@ -161,4 +163,81 @@ test("shows an error and does not fire onComplete when the upload fails", async 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(mockedSendEvent).not.toHaveBeenCalled();
     expect(uiContextAccessor.getUIContextById("ctx1").data["avatar"]).toBeUndefined();
+});
+
+// AC-1: an element that does not opt in (unbufferedTransport absent, as createElement() renders it)
+// must be byte-for-byte unchanged in behaviour -- it calls Backend.uploadFile, never uploadFileRaw.
+test("an element with no unbufferedTransport flag calls Backend.uploadFile, never uploadFileRaw", async () => {
+    const element = createElement();
+    const uiContextAccessor = createUIContextAccessor();
+
+    mockedUploadFile.mockResolvedValue({
+        uploadId: "upload-123",
+        filename: "photo.png",
+        size: 42,
+        contentType: "image/png"
+    });
+
+    render(
+        <FileUpload
+            id="avatar"
+            element={element}
+            onUpdate={jest.fn()}
+            updateCounter={0}
+            renderingSupport={{ uiContextAccessor, nodeContextAccessor: {} as NodeContextAccessor }}
+        />
+    );
+
+    const input = document.getElementById("avatar") as HTMLInputElement;
+    const file = new File(["hello"], "photo.png", { type: "image/png" });
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await screen.findByText(/Uploaded: photo.png/);
+
+    expect(mockedUploadFile).toHaveBeenCalledWith("ui/upload", "upload-123", file);
+    expect(mockedUploadFileRaw).not.toHaveBeenCalled();
+});
+
+// AC-1: an opted-in element (unbufferedTransport === true) must call Backend.uploadFileRaw against
+// the rendered uploadUrl, never the multipart Backend.uploadFile -- and the rest of the element's
+// behaviour (field write, onComplete) is unchanged.
+test("an element with unbufferedTransport=true calls Backend.uploadFileRaw, never uploadFile", async () => {
+    const element = createElement();
+    element.fileUpload.uploadUrl = "ui/upload/raw";
+    element.fileUpload.unbufferedTransport = true;
+    const uiContextAccessor = createUIContextAccessor();
+    const nodeContextAccessor = {} as NodeContextAccessor;
+
+    mockedUploadFileRaw.mockResolvedValue({
+        uploadId: "upload-123",
+        filename: "photo.png",
+        size: 42,
+        contentType: "image/png"
+    });
+
+    render(
+        <FileUpload
+            id="avatar"
+            element={element}
+            onUpdate={jest.fn()}
+            updateCounter={0}
+            renderingSupport={{ uiContextAccessor, nodeContextAccessor }}
+        />
+    );
+
+    const input = document.getElementById("avatar") as HTMLInputElement;
+    const file = new File(["hello"], "photo.png", { type: "image/png" });
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(mockedUploadFileRaw).toHaveBeenCalledWith("ui/upload/raw", "upload-123", file);
+    expect(mockedUploadFile).not.toHaveBeenCalled();
+
+    expect(await screen.findByText(/Uploaded: photo.png/)).toBeInTheDocument();
+    expect(mockedSendEvent).toHaveBeenCalledWith(
+        ["form", "avatar"],
+        "ctx1",
+        uiContextAccessor,
+        nodeContextAccessor
+    );
+    expect(uiContextAccessor.getUIContextById("ctx1").data["avatar"]).toBe("photo.png");
 });

@@ -34,6 +34,17 @@ public interface Modal extends UIComponentWithContent<Modal>
 
     public Modal withCentered(boolean centered);
 
+    /**
+     * Whether the dialog renders edge-to-edge, filling the viewport. Default is {@code false}. Independent
+     * of {@link #withSize(Size)} - react-bootstrap treats {@code size} and {@code fullscreen} as separate
+     * props, so both may be set at once (see {@link Size}'s own javadoc on why {@code size} is not replaced
+     * by a fullscreen member).
+     *
+     * @param fullscreen
+     * @return this
+     */
+    public Modal withFullscreen(boolean fullscreen);
+
     public Modal onClose(EventHandler eventHandler);
 
     public static enum Size

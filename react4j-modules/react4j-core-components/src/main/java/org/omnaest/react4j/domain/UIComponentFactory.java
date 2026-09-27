@@ -36,6 +36,8 @@ public interface UIComponentFactory
 
     public Button newButton();
 
+    public ClipboardCopyButton newClipboardCopyButton();
+
     public Anker newAnker();
 
     public AnkerButton newAnkerButton();
@@ -69,6 +71,12 @@ public interface UIComponentFactory
     public VerticalContentSwitcher newVerticalContentSwitcher();
 
     public ScrollbarContainer newScrollbarContainer();
+
+    public DiagramViewer newDiagramViewer();
+
+    public Draggable newDraggable();
+
+    public DropTarget newDropTarget();
 
     public Text newText();
 

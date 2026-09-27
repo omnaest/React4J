@@ -4,6 +4,7 @@ import { JumboTron, JumbotronNode } from "./components/JumboTron";
 import { UnorderedListNode, UnorderedList } from "./components/UnorderedList";
 import { ImageNode, Image } from "./components/Image";
 import { Button, ButtonNode } from "./components/Button";
+import { ClipboardCopyButton, ClipboardCopyButtonNode } from "./components/ClipboardCopyButton";
 import { ImageIndex, ImageIndexNode } from "./components/ImageIndex";
 import { NavigationBar, NavigationBarNode } from "./components/NavigationBar";
 import { Container, ContainerNode } from "./components/Container";
@@ -22,6 +23,9 @@ import { HomePage, HomePageNode } from "./components/HomePage";
 import { Form, FormNode } from "./components/form/Form";
 import { Text, TextNode } from "./components/Text";
 import { ScrollbarContainerNode, ScrollbarContainer } from "./components/ScrollbarContainer";
+import { DiagramViewerNode, DiagramViewer } from "./components/DiagramViewer";
+import { DraggableNode, Draggable } from "./components/Draggable";
+import { DropTargetNode, DropTarget } from "./components/DropTarget";
 import { AnkerButton, AnkerButtonNode } from "./components/AnkerButton";
 import { LineBreakNode, LineBreak } from "./components/LineBreak";
 import { Toaster, ToasterNode } from "./components/Toaster";
@@ -31,7 +35,7 @@ import { TextAlignmentContainer, TextAlignmentContainerNode } from "./components
 import RerenderingContainer, { RerenderingContainerNode } from "./components/RerenderingContainer";
 import { UIContext, UIContextAccessor, UIContextDataNode } from "./data/DataContextManager";
 import { ProgressBar, ProgressBarNode } from "./components/ProgressBar";
-import { IntervalRerenderingContainer, IntervalRerenderingContainerNode } from "./components/IntervalRerenderingContainer";
+import IntervalRerenderingContainer, { IntervalRerenderingContainerNode } from "./components/IntervalRerenderingContainer";
 import { RatioContainer, RatioContainerNode } from "./components/RatioContainer";
 import { IFrameContainer, IFrameContainerNode } from "./components/IFrameContainer";
 import { SizedContainer, SizedContainerNode } from "./components/SizedContainer";
@@ -185,6 +189,9 @@ export class Renderer {
             else if (node.type === Button.TYPE) {
                 return <Button node={node as ButtonNode} />;
             }
+            else if (node.type === ClipboardCopyButton.TYPE) {
+                return <ClipboardCopyButton node={node as ClipboardCopyButtonNode} />;
+            }
             else if (node.type === ImageIndex.TYPE) {
                 return <ImageIndex
                     node={node as ImageIndexNode}
@@ -247,6 +254,15 @@ export class Renderer {
             }
             else if (node.type === ScrollbarContainer.TYPE) {
                 return <ScrollbarContainer node={node as ScrollbarContainerNode} />
+            }
+            else if (node.type === DiagramViewer.TYPE) {
+                return <DiagramViewer node={node as DiagramViewerNode} />
+            }
+            else if (node.type === Draggable.TYPE) {
+                return <Draggable node={node as DraggableNode} />
+            }
+            else if (node.type === DropTarget.TYPE) {
+                return <DropTarget node={node as DropTargetNode} />
             }
             else if (node.type === Text.TYPE) {
                 return <Text node={node as TextNode} />

@@ -19,6 +19,16 @@ export interface FileUploadFormNode {
     accept?: string;
     maxSize?: number;
     onComplete: ServerHandler;
+    /**
+     * Mirrors the server's `FormFileUploadNode#isUnbufferedTransport()` (react4j-core-components):
+     * true when this element opted into the unbuffered, non-multipart transport
+     * (`Form.FileUploadFormElement#withUnbufferedTransport()`). `uploadUrl` already reflects the
+     * choice (`ui/upload` vs `ui/upload/raw`), computed server-side -- this flag is what the client
+     * branches on to decide which REQUEST SHAPE to send (multipart FormData vs raw file body plus
+     * headers), since the two transports are not interchangeable at the wire level. Default/absent
+     * is `false` -- today's multipart behaviour, unchanged.
+     */
+    unbufferedTransport?: boolean;
 }
 
 export interface Props {
@@ -55,7 +65,18 @@ export class FileUpload extends React.Component<Props, State> {
         const fileUploadNode = element.fileUpload;
         this.setState({ status: "uploading", errorMessage: undefined });
 
-        Backend.uploadFile(fileUploadNode.uploadUrl, fileUploadNode.uploadId, file)
+        // The rendered flag the client branches on (react4j-core-components/CLAUDE.md): an opted-in
+        // element must send the raw-body shape (uploadFileRaw) to the raw endpoint, never the
+        // multipart FormData shape -- the raw endpoint's guard treats a multipart Content-Type as a
+        // wiring error (415) and, more importantly, a multipart request is parsed and spilled to a
+        // plaintext temp file by the servlet container before this class's handler ever runs, which
+        // is exactly the property the unbuffered transport exists to avoid (see FileUploadController's
+        // class javadoc, react4j-core).
+        const upload = fileUploadNode.unbufferedTransport
+            ? Backend.uploadFileRaw(fileUploadNode.uploadUrl, fileUploadNode.uploadId, file)
+            : Backend.uploadFile(fileUploadNode.uploadUrl, fileUploadNode.uploadId, file);
+
+        upload
             .then((receipt: UploadReceipt) => {
                 this.setState({ status: "uploaded", filename: receipt.filename });
 

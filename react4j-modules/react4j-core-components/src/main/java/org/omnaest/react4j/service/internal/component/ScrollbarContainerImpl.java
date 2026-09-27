@@ -49,8 +49,7 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
         this(context, content, verticalBoxMode, horizontalBoxMode, scrollToBottomOnUpdate, false);
     }
 
-    public ScrollbarContainerImpl(ComponentContext context, UIComponent<?> content, VerticalBoxMode verticalBoxMode, HorizontalBoxMode horizontalBoxMode,
-                                  boolean scrollToBottomOnUpdate, boolean announcedUpdates)
+    public ScrollbarContainerImpl(ComponentContext context, UIComponent<?> content, VerticalBoxMode verticalBoxMode, HorizontalBoxMode horizontalBoxMode, boolean scrollToBottomOnUpdate, boolean announcedUpdates)
     {
         super(context);
         this.content = content;

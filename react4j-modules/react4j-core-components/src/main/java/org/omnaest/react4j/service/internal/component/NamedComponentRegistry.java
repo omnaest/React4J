@@ -53,9 +53,9 @@ public class NamedComponentRegistry
      * The context a component dispatches under when it declares none of its own - which is what the client uses
      * as the key for the root ui context.
      */
-    public static final String                    ROOT_CONTEXT_ID    = "";
+    public static final String              ROOT_CONTEXT_ID    = "";
 
-    private final Map<String, Registration>       nameToRegistration = new ConcurrentHashMap<>();
+    private final Map<String, Registration> nameToRegistration = new ConcurrentHashMap<>();
 
     /**
      * Where a named component is, and which submitted-data context its fields belong to.

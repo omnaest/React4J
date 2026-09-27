@@ -36,6 +36,9 @@ public class PaginationItemNode extends AbstractNode implements Node
     private boolean       disabled;
 
     @JsonProperty
+    private String        ariaLabel;
+
+    @JsonProperty
     private Handler       onClick;
 
     @Override
@@ -74,6 +77,17 @@ public class PaginationItemNode extends AbstractNode implements Node
     public PaginationItemNode setDisabled(boolean disabled)
     {
         this.disabled = disabled;
+        return this;
+    }
+
+    public String getAriaLabel()
+    {
+        return this.ariaLabel;
+    }
+
+    public PaginationItemNode setAriaLabel(String ariaLabel)
+    {
+        this.ariaLabel = ariaLabel;
         return this;
     }
 

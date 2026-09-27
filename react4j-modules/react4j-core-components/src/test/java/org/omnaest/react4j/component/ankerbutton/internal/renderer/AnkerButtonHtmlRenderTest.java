@@ -84,8 +84,7 @@ public class AnkerButtonHtmlRenderTest
 
         @SuppressWarnings("unchecked")
         @Override
-        public <N extends org.omnaest.react4j.domain.raw.Node> NodeRendererRegistry register(Class<N> nodeType, NodeRenderType renderType,
-                                                                                             NodeRenderer<N> nodeRenderer)
+        public <N extends org.omnaest.react4j.domain.raw.Node> NodeRendererRegistry register(Class<N> nodeType, NodeRenderType renderType, NodeRenderer<N> nodeRenderer)
         {
             this.nodeRenderer = (NodeRenderer<AnkerButtonNode>) nodeRenderer;
             return this;

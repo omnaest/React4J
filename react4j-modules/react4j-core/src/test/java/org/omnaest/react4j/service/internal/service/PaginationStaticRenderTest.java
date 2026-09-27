@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -76,5 +77,48 @@ public class PaginationStaticRenderTest
         assertTrue(html.contains("page-link"), () -> "expected the page-link element in: " + html);
         assertTrue(html.contains(">1<"), () -> "expected the first item's label in: " + html);
         assertTrue(html.contains(">2<"), () -> "expected the second item's label in: " + html);
+        // AC-6 (additive): neither item calls withAriaLabel, so no aria-label attribute appears anywhere on the
+        // item markup - the static HTML for an existing consumer is byte-identical to pre-plan-255 output.
+        assertFalse(html.contains("aria-label=\"Switch"), () -> "expected no item aria-label leaking in from another test in: " + html);
+        assertEquals(1, countOccurrences(html, "aria-label"), () -> "expected only the <nav> landmark's own aria-label in: " + html);
+    }
+
+    /**
+     * AC-5 (plan-255 S1, Cliff 2 - {@code PaginationImpl}'s own call, not {@code Button}'s): the static HTML
+     * renderer emits {@code aria-label} on the {@code page-link} span when set, HTML-escaped, and omits the
+     * attribute entirely (never an empty one) when unset.
+     */
+    @Test
+    public void testAriaLabelEmittedWhenSetEscapedAndOmittedWhenNull() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newPagination()
+                                                                                              .addItem(item -> item.withLabel("1")
+                                                                                                                   .withActiveState(true)
+                                                                                                                   .withAriaLabel("Currently viewing \"BOARD\" view"))
+                                                                                              .addItem(item -> item.withLabel("2"))));
+
+        String html = uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML);
+
+        assertTrue(html.contains("aria-label=\"Currently viewing &quot;BOARD&quot; view\""),
+                   () -> "expected the escaped aria-label on the first item in: " + html);
+        // Second item never called withAriaLabel: its <span class="page-link"> must carry no aria-label
+        // attribute at all - not an empty one.
+        assertFalse(html.contains("aria-label=\"\""), () -> "expected no empty aria-label attribute in: " + html);
+        assertTrue(html.contains("<span class=\"page-link\">2</span>"),
+                   () -> "expected the second item's page-link with no aria-label attribute in: " + html);
+    }
+
+    private static int countOccurrences(String haystack, String needle)
+    {
+        int count = 0;
+        int index = 0;
+        while ((index = haystack.indexOf(needle, index)) != -1)
+        {
+            count++;
+            index += needle.length();
+        }
+        return count;
     }
 }

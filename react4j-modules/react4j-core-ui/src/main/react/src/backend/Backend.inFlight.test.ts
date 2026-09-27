@@ -92,6 +92,40 @@ test("uploadFile settles the in-flight count back to 0 even when the round-trip 
     expect(InFlightTracker.getCount()).toBe(0);
 });
 
+test("uploadFileRaw increments the in-flight count while pending and settles back to 0 on success", async () => {
+    let resolvePost!: (value: unknown) => void;
+    mockedPost.mockImplementation(() => new Promise((resolve) => {
+        resolvePost = resolve;
+    }));
+
+    const file = new File(["content"], "test.txt", { type: "text/plain" });
+    const pending = Backend.uploadFileRaw("ui/upload/raw", "upload-1", file);
+
+    expect(InFlightTracker.getCount()).toBe(1);
+
+    resolvePost({ data: { uploadId: "upload-1", filename: "test.txt", size: 7, contentType: "text/plain" } });
+    await pending;
+
+    expect(InFlightTracker.getCount()).toBe(0);
+});
+
+test("uploadFileRaw settles the in-flight count back to 0 even when the round-trip FAILS (finally, not just then)", async () => {
+    let rejectPost!: (reason?: unknown) => void;
+    mockedPost.mockImplementation(() => new Promise((_resolve, reject) => {
+        rejectPost = reject;
+    }));
+
+    const file = new File(["content"], "test.txt", { type: "text/plain" });
+    const pending = Backend.uploadFileRaw("ui/upload/raw", "upload-1", file);
+
+    expect(InFlightTracker.getCount()).toBe(1);
+
+    rejectPost(new Error("upload failed"));
+    await expect(pending).rejects.toThrow("upload failed");
+
+    expect(InFlightTracker.getCount()).toBe(0);
+});
+
 test("two concurrent round-trips keep data-rerender-pending true until BOTH settle", async () => {
     let resolveFirst!: (value: unknown) => void;
     let resolveSecond!: (value: unknown) => void;

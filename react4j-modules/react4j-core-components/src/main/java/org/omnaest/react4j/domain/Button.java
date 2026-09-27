@@ -41,7 +41,6 @@ public interface Button extends UIComponent<Button>
      */
     public Button withAriaLabel(String ariaLabel);
 
-
     public Button onClick(EventHandler eventHandler);
 
     public static enum Style

@@ -51,6 +51,31 @@
             </exclusions>
         </dependency>
         <dependency>
+            <!-- plan-235 S3 (browser verification). react4j-data-datagrid -> CommonsDataGrid -> Apache Ignite ->
+                 Calcite -> Avatica pulls httpclient5:5.2.3, which depends on httpcore5-h2 but NOT on plain
+                 httpcore5 - so org.apache.hc.core5.io.ModalCloseable (declared in the PLAIN httpcore5 artifact,
+                 confirmed present in the cached 5.2.5 jar; httpcore5-h2 does not carry it) was simply absent from
+                 the classpath. Spring's own HttpComponentsClientHttpRequestFactory (used by
+                 TestRestTemplateContextCustomizer, which every @SpringBootTest with a real web environment
+                 constructs) references that class directly, so EVERY such test failed at ApplicationContext
+                 startup with NoClassDefFoundError before any test method ran - reproduced on the unmodified,
+                 pre-existing ToggleButtonRoundTripIT too, so this is a pre-existing environment gap, not caused by
+                 this slice's own change. Declaring the already-cached plain httpcore5 explicitly (same version as
+                 the resolved httpcore5-h2) puts ModalCloseable back on the classpath without touching the
+                 Ignite/Calcite/Avatica chain's own real dependency on httpclient5. Deliberately NOT
+                 test-scoped: `mvn verify`'s spring-boot:process-aot goal (bound by the inherited Spring Boot
+                 plugin configuration, unrelated to this slice) forks a SEPARATE process resolving against the
+                 compile/runtime classpath, not the test one, and hit the identical NoClassDefFoundError
+                 (org.apache.hc.core5.http.ClassicHttpRequest this time, same missing-plain-httpcore5 gap) until
+                 this was widened off test scope. httpclient5 itself already reaches MockApplication at compile
+                 scope via the SAME Ignite/Calcite/Avatica chain, so pairing httpcore5 at the same (default,
+                 compile) scope is the consistent fix, not a widening beyond what was already effectively on that
+                 classpath. -->
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+        <dependency>
             <!-- Tier-2 browser round-trip driver (plan-74 Cliff C5, Slice 0/4 pilot). -->
             <groupId>com.microsoft.playwright</groupId>
             <artifactId>playwright</artifactId>

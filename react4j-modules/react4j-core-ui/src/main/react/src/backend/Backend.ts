@@ -162,4 +162,43 @@ export class Backend {
             InFlightTracker.decrement();
         });
     }
+
+    /**
+     * The unbuffered, non-multipart transport (server: FileUploadController#uploadFileRaw,
+     * react4j-core). Posts the raw `File` as the request body -- no FormData, no wrapper, no base64
+     * -- with the upload id and filename carried as headers, since a raw body has no fields to carry
+     * them in. Two wire-contract traps this method exists to close, both pinned by tests:
+     *
+     * (a) Content-Type must never be a form content type. A `File`'s `type` is routinely empty for an
+     * unrecognised extension, and letting that empty value reach the request would leave the HTTP
+     * client to choose a fallback -- `application/x-www-form-urlencoded` is exactly the one content
+     * type the servlet container's multipart resolver ignores but Tomcat still parses into request
+     * PARAMETERS, which reads (and so consumes) the body before this method's caller ever sees it,
+     * silently defeating the whole point of this transport. So: `file.type || "application/octet-stream"`,
+     * always explicit, never left to a client default.
+     *
+     * (b) The `X-Filename` header must be percent-encoded with `encodeURIComponent`, not `encodeURI`
+     * and not left raw. The server decodes it with Java's `URLDecoder.decode(value, UTF_8)`, which
+     * turns a literal `+` into a space -- `encodeURIComponent` escapes `+` to `%2B` and a space to
+     * `%20`, so it round-trips correctly; `encodeURI` leaves `+` unescaped, which `URLDecoder` would
+     * then silently turn into a space on the server, corrupting any filename that happens to contain
+     * one.
+     */
+    public static uploadFileRaw(uploadUrl: string, uploadId: string, file: File): Promise<UploadReceipt> {
+        const contentType = file.type || "application/octet-stream";
+        InFlightTracker.increment();
+        return Axios.post(BackendUri.resolve(uploadUrl), file, {
+            headers: {
+                "X-Upload-Id": uploadId,
+                "X-Filename": encodeURIComponent(file.name),
+                "Content-Type": contentType
+            }
+        }).then((response: AxiosResponse<UploadReceipt>) => {
+            return response?.data;
+        }).finally(() => {
+            // CRITICAL: decrement in finally so a failed round-trip still settles the counter --
+            // mirrors uploadFile above.
+            InFlightTracker.decrement();
+        });
+    }
 }

@@ -45,6 +45,9 @@ public class ModalNode extends AbstractNode implements Node
     private boolean       centered;
 
     @JsonProperty
+    private boolean       fullscreen;
+
+    @JsonProperty
     private Handler       onClose;
 
     @Override
@@ -116,6 +119,17 @@ public class ModalNode extends AbstractNode implements Node
     public ModalNode setCentered(boolean centered)
     {
         this.centered = centered;
+        return this;
+    }
+
+    public boolean isFullscreen()
+    {
+        return this.fullscreen;
+    }
+
+    public ModalNode setFullscreen(boolean fullscreen)
+    {
+        this.fullscreen = fullscreen;
         return this;
     }
 

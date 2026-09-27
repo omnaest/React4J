@@ -42,6 +42,7 @@ public class PaginationItemImpl extends AbstractUIComponent<PaginationItem> impl
     private I18nText     label;
     private boolean      active;
     private boolean      disabled;
+    private String       ariaLabel;
     private EventHandler eventHandler;
 
     public PaginationItemImpl(ComponentContext context, int index)
@@ -51,7 +52,7 @@ public class PaginationItemImpl extends AbstractUIComponent<PaginationItem> impl
         this.withId("paginationitem-" + index);
     }
 
-    public PaginationItemImpl(ComponentContext context, int index, I18nText label, boolean active, boolean disabled, EventHandler eventHandler)
+    public PaginationItemImpl(ComponentContext context, int index, I18nText label, boolean active, boolean disabled, String ariaLabel, EventHandler eventHandler)
     {
         super(context);
         this.index = index;
@@ -59,6 +60,7 @@ public class PaginationItemImpl extends AbstractUIComponent<PaginationItem> impl
         this.label = label;
         this.active = active;
         this.disabled = disabled;
+        this.ariaLabel = ariaLabel;
         this.eventHandler = eventHandler;
     }
 
@@ -80,6 +82,13 @@ public class PaginationItemImpl extends AbstractUIComponent<PaginationItem> impl
     public PaginationItem withDisabledState(boolean disabled)
     {
         this.disabled = disabled;
+        return this;
+    }
+
+    @Override
+    public PaginationItem withAriaLabel(String ariaLabel)
+    {
+        this.ariaLabel = ariaLabel;
         return this;
     }
 
@@ -106,7 +115,8 @@ public class PaginationItemImpl extends AbstractUIComponent<PaginationItem> impl
                 PaginationItemNode node = new PaginationItemNode().setLabel(PaginationItemImpl.this.getTextResolver()
                                                                                                    .apply(PaginationItemImpl.this.label, location))
                                                                   .setActive(PaginationItemImpl.this.active)
-                                                                  .setDisabled(PaginationItemImpl.this.disabled);
+                                                                  .setDisabled(PaginationItemImpl.this.disabled)
+                                                                  .setAriaLabel(PaginationItemImpl.this.ariaLabel);
                 if (PaginationItemImpl.this.eventHandler != null)
                 {
                     node.setOnClick(PaginationItemImpl.this.emitOnClickHandler(renderingProcessor, Target.from(location)));
@@ -140,7 +150,7 @@ public class PaginationItemImpl extends AbstractUIComponent<PaginationItem> impl
     @Override
     public UIComponentProvider<PaginationItem> asTemplateProvider()
     {
-        return () -> new PaginationItemImpl(this.context, this.index, this.label, this.active, this.disabled, this.eventHandler);
+        return () -> new PaginationItemImpl(this.context, this.index, this.label, this.active, this.disabled, this.ariaLabel, this.eventHandler);
     }
 
     /**

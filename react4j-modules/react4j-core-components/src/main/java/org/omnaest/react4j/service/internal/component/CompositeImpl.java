@@ -131,6 +131,18 @@ public class CompositeImpl extends AbstractUIComponentWithSubComponents<Composit
     @Override
     public UIComponentProvider<Composite> asTemplateProvider()
     {
-        return () -> new CompositeImpl(this.context, this.components);
+        // plan-245 S0 fix: a defensive copy, exactly as the sibling implementations already do
+        // (GridContainerImpl/AccordionImpl via stream().collect(toList()), FormImpl/ListViewImpl via
+        // toBuilder()). Without this, the returned CompositeImpl shared THIS instance's own mutable
+        // `components` list - a second facade over the same ArrayList, not a template clone - so every
+        // withRerenderingUIContext render pass that called `self.addComponent(...)` appended to the ONE
+        // shared list belonging to the original, page-registered Composite, accumulating across renders for
+        // the life of that registered instance. Confirmed empirically (plan-245 S0): the real
+        // KanbanBoardServer CardCreateForm measured exactly 5 FORM nodes after one submit and 9 after a
+        // second (no reload) with this bug present - matching the design spike's prediction precisely - and
+        // exactly 1 after each submit once fixed (CreateCardFormDuplicationRegressionTest,
+        // ArmCOutsideBuiltCompositeAccumulationReproductionTest).
+        return () -> new CompositeImpl(this.context, this.components.stream()
+                                                                    .collect(Collectors.toList()));
     }
 }

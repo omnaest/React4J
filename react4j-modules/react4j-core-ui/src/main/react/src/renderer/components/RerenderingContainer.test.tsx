@@ -96,7 +96,8 @@ test("clicking a server-driven Button inside a real Redux RerenderingContainer a
         title: { DEFAULT: "My Modal" },
         content: modalContentNode,
         visible: true,
-        centered: false
+        centered: false,
+        fullscreen: false
     };
     const updatedContent: CompositeNode = {
         target: [...CONTAINER_TARGET, "content"],

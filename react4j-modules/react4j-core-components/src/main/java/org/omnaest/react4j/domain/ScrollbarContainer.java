@@ -53,10 +53,7 @@ public interface ScrollbarContainer extends UIComponentWithContent<ScrollbarCont
 
     public static enum VerticalBoxMode
     {
-        FULL_VIEWPORT_HEIGHT,
-        HALF_VIEWPORT_HEIGHT,
-        FULL_VIEWPORT_HEIGHT_WITHOUT_HEADER,
-        FULL_PARENT_HEIGHT,
+        FULL_VIEWPORT_HEIGHT, HALF_VIEWPORT_HEIGHT, FULL_VIEWPORT_HEIGHT_WITHOUT_HEADER, FULL_PARENT_HEIGHT,
 
         /**
          * Makes this region a vertical flow: it takes the full height of its parent and lays its children out top to

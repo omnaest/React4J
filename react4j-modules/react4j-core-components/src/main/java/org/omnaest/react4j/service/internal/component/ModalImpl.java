@@ -46,6 +46,7 @@ public class ModalImpl extends AbstractUIComponentAndContentHolder<Modal> implem
     private boolean        visible;
     private Size           size;
     private boolean        centered;
+    private boolean        fullscreen;
     private EventHandler   eventHandler;
 
     public ModalImpl(ComponentContext context)
@@ -53,7 +54,7 @@ public class ModalImpl extends AbstractUIComponentAndContentHolder<Modal> implem
         super(context);
     }
 
-    public ModalImpl(ComponentContext context, I18nText title, UIComponent<?> content, UIComponent<?> footer, boolean visible, Size size, boolean centered, EventHandler eventHandler)
+    public ModalImpl(ComponentContext context, I18nText title, UIComponent<?> content, UIComponent<?> footer, boolean visible, Size size, boolean centered, boolean fullscreen, EventHandler eventHandler)
     {
         super(context);
         this.title = title;
@@ -62,6 +63,7 @@ public class ModalImpl extends AbstractUIComponentAndContentHolder<Modal> implem
         this.visible = visible;
         this.size = size;
         this.centered = centered;
+        this.fullscreen = fullscreen;
         this.eventHandler = eventHandler;
     }
 
@@ -108,6 +110,13 @@ public class ModalImpl extends AbstractUIComponentAndContentHolder<Modal> implem
     }
 
     @Override
+    public Modal withFullscreen(boolean fullscreen)
+    {
+        this.fullscreen = fullscreen;
+        return this;
+    }
+
+    @Override
     public Modal onClose(EventHandler eventHandler)
     {
         this.eventHandler = eventHandler;
@@ -135,7 +144,8 @@ public class ModalImpl extends AbstractUIComponentAndContentHolder<Modal> implem
                                                                    .orElse(null))
                                                 .setVisible(ModalImpl.this.visible)
                                                 .setSize(ModalImpl.this.size != null ? ModalImpl.this.size.toBootstrapToken() : null)
-                                                .setCentered(ModalImpl.this.centered);
+                                                .setCentered(ModalImpl.this.centered)
+                                                .setFullscreen(ModalImpl.this.fullscreen);
                 if (ModalImpl.this.eventHandler != null)
                 {
                     node.setOnClose(ModalImpl.this.emitOnCloseHandler(renderingProcessor, Target.from(location)));
@@ -171,7 +181,8 @@ public class ModalImpl extends AbstractUIComponentAndContentHolder<Modal> implem
     @Override
     public UIComponentProvider<Modal> asTemplateProvider()
     {
-        return () -> new ModalImpl(this.context, this.title, this.content, this.footer, this.visible, this.size, this.centered, this.eventHandler);
+        return () -> new ModalImpl(this.context, this.title, this.content, this.footer, this.visible, this.size, this.centered, this.fullscreen,
+                                   this.eventHandler);
     }
 
     /**

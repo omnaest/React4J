@@ -25,10 +25,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class EventBody extends AbstractJSONSerializable
 {
     @JsonProperty
-    protected Target          target;
+    protected Target                target;
 
     @JsonProperty
-    protected DataWithContext dataWithContext;
+    protected DataWithContext       dataWithContext;
 
     /**
      * EVERY ui context the page holds, not only the one the event came from.

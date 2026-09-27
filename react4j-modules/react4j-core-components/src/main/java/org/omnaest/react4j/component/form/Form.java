@@ -306,6 +306,17 @@ public interface Form extends UIComponent<Form>
          */
         public FileUploadFormElement onUpload(ButtonFormElement.ButtonEventHandler eventHandler);
 
+        /**
+         * Opts this element into the unbuffered upload transport: the request body is delivered to the {@link UploadChannel} without the servlet container
+         * ever writing it to a temporary file or buffering it in a request-size-proportional heap allocation. See {@code FileUploadController}'s javadoc for
+         * the mechanism and for why the default (multipart) transport does not have this property.
+         * <p>
+         * Default is {@code false} - opt-in only, so an element that does not call this behaves exactly as before this capability existed.
+         *
+         * @return
+         */
+        public FileUploadFormElement withUnbufferedTransport();
+
     }
 
     public static enum ValidationMessageType
