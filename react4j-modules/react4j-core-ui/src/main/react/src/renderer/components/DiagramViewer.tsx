@@ -21,14 +21,28 @@ export interface Props {
  * A fixed zoom ratio offered by the ratio control, expressed as a multiple of the Fit (base) viewBox.
  * "Fit" and "100%" are ONE entry (plan-261 Cliff C4) - the user-facing ratio list names five things, not
  * six, and Fit sits in its natural ascending position between 50% and 150%.
+ *
+ * plan-266 Cliff N4 added a SIXTH entry, "Whole diagram", between 50% and Fit. It carries the SAME numeric
+ * scale as Fit (both are 1) but a DIFFERENT fit mode - `containMode: true` selects the incumbent
+ * fill-and-letterbox (contain) rule instead of the new cover rule, so numeric scale alone can no longer
+ * identify the selected option (see `selectedRatioOption` in render()). `key` is the <option value> the
+ * <select> actually carries and is therefore what selectRatio dispatches on; `scale` is the numeric value
+ * applied to state.
  */
 const FIT_RATIO = 1;
-const RATIO_OPTIONS: { value: number; label: string }[] = [
-    { value: 0.5, label: "50%" },
-    { value: FIT_RATIO, label: "Fit (100%)" },
-    { value: 1.5, label: "150%" },
-    { value: 2, label: "200%" },
-    { value: 4, label: "400%" }
+interface RatioOption {
+    key: string;
+    scale: number;
+    containMode: boolean;
+    label: string;
+}
+const RATIO_OPTIONS: RatioOption[] = [
+    { key: "0.5", scale: 0.5, containMode: false, label: "50%" },
+    { key: "whole", scale: FIT_RATIO, containMode: true, label: "Whole diagram" },
+    { key: "1", scale: FIT_RATIO, containMode: false, label: "Fit (100%)" },
+    { key: "1.5", scale: 1.5, containMode: false, label: "150%" },
+    { key: "2", scale: 2, containMode: false, label: "200%" },
+    { key: "4", scale: 4, containMode: false, label: "400%" }
 ];
 
 /**
@@ -51,6 +65,15 @@ interface State {
      * zoomIn/zoomOut/resetZoom/selectRatio all keep this in sync with the DOM mutation they perform.
      */
     scale: number;
+    /**
+     * plan-266 Cliff N4. `false` (the default, "cover"): the smallest axis is fit to the host and the larger
+     * axis overflows into the scroll region (N4-C / "V8"). `true` ("Whole diagram" selected): the incumbent
+     * fill-and-letterbox (contain) rule, byte-identically what Fit always rendered (plan-266 section 2.9a) -
+     * also the rule a non-interactive thumbnail always uses, by construction rather than by a second
+     * mechanism. Every action OTHER than selecting "Whole diagram" itself - zoomIn/zoomOut/a fixed ratio/
+     * reset - returns this to `false`, because cover is the only mode this component scrolls in.
+     */
+    containMode: boolean;
 }
 
 interface ViewBox {
@@ -95,6 +118,16 @@ const ZOOM_FACTOR = 1.2;
 const SCALE_CSS_PROPERTY = "--diagram-viewer-scale";
 
 /**
+ * plan-266 Cliff N4. The CSS custom property carrying the diagram's own ratio (parsed from the already-read
+ * `baseViewBox`, never measured) into DiagramViewer.css's cover formula - `aspect-ratio: var(--diagram-viewer-
+ * aspect)` on `.diagram-viewer-canvas`. This is authored data, not rendered geometry: `viewBox` is an SVG
+ * attribute string, read once on mount exactly as `baseViewBox` itself already is, before any layout the
+ * property could race with. Set whenever `baseViewBox` is known, regardless of interactive/cover/contain -
+ * harmless where the cover rule that reads it is not selected (thumbnails, "Whole diagram").
+ */
+const ASPECT_CSS_PROPERTY = "--diagram-viewer-aspect";
+
+/**
  * Displays an SVG diagram, fitted into its container by default via pure CSS (viewBox +
  * preserveAspectRatio letterboxing, no measurement - see DiagramViewer.css), with optional zoom (in /
  * out / reset) and two-axis scrolling.
@@ -130,11 +163,23 @@ const SCALE_CSS_PROPERTY = "--diagram-viewer-scale";
  * controls are never shown and the scale never leaves 1 - the diagram itself still renders normally, and
  * with no overflow there is nothing for a drag or a key press to move. The same `showControls` flag gates
  * the band, so a non-interactive thumbnail emits no band element and reserves no height for one.
+ *
+ * AUTO-FIT IS COVER, NOT CONTAIN (plan-266 Cliff N4). The default fit - and every fixed ratio except "Whole
+ * diagram" - fits the SMALLER axis of the diagram to the host and lets the LARGER axis overflow into the
+ * scroll region, rather than letterboxing the whole diagram into the box. This is a pure-CSS mechanism (see
+ * DiagramViewer.css, ".diagram-viewer-canvas"): a wrapper div carries `aspect-ratio` (from `baseViewBox`,
+ * published via {@link ASPECT_CSS_PROPERTY}) plus a `min-width`/`min-height` pair scaled by
+ * {@link SCALE_CSS_PROPERTY}, and the injected `<svg>` is `position: absolute` filling it - out of flow, so
+ * the wrapper's own content size is 0x0 and both minima are always violated, which is the one CSS-minimum-
+ * resolution branch that produces cover rather than contain. No JS measurement of rendered geometry is
+ * involved anywhere in this mechanism, matching the user's own constraint. "Whole diagram" (state.containMode)
+ * opts back into the incumbent contain rule - byte-identically what Fit always rendered - and is also what a
+ * non-interactive thumbnail always uses, since `showCover` below is gated on `interactive`.
  */
 export class DiagramViewer extends React.Component<Props, State> {
     public static TYPE: string = "DIAGRAMVIEWER";
 
-    public state: State = { hasViewBox: false, scale: FIT_RATIO };
+    public state: State = { hasViewBox: false, scale: FIT_RATIO, containMode: false };
 
     private svgHostRef = React.createRef<HTMLDivElement>();
     private baseViewBox: ViewBox | null = null;
@@ -184,8 +229,8 @@ export class DiagramViewer extends React.Component<Props, State> {
 
         this.baseViewBox = this.parseViewBox(svg.getAttribute("viewBox"));
         const hasViewBox = this.baseViewBox !== null;
-        if (hasViewBox !== this.state.hasViewBox || this.state.scale !== FIT_RATIO) {
-            this.setState({ hasViewBox, scale: FIT_RATIO });
+        if (hasViewBox !== this.state.hasViewBox || this.state.scale !== FIT_RATIO || this.state.containMode) {
+            this.setState({ hasViewBox, scale: FIT_RATIO, containMode: false });
         }
     }
 
@@ -200,13 +245,13 @@ export class DiagramViewer extends React.Component<Props, State> {
      * `componentDidUpdate` would need a prevState comparison to tell a scale change from any other
      * re-render.
      */
-    private applyScale(scale: number): void {
+    private applyScale(scale: number, containMode: boolean = false): void {
         const host = this.svgHostRef.current;
         const before: ScrollViewport | null = host
             ? { scrollLeft: host.scrollLeft, scrollTop: host.scrollTop, clientWidth: host.clientWidth, clientHeight: host.clientHeight }
             : null;
         const previousScale = this.state.scale;
-        this.setState({ scale }, () => this.adjustScrollToPreserveCentre(before, previousScale, scale));
+        this.setState({ scale, containMode }, () => this.adjustScrollToPreserveCentre(before, previousScale, scale));
     }
 
     /**
@@ -259,18 +304,30 @@ export class DiagramViewer extends React.Component<Props, State> {
         this.applyScale(ratio);
     }
 
+    /**
+     * Dispatches on the RATIO_OPTIONS `key` the <select> actually carries (plan-266 Cliff N4) - NOT on the
+     * numeric scale, because "Whole diagram" and "Fit" share the same scale (1) and are distinguished only by
+     * `containMode`.
+     */
     private selectRatio = (event: React.ChangeEvent<HTMLSelectElement>): void => {
-        const value = event.target.value;
-        if (value === CUSTOM_RATIO_VALUE) {
+        const key = event.target.value;
+        if (key === CUSTOM_RATIO_VALUE) {
             return;
         }
-        const ratio = Number(value);
-        if (ratio === FIT_RATIO) {
+        const option = RATIO_OPTIONS.find((candidate) => candidate.key === key);
+        if (!option) {
+            return;
+        }
+        if (option.containMode) {
+            this.applyScale(option.scale, true);
+            return;
+        }
+        if (option.scale === FIT_RATIO) {
             // Fit and 100% are one entry, wired to the existing resetZoom (plan-261 Cliff C4).
             this.resetZoom();
             return;
         }
-        this.applyRatio(ratio);
+        this.applyRatio(option.scale);
     };
 
     /**
@@ -352,8 +409,12 @@ export class DiagramViewer extends React.Component<Props, State> {
             ...(node.height ? { height: node.height } : {})
         };
         const showControls = node.interactive && this.state.hasViewBox;
-        const selectedRatioOption = RATIO_OPTIONS.find((option) => option.value === this.state.scale);
-        const ratioSelectValue = selectedRatioOption ? String(selectedRatioOption.value) : CUSTOM_RATIO_VALUE;
+        // Matched on BOTH scale and containMode (plan-266 Cliff N4) - scale alone is ambiguous between "Whole
+        // diagram" and "Fit", which share the value 1.
+        const selectedRatioOption = RATIO_OPTIONS.find(
+            (option) => option.scale === this.state.scale && option.containMode === this.state.containMode
+        );
+        const ratioSelectValue = selectedRatioOption ? selectedRatioOption.key : CUSTOM_RATIO_VALUE;
         // Emitted ONLY away from Fit, and only for an interactive viewer: the stylesheet's var(..., 1)
         // fallback then renders a thumbnail and an unzoomed viewer at exactly 100% with no scroll region,
         // by construction rather than by a value this branch has to get right (see SCALE_CSS_PROPERTY).
@@ -361,6 +422,16 @@ export class DiagramViewer extends React.Component<Props, State> {
             node.interactive && this.state.scale !== FIT_RATIO
                 ? ({ [SCALE_CSS_PROPERTY]: String(this.state.scale) } as React.CSSProperties)
                 : undefined;
+        // plan-266 Cliff N4 - cover is selected only for an interactive viewer with a parseable viewBox that
+        // has NOT chosen "Whole diagram". Thumbnails (interactive === false) never carry this class, so their
+        // rendering is untouched by cover's existence, by construction (section 2.9a).
+        const coverMode = node.interactive && this.state.hasViewBox && !this.state.containMode;
+        const hostClassName = "diagram-viewer-svg-host" + (coverMode ? " diagram-viewer-svg-host--cover" : "");
+        // The ratio the cover formula scales - authored data (the already-parsed base viewBox), never
+        // rendered geometry. Set whenever known; inert under the contain rule, which does not read it.
+        const canvasStyle: React.CSSProperties | undefined = this.baseViewBox
+            ? ({ [ASPECT_CSS_PROPERTY]: `${this.baseViewBox.width} / ${this.baseViewBox.height}` } as React.CSSProperties)
+            : undefined;
 
         return (
             <div className="diagram-viewer" style={style}>
@@ -382,7 +453,7 @@ export class DiagramViewer extends React.Component<Props, State> {
                         >
                             {!selectedRatioOption && <option value={CUSTOM_RATIO_VALUE}>Custom</option>}
                             {RATIO_OPTIONS.map((option) => (
-                                <option key={option.value} value={option.value}>{option.label}</option>
+                                <option key={option.key} value={option.key}>{option.label}</option>
                             ))}
                         </select>
                         <button type="button" aria-label="Zoom in" onClick={this.zoomIn}>+</button>
@@ -403,7 +474,7 @@ export class DiagramViewer extends React.Component<Props, State> {
                 <div className="diagram-viewer-viewport">
                     <div
                         ref={this.svgHostRef}
-                        className="diagram-viewer-svg-host"
+                        className={hostClassName}
                         style={hostStyle}
                         // The scroll host must be genuinely drivable, not merely scrollable: a tabIndex is what
                         // makes the browser's own arrow-key scrolling reach it, and the labelled region is what
@@ -413,9 +484,21 @@ export class DiagramViewer extends React.Component<Props, State> {
                         role={node.interactive ? "region" : undefined}
                         aria-label={node.interactive ? "Scrollable diagram" : undefined}
                         onMouseDown={node.interactive ? this.handleMouseDown : undefined}
-                        // eslint-disable-next-line react/no-danger -- server-rendered SVG markup; see class doc
-                        dangerouslySetInnerHTML={{ __html: node.svg || "" }}
-                    />
+                    >
+                        {/*
+                          * plan-266 Cliff N4 (N4-C / "V8"). The injected svg moved one level in, from the host
+                          * directly to this wrapper - both the cover formula (aspect-ratio + minima, applied
+                          * when the host carries "--cover") and the incumbent contain formula (width/height:
+                          * calc(100% * scale), the default) size THIS element; the svg itself is always
+                          * "position: absolute" filling it. See DiagramViewer.css for the full mechanism.
+                          */}
+                        <div
+                            className="diagram-viewer-canvas"
+                            style={canvasStyle}
+                            // eslint-disable-next-line react/no-danger -- server-rendered SVG markup; see class doc
+                            dangerouslySetInnerHTML={{ __html: node.svg || "" }}
+                        />
+                    </div>
                 </div>
             </div>
         );

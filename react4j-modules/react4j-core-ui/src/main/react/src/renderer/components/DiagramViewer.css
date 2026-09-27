@@ -18,7 +18,19 @@
  * Combined with the preserveAspectRatio="xMidYMid meet" DiagramViewer.tsx sets on mount, SVG's own
  * viewBox scaling letterboxes the whole diagram into the box - no measurement, no race with a modal's
  * mount/animation.
+ *   >>> UPDATED BY plan-266 S-COVER (2026-09-27). The paragraph above describes CONTAIN, which is still
+ *   >>> exactly what happens for a non-interactive thumbnail and for "Whole diagram" - unchanged, byte for
+ *   >>> byte. It is no longer the ONLY behaviour: every other ratio (including the default, Fit) is now
+ *   >>> COVER instead (the smallest axis fills the host, the largest overflows) - see "AUTO-FIT IS COVER,
+ *   >>> NOT CONTAIN" further down for the mechanism. The claim "no measurement, no race with a modal's
+ *   >>> mount/animation" STILL HOLDS for cover too, restated rather than merely kept: cover's ratio comes
+ *   >>> from `--diagram-viewer-aspect`, itself parsed from the injected svg's `viewBox` ATTRIBUTE STRING on
+ *   >>> mount (authored data, identical before and after any modal animation) - never from
+ *   >>> `getBoundingClientRect()`, `clientWidth/Height`, `ResizeObserver` or any other read of RENDERED
+ *   >>> geometry. Cliff N4's binding constraint ruled those out explicitly, and this mechanism uses none of
+ *   >>> them.
  *
+
  * WHY .diagram-viewer-svg-host ITSELF IS SIZED WITH FLEXBOX, NOT A CSS PERCENTAGE (plan-229 S2 finding,
  * fixed here in S3 - verified at source and by getComputedStyle in a real browser). A percentage height
  * ("height: 100%") only resolves against an ancestor whose OWN "height" property is explicitly set.
@@ -279,12 +291,111 @@
     overscroll-behavior: contain;
 }
 
-.diagram-viewer-svg-host > svg {
+/*
+ * .diagram-viewer-canvas (plan-266 Cliff N4 / N4-C, "V8") - the wrapper the injected <svg> now renders
+ * INSIDE rather than being the host's own flex item. Two CSS regimes are selected by whether the HOST
+ * carries the "--cover" modifier class (below); this base rule is the CONTAIN regime, unconditional, and
+ * is therefore what a non-interactive thumbnail and "Whole diagram" both get - byte-identically what
+ * ".diagram-viewer-svg-host > svg" rendered before this slice, just carried by the wrapper instead of the
+ * svg itself. See "AUTO-FIT IS COVER, NOT CONTAIN" below for the cover regime and why this shape (an
+ * out-of-flow child of a non-replaced wrapper) is what makes the minima resolve to cover rather than
+ * contain.
+ */
+/*
+ * "aspect-ratio" on the BASE (contain) rule too - MEASURED, not decorative, and fixing a genuine bug this
+ * slice's own N4-C shape introduced. Before this slice the injected <svg> was IN FLOW as the host's own
+ * flex item, so a percentage height that could not resolve (an AUTO-HEIGHT consumer, e.g. a non-interactive
+ * thumbnail with no ancestor of definite height) fell back to the svg's own INTRINSIC aspect-ratio size,
+ * which is what bootstrapped ".diagram-viewer"'s own auto height in the first place (see the file's
+ * long-standing header explanation above). Moving the svg OUT OF FLOW (required for the cover regime, see
+ * below) removes that fallback: MEASURED, a non-interactive thumbnail's whole chain collapsed to height 0
+ * (".diagram-viewer" 1566x0, host 1566x0, canvas 1566x0, svg 1566x0) - a percentage height on a
+ * non-replaced element with an indefinite container is treated as "auto", and an "auto" height on a
+ * non-replaced element normally comes from its IN-FLOW CONTENT, which the wrapper no longer has any of.
+ * "aspect-ratio" restores a content-independent fallback: per the CSS Sizing spec, aspect-ratio only
+ * participates when the OTHER dimension is used-value "auto" or an unresolved percentage - so when the
+ * height percentage genuinely resolves (a DEFINITE ancestor - the real KanbanBoardServer overlay, or any
+ * fixture given an explicit height), this declaration is INERT and the box is still sized to EXACTLY the
+ * host's box on both axes, unchanged from before this rule was added (verified: the explicit-height cover
+ * battery's contain siblings render identically with and without it). It activates ONLY on the indefinite
+ * branch, where it makes height = width / aspectRatio instead of 0 - the same number the old in-flow
+ * svg-intrinsic fallback effectively produced (data-driven now, rather than derived from the svg's own
+ * width/height attributes).
+ */
+.diagram-viewer-canvas {
+    position: relative;
     display: block;
     flex: none;
     margin: auto;
+    aspect-ratio: var(--diagram-viewer-aspect);
     width: calc(100% * var(--diagram-viewer-scale, 1));
     height: calc(100% * var(--diagram-viewer-scale, 1));
+}
+
+.diagram-viewer-canvas > svg {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/*
+ * THE COVER REGIME (plan-266 Cliff N4 / N4-C, "V8"). Overrides the CONTAIN base rule above, on the wrapper
+ * only when its HOST carries "--cover" - i.e. an interactive viewer with a parseable viewBox that has NOT
+ * selected "Whole diagram" (DiagramViewer.tsx `coverMode`). Selector specificity (two classes beats one)
+ * wins this over the base rule with no "!important" needed.
+ *
+ * THE MECHANISM, MEASURED, NOT ASSUMED. "aspect-ratio" fixes the wrapper's own intrinsic ratio to the
+ * diagram's (from the authored viewBox, never measured - see ASPECT_CSS_PROPERTY in DiagramViewer.tsx).
+ * "min-width"/"min-height" are BOTH "calc(100% * scale)" - the host's full content box, scaled. Since the
+ * wrapper is non-replaced and its ONLY child (the svg) is "position: absolute" - OUT OF FLOW - the
+ * wrapper's own CONTENT size is 0x0, so BOTH minima are ALWAYS violated. That is the one CSS-minimum-
+ * resolution branch that produces COVER: the browser grows the box on the axis where the aspect-ratio-
+ * constrained size would undershoot a minimum, and on THAT axis the box ends up exactly at the minimum
+ * (100% of the host) while the OTHER axis follows from the aspect ratio and overflows. Swap the svg back
+ * into flow (remove "position: absolute") and this degenerates to CONTAIN's own minimum-resolution branch
+ * instead - measured directly, this is the entire difference between N4-C (chosen) and its falsified
+ * sibling N4-B.
+ *
+ * "width: auto; height: auto" are load-bearing overrides of the base rule's "calc(100% * scale)": with
+ * those still in force the wrapper would have an explicit (non-auto) preferred size, which is a definite
+ * used size regardless of the minima and would suppress the min-resolution branch entirely - the axis that
+ * is supposed to overflow would instead be clamped back to the host's box, degenerating to contain-at-most.
+ *
+ * ONE UNMEASURED RESIDUAL, CARRIED FORWARD RATHER THAN HIDDEN (plan-266 section 2.9b / AC-N12). Headless
+ * Chromium's scrollbar gutter is 0px, so the "circular" case - a percentage minimum resolving against a
+ * content box that itself SHRINKS once the scrollbar the minimum caused appears - cannot be exercised
+ * headless. AC-N12 runs headed (setHeadless(false), genuine 17px gutter) specifically to settle it; see
+ * DiagramViewerZoomOverflowIT for the measured result.
+ *
+ * A SECOND, DIFFERENT RESIDUAL - A KNOWN, DOCUMENTED LIMITATION, NOT A DEFECT (plan-266 S-COVER, endorsed
+ * by the orchestrator's ruling, carried to the user as a known limitation). "min-height: calc(100% * scale)"
+ * can only resolve as a real percentage against a DEFINITE ancestor height. Two things make that ancestor
+ * definite: an explicit height somewhere in the chain (the REAL consumer - KanbanBoardServer's fullscreen
+ * overlay - always calls withHeight("100%")), or ".diagram-viewer"'s own "max-height: 60vh" ceiling actually
+ * BINDING (i.e. the diagram's natural width-bound height exceeds it). When NEITHER holds - an interactive,
+ * AUTO-HEIGHT consumer whose content naturally fits under that ceiling - the min-height percentage cannot
+ * resolve and is dropped per spec (a percentage that cannot resolve computes as unspecified), so cover
+ * silently degenerates to "fit width, let height follow the aspect ratio", indistinguishable from contain
+ * for that one shape. MEASURED on the S0/S1 wide-flat fixture (viewBox 900x120, no withHeight): host
+ * 1566x209, scroll 1566x209 - genuinely no overflow, even though the diagram's aspect (7.5) differs sharply
+ * from the host's. tall-narrow (900x120 transposed) is NOT affected, because its natural width-bound height
+ * (11745px) vastly exceeds the 60vh ceiling, so the ceiling itself supplies the missing definiteness. This
+ * is scoped to a hypothetical auto-height INTERACTIVE consumer that nothing in this codebase currently
+ * ships; measured exact on 6 of 6 definite-height fixtures spanning all four intrinsic-size relationships
+ * (DiagramViewerZoomOverflowIT's planCover_* battery). Documented here, asserted honestly rather than
+ * omitted in DiagramViewerZoomOverflowIT's planCover_autoHeightConsumer_coverDegeneratesToWidthFit_
+ * documentedNotHidden test, per the user's own instruction that a silent behavioural difference is the
+ * outcome they least want.
+ */
+.diagram-viewer-svg-host--cover > .diagram-viewer-canvas {
+    aspect-ratio: var(--diagram-viewer-aspect);
+    width: auto;
+    height: auto;
+    min-width: calc(100% * var(--diagram-viewer-scale, 1));
+    min-height: calc(100% * var(--diagram-viewer-scale, 1));
 }
 
 .diagram-viewer-controls {

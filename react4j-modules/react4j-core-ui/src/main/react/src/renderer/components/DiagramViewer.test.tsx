@@ -45,6 +45,10 @@ function getViewport(container: HTMLElement): HTMLElement {
     return container.querySelector(".diagram-viewer-viewport") as HTMLElement;
 }
 
+function getCanvas(container: HTMLElement): HTMLElement {
+    return container.querySelector(".diagram-viewer-canvas") as HTMLElement;
+}
+
 /**
  * The scale as it actually reaches the stylesheet - the `--diagram-viewer-scale` custom property on the
  * scroll host, which is the whole of seam D1 (component to stylesheet). An EMPTY string is the meaningful
@@ -405,6 +409,141 @@ describe("DiagramViewer", () => {
             fireEvent.click(screen.getByLabelText("Reset zoom"));
 
             expect(select.value).toBe("1");
+        });
+    });
+
+    // ------------------------------------------------------------------------------------------------
+    // plan-266 Cliff N4 - auto-fit becomes COVER, plus the "Whole diagram" contain entry. The GEOMETRIC
+    // claims (which axis overflows, that the fill is exact, that nothing is lost) are unprovable in jsdom
+    // (no layout engine - see the file note at the top) and are measured by DiagramViewerZoomOverflowIT.
+    // What jest CAN and does pin: the DOM shape the CSS mechanism depends on (the canvas wrapper, the svg
+    // moved inside it), the "--cover" class is applied/withheld by the right conditions, the aspect custom
+    // property is authored data derived from viewBox (not a measurement), and the ratio control's new
+    // sixth entry and its distinct selection state.
+    // ------------------------------------------------------------------------------------------------
+
+    test("the injected svg renders inside .diagram-viewer-canvas, which sits inside the scroll host", () => {
+        const node = createNode(SVG_WITH_VIEWBOX);
+        const { container } = render(<DiagramViewer node={node} />);
+
+        const host = getHost(container);
+        const canvas = getCanvas(container);
+        expect(canvas).not.toBeNull();
+        expect(canvas.parentElement).toBe(host);
+        expect(canvas.querySelector("svg")).not.toBeNull();
+        expect(canvas.contains(container.querySelector("svg"))).toBe(true);
+    });
+
+    test("an interactive viewer at Fit (the default) carries the cover modifier class on the host", () => {
+        const node = createNode(SVG_WITH_VIEWBOX);
+        const { container } = render(<DiagramViewer node={node} />);
+
+        expect(getHost(container).className).toBe("diagram-viewer-svg-host diagram-viewer-svg-host--cover");
+    });
+
+    test("a non-interactive thumbnail never carries the cover modifier class, even with a viewBox", () => {
+        const node = createNode(SVG_WITH_VIEWBOX, { interactive: false });
+        const { container } = render(<DiagramViewer node={node} />);
+
+        expect(getHost(container).className).toBe("diagram-viewer-svg-host");
+    });
+
+    test("an SVG with no viewBox never carries the cover modifier class (no aspect data to cover with)", () => {
+        const node = createNode(SVG_WITHOUT_VIEWBOX);
+        const { container } = render(<DiagramViewer node={node} />);
+
+        expect(getHost(container).className).toBe("diagram-viewer-svg-host");
+    });
+
+    test("the canvas publishes --diagram-viewer-aspect from the parsed base viewBox, not a measurement", () => {
+        const node = createNode(SVG_WITH_VIEWBOX);
+        const { container } = render(<DiagramViewer node={node} />);
+
+        // SVG_WITH_VIEWBOX is "0 0 100 100" - width/height both 100.
+        expect(getCanvas(container).style.getPropertyValue("--diagram-viewer-aspect")).toBe("100 / 100");
+    });
+
+    describe("the Whole diagram (contain) ratio entry", () => {
+        test("sits between 50% and Fit (100%) in the option list", () => {
+            const node = createNode(SVG_WITH_VIEWBOX);
+            render(<DiagramViewer node={node} />);
+
+            const select = screen.getByLabelText("Zoom ratio") as HTMLSelectElement;
+            const labels = Array.from(select.options).map((option) => option.text);
+            expect(labels).toEqual(["50%", "Whole diagram", "Fit (100%)", "150%", "200%", "400%"]);
+        });
+
+        test("selecting it drops the cover modifier class - contain, not cover", () => {
+            const node = createNode(SVG_WITH_VIEWBOX);
+            const { container } = render(<DiagramViewer node={node} />);
+
+            expect(getHost(container).className).toContain("diagram-viewer-svg-host--cover");
+
+            fireEvent.change(screen.getByLabelText("Zoom ratio"), { target: { value: "whole" } });
+
+            expect(getHost(container).className).toBe("diagram-viewer-svg-host");
+        });
+
+        test("selecting it emits no --diagram-viewer-scale (its scale is Fit's own value, 1)", () => {
+            const node = createNode(SVG_WITH_VIEWBOX);
+            const { container } = render(<DiagramViewer node={node} />);
+
+            fireEvent.change(screen.getByLabelText("Zoom ratio"), { target: { value: "whole" } });
+
+            expect(getEmittedScale(container)).toBe("");
+            expect(getViewBox(container)).toBe("0 0 100 100");
+        });
+
+        test("is a DISTINCT selection state from Fit even though both carry scale 1", () => {
+            const node = createNode(SVG_WITH_VIEWBOX);
+            render(<DiagramViewer node={node} />);
+            const select = screen.getByLabelText("Zoom ratio") as HTMLSelectElement;
+            expect(select.value).toBe("1");
+
+            fireEvent.change(select, { target: { value: "whole" } });
+            expect(select.value).toBe("whole");
+            expect(select.value).not.toBe("1");
+
+            fireEvent.change(select, { target: { value: "1" } });
+            expect(select.value).toBe("1");
+        });
+
+        test("choosing a fixed ratio after Whole diagram returns to cover", () => {
+            const node = createNode(SVG_WITH_VIEWBOX);
+            const { container } = render(<DiagramViewer node={node} />);
+            const select = screen.getByLabelText("Zoom ratio") as HTMLSelectElement;
+
+            fireEvent.change(select, { target: { value: "whole" } });
+            expect(getHost(container).className).toBe("diagram-viewer-svg-host");
+
+            fireEvent.change(select, { target: { value: "2" } });
+
+            expect(getHost(container).className).toBe("diagram-viewer-svg-host diagram-viewer-svg-host--cover");
+            expect(getEmittedScale(container)).toBe("2");
+        });
+
+        test("zooming in from Whole diagram returns to cover mode", () => {
+            const node = createNode(SVG_WITH_VIEWBOX);
+            const { container } = render(<DiagramViewer node={node} />);
+
+            fireEvent.change(screen.getByLabelText("Zoom ratio"), { target: { value: "whole" } });
+            expect(getHost(container).className).toBe("diagram-viewer-svg-host");
+
+            fireEvent.click(screen.getByLabelText("Zoom in"));
+
+            expect(getHost(container).className).toBe("diagram-viewer-svg-host diagram-viewer-svg-host--cover");
+        });
+
+        test("resetting zoom from Whole diagram returns to the Fit entry, in cover mode", () => {
+            const node = createNode(SVG_WITH_VIEWBOX);
+            const { container } = render(<DiagramViewer node={node} />);
+            const select = screen.getByLabelText("Zoom ratio") as HTMLSelectElement;
+
+            fireEvent.change(select, { target: { value: "whole" } });
+            fireEvent.click(screen.getByLabelText("Reset zoom"));
+
+            expect(select.value).toBe("1");
+            expect(getHost(container).className).toBe("diagram-viewer-svg-host diagram-viewer-svg-host--cover");
         });
     });
 });

@@ -84,8 +84,8 @@ import jakarta.annotation.PostConstruct;
 @Profile("!treeTableFullWindow")
 public class ComponentShowcaseUI
 {
-    private static final String                 NAV_TARGET_A_LOCATOR                      = "nav-target-a";
-    private static final String                 NAV_TARGET_B_LOCATOR                      = "nav-target-b";
+    private static final String                 NAV_TARGET_A_LOCATOR                         = "nav-target-a";
+    private static final String                 NAV_TARGET_B_LOCATOR                         = "nav-target-b";
 
     /**
      * plan-265 S0: three addressable {@link org.omnaest.react4j.domain.DiagramViewer} showcase fixtures -
@@ -98,9 +98,52 @@ public class ComponentShowcaseUI
      * sync. Two clearly different aspect ratios (roughly 120x900 and 900x120) are used deliberately - a
      * square fixture could not distinguish a scroll axis that was wired from one that was never touched.
      */
-    public static final String                  DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE     = "DiagramViewer Tall Narrow (interactive)";
-    public static final String                  DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE       = "DiagramViewer Wide Flat (interactive)";
-    public static final String                  DIAGRAM_VIEWER_NON_INTERACTIVE_CARD_TITLE = "DiagramViewer Thumbnail (non-interactive)";
+    public static final String                  DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE        = "DiagramViewer Tall Narrow (interactive)";
+    public static final String                  DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE          = "DiagramViewer Wide Flat (interactive)";
+    public static final String                  DIAGRAM_VIEWER_NON_INTERACTIVE_CARD_TITLE    = "DiagramViewer Thumbnail (non-interactive)";
+
+    /**
+     * plan-266 Cliff N4 / AC-N11 - the card's own fixture pair (tall-narrow/wide-flat) exercises only ONE
+     * branch of the cover mechanism: each violates exactly one of the two CSS minima, because each is
+     * smaller than the host on one axis and larger on the other. The falsified N4-A candidate was exact on
+     * that branch and wrong by 3x on the other: "larger than the host on BOTH axes", which is also the
+     * common case for real Mermaid output. These four fixtures span all four intrinsic-size relationships a
+     * diagram can have against its host (smaller than host on both axes / larger on both / larger in width
+     * only / larger in height only), so AC-N11 in {@code DiagramViewerZoomOverflowIT} can run AC-N1/N3/N5/
+     * N10 across all four rather than assuming the existing pair generalises.
+     */
+    public static final String                  DIAGRAM_VIEWER_SMALLER_BOTH_AXES_CARD_TITLE  = "DiagramViewer Smaller Than Host On Both Axes (interactive)";
+    public static final String                  DIAGRAM_VIEWER_LARGER_BOTH_AXES_CARD_TITLE   = "DiagramViewer Larger Than Host On Both Axes (interactive)";
+    public static final String                  DIAGRAM_VIEWER_LARGER_WIDTH_ONLY_CARD_TITLE  = "DiagramViewer Larger Than Host In Width Only (interactive)";
+    public static final String                  DIAGRAM_VIEWER_LARGER_HEIGHT_ONLY_CARD_TITLE = "DiagramViewer Larger Than Host In Height Only (interactive)";
+
+    /**
+     * plan-266 AC-N7 - "where the diagram's aspect equals the host's, Whole diagram and Fit produce identical
+     * geometry". An explicit, non-percentage {@code withWidth}/{@code withHeight} pins the DIAGRAM'S OWN box
+     * to a fixed, page-layout-independent size, so the host's content-box aspect is a constant this fixture
+     * can be authored to match, rather than a number that depends on Bootstrap column width. See
+     * {@code DiagramViewerZoomOverflowIT} for the measured host box this viewBox was calibrated against.
+     */
+    public static final String                  DIAGRAM_VIEWER_SQUARE_ASPECT_CARD_TITLE      = "DiagramViewer Aspect Equals Host (interactive)";
+
+    /**
+     * plan-266 Cliff N4, AC-N1/N2/N3/N4/N5/N9/N10 - a DEDICATED, explicit-height pair, deliberately separate
+     * from {@link #DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE}/{@link #DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE}.
+     * MEASURED finding (not assumed): cover's "min-height: calc(100% * scale)" can only resolve against a
+     * DEFINITE ancestor height. The two S0/S1 fixtures above are deliberately auto-height (no
+     * {@code withHeight} call, `.diagram-viewer`'s own height is "auto" up to its 60vh ceiling) - which is
+     * exactly right for what THEY test (S1's band-subtraction-on-an-auto-box finding), but wide-flat's
+     * natural width-bound height (about 209px at this viewport) never reaches that 60vh ceiling, so nothing
+     * ever makes its host height definite, and cover's height minimum silently fails to resolve - it
+     * degenerates to "fit width, let height follow", indistinguishable from contain for that one fixture.
+     * (tall-narrow does NOT show this: its natural width-bound height vastly exceeds 60vh, so the ceiling
+     * itself supplies the missing definiteness.) The REAL target consumer (KanbanBoardServer's fullscreen
+     * overlay) always calls {@code withHeight("100%")}, so it is never in the affected regime - these two
+     * fixtures mirror that by giving the diagram viewer an explicit, definite height, so the cover battery
+     * exercises the mechanism under the conditions it actually ships in.
+     */
+    public static final String                  DIAGRAM_VIEWER_COVER_WIDE_FLAT_CARD_TITLE    = "DiagramViewer Cover Wide Flat, Fixed Height (interactive)";
+    public static final String                  DIAGRAM_VIEWER_COVER_TALL_NARROW_CARD_TITLE  = "DiagramViewer Cover Tall Narrow, Fixed Height (interactive)";
 
     /**
      * Hand-written literal SVGs (plan-265 S0 brief - preferred over pulling in a diagram renderer for a
@@ -109,46 +152,96 @@ public class ComponentShowcaseUI
      * {@code DiagramViewer.tsx}'s {@code hasViewBox} state gates the zoom/pan controls on.
      * {@code marker-rect} is the SVG-interior element a scroll-geometry test can measure the position of.
      */
-    private static final String                 DIAGRAM_VIEWER_TALL_NARROW_SVG            = "<svg viewBox=\"0 0 120 900\" width=\"120\" height=\"900\" "
-                                                                                            + "xmlns=\"http://www.w3.org/2000/svg\">"
-                                                                                            + "<rect x=\"0\" y=\"0\" width=\"120\" height=\"900\" fill=\"#eef2ff\" />"
-                                                                                            + "<rect id=\"marker-rect\" x=\"10\" y=\"10\" width=\"30\" height=\"30\" fill=\"#0066cc\" />"
-                                                                                            + "<line x1=\"0\" y1=\"450\" x2=\"120\" y2=\"450\" stroke=\"#333333\" stroke-width=\"2\" />"
-                                                                                            + "<rect x=\"80\" y=\"860\" width=\"30\" height=\"30\" fill=\"#cc0066\" />"
-                                                                                            + "<text x=\"10\" y=\"890\" font-size=\"20\">Tall</text>" + "</svg>";
+    private static final String                 DIAGRAM_VIEWER_TALL_NARROW_SVG               = "<svg viewBox=\"0 0 120 900\" width=\"120\" height=\"900\" "
+                                                                                               + "xmlns=\"http://www.w3.org/2000/svg\">"
+                                                                                               + "<rect x=\"0\" y=\"0\" width=\"120\" height=\"900\" fill=\"#eef2ff\" />"
+                                                                                               + "<rect id=\"marker-rect\" x=\"10\" y=\"10\" width=\"30\" height=\"30\" fill=\"#0066cc\" />"
+                                                                                               + "<line x1=\"0\" y1=\"450\" x2=\"120\" y2=\"450\" stroke=\"#333333\" stroke-width=\"2\" />"
+                                                                                               + "<rect id=\"end-marker\" x=\"80\" y=\"860\" width=\"30\" height=\"30\" fill=\"#cc0066\" />"
+                                                                                               + "<text x=\"10\" y=\"890\" font-size=\"20\">Tall</text>" + "</svg>";
 
-    private static final String                 DIAGRAM_VIEWER_WIDE_FLAT_SVG              = "<svg viewBox=\"0 0 900 120\" width=\"900\" height=\"120\" "
-                                                                                            + "xmlns=\"http://www.w3.org/2000/svg\">"
-                                                                                            + "<rect x=\"0\" y=\"0\" width=\"900\" height=\"120\" fill=\"#eefaef\" />"
-                                                                                            + "<rect id=\"marker-rect\" x=\"10\" y=\"10\" width=\"30\" height=\"30\" fill=\"#0066cc\" />"
-                                                                                            + "<line x1=\"450\" y1=\"0\" x2=\"450\" y2=\"120\" stroke=\"#333333\" stroke-width=\"2\" />"
-                                                                                            + "<rect x=\"860\" y=\"80\" width=\"30\" height=\"30\" fill=\"#cc0066\" />"
-                                                                                            + "<text x=\"10\" y=\"110\" font-size=\"20\">Wide</text>" + "</svg>";
+    private static final String                 DIAGRAM_VIEWER_WIDE_FLAT_SVG                 = "<svg viewBox=\"0 0 900 120\" width=\"900\" height=\"120\" "
+                                                                                               + "xmlns=\"http://www.w3.org/2000/svg\">"
+                                                                                               + "<rect x=\"0\" y=\"0\" width=\"900\" height=\"120\" fill=\"#eefaef\" />"
+                                                                                               + "<rect id=\"marker-rect\" x=\"10\" y=\"10\" width=\"30\" height=\"30\" fill=\"#0066cc\" />"
+                                                                                               + "<line x1=\"450\" y1=\"0\" x2=\"450\" y2=\"120\" stroke=\"#333333\" stroke-width=\"2\" />"
+                                                                                               + "<rect id=\"end-marker\" x=\"860\" y=\"80\" width=\"30\" height=\"30\" fill=\"#cc0066\" />"
+                                                                                               + "<text x=\"10\" y=\"110\" font-size=\"20\">Wide</text>" + "</svg>";
 
-    private static final String                 DIAGRAM_VIEWER_NON_INTERACTIVE_SVG        = "<svg viewBox=\"0 0 200 200\" width=\"200\" height=\"200\" "
-                                                                                            + "xmlns=\"http://www.w3.org/2000/svg\">"
-                                                                                            + "<rect x=\"0\" y=\"0\" width=\"200\" height=\"200\" fill=\"#fefeee\" />"
-                                                                                            + "<rect x=\"20\" y=\"20\" width=\"40\" height=\"40\" fill=\"#666666\" />" + "</svg>";
+    private static final String                 DIAGRAM_VIEWER_NON_INTERACTIVE_SVG           = "<svg viewBox=\"0 0 200 200\" width=\"200\" height=\"200\" "
+                                                                                               + "xmlns=\"http://www.w3.org/2000/svg\">"
+                                                                                               + "<rect x=\"0\" y=\"0\" width=\"200\" height=\"200\" fill=\"#fefeee\" />"
+                                                                                               + "<rect x=\"20\" y=\"20\" width=\"40\" height=\"40\" fill=\"#666666\" />" + "</svg>";
+
+    /**
+     * plan-266 AC-N11 fixtures. Each carries {@code #marker-rect} at the origin corner (reusing the existing
+     * IT convention) AND {@code #end-marker} at the FAR corner - the element AC-N4 ("no content lost") scrolls
+     * to and asserts is reachable inside the host's visible rect. Dimensions are deliberately far from the
+     * host's own aspect ratio in each direction, per the workspace finding that a coincidentally-proportioned
+     * fixture can make a wrong answer numerically equal the right one (plan-266 section 2.10c).
+     */
+    private static final String                 DIAGRAM_VIEWER_SMALLER_BOTH_AXES_SVG         = "<svg viewBox=\"0 0 300 200\" width=\"300\" height=\"200\" "
+                                                                                               + "xmlns=\"http://www.w3.org/2000/svg\">"
+                                                                                               + "<rect x=\"0\" y=\"0\" width=\"300\" height=\"200\" fill=\"#eef2ff\" />"
+                                                                                               + "<rect id=\"marker-rect\" x=\"5\" y=\"5\" width=\"20\" height=\"20\" fill=\"#0066cc\" />"
+                                                                                               + "<rect id=\"end-marker\" x=\"275\" y=\"175\" width=\"20\" height=\"20\" fill=\"#cc0066\" />"
+                                                                                               + "</svg>";
+
+    private static final String                 DIAGRAM_VIEWER_LARGER_BOTH_AXES_SVG          = "<svg viewBox=\"0 0 3000 2500\" width=\"3000\" height=\"2500\" "
+                                                                                               + "xmlns=\"http://www.w3.org/2000/svg\">"
+                                                                                               + "<rect x=\"0\" y=\"0\" width=\"3000\" height=\"2500\" fill=\"#eef2ff\" />"
+                                                                                               + "<rect id=\"marker-rect\" x=\"10\" y=\"10\" width=\"60\" height=\"60\" fill=\"#0066cc\" />"
+                                                                                               + "<rect id=\"end-marker\" x=\"2930\" y=\"2430\" width=\"60\" height=\"60\" fill=\"#cc0066\" />"
+                                                                                               + "</svg>";
+
+    private static final String                 DIAGRAM_VIEWER_LARGER_WIDTH_ONLY_SVG         = "<svg viewBox=\"0 0 3000 400\" width=\"3000\" height=\"400\" "
+                                                                                               + "xmlns=\"http://www.w3.org/2000/svg\">"
+                                                                                               + "<rect x=\"0\" y=\"0\" width=\"3000\" height=\"400\" fill=\"#eefaef\" />"
+                                                                                               + "<rect id=\"marker-rect\" x=\"10\" y=\"10\" width=\"40\" height=\"40\" fill=\"#0066cc\" />"
+                                                                                               + "<rect id=\"end-marker\" x=\"2950\" y=\"350\" width=\"40\" height=\"40\" fill=\"#cc0066\" />"
+                                                                                               + "</svg>";
+
+    private static final String                 DIAGRAM_VIEWER_LARGER_HEIGHT_ONLY_SVG        = "<svg viewBox=\"0 0 400 3000\" width=\"400\" height=\"3000\" "
+                                                                                               + "xmlns=\"http://www.w3.org/2000/svg\">"
+                                                                                               + "<rect x=\"0\" y=\"0\" width=\"400\" height=\"3000\" fill=\"#fefeee\" />"
+                                                                                               + "<rect id=\"marker-rect\" x=\"10\" y=\"10\" width=\"40\" height=\"40\" fill=\"#0066cc\" />"
+                                                                                               + "<rect id=\"end-marker\" x=\"350\" y=\"2950\" width=\"40\" height=\"40\" fill=\"#cc0066\" />"
+                                                                                               + "</svg>";
+
+    /**
+     * plan-266 AC-N7 fixture. {@code viewBox} width/height are CALIBRATED to the host box MEASURED for
+     * {@code withWidth("800px").withHeight("300px")} at viewport 1600x1000 - clientWidth=800.0,
+     * clientHeight=260.0 (300px minus the 40px control band), aspect 3.0769..., which is exactly 800/260 -
+     * i.e. an exact match by construction rather than a coincidence, since the width and height are both
+     * author-fixed (no percentage, no card-column dependency) and the band's 40px is itself a measured
+     * constant (plan-266 S1).
+     */
+    private static final String                 DIAGRAM_VIEWER_SQUARE_ASPECT_SVG             = "<svg viewBox=\"0 0 800 260\" width=\"800\" height=\"260\" "
+                                                                                               + "xmlns=\"http://www.w3.org/2000/svg\">"
+                                                                                               + "<rect x=\"0\" y=\"0\" width=\"800\" height=\"260\" fill=\"#f5f5f5\" />"
+                                                                                               + "<rect id=\"marker-rect\" x=\"10\" y=\"10\" width=\"40\" height=\"40\" fill=\"#0066cc\" />"
+                                                                                               + "<rect id=\"end-marker\" x=\"750\" y=\"210\" width=\"40\" height=\"40\" fill=\"#cc0066\" />"
+                                                                                               + "</svg>";
 
     @Autowired
     private ReactUIService                      uiService;
 
-    private final AtomicBoolean                 modalVisible                              = new AtomicBoolean(false);
-    private final AtomicBoolean                 offcanvasVisible                          = new AtomicBoolean(false);
-    private final AtomicBoolean                 toggleButtonPressed                       = new AtomicBoolean(false);
+    private final AtomicBoolean                 modalVisible                                 = new AtomicBoolean(false);
+    private final AtomicBoolean                 offcanvasVisible                             = new AtomicBoolean(false);
+    private final AtomicBoolean                 toggleButtonPressed                          = new AtomicBoolean(false);
 
     /**
      * Stable {@link ByteArrayChannel} instance held across renders (required by {@link org.omnaest.react4j.component.form.upload.UploadChannel}'s usage
      * contract) so a repeat upload against the same rendered {@code uploadId} keeps working.
      */
-    private final ByteArrayChannel              fileUploadChannel                         = ByteArrayChannel.create();
+    private final ByteArrayChannel              fileUploadChannel                            = ByteArrayChannel.create();
 
     /**
      * Small in-memory multi-level tree (plan-76 Slice 8) held as a stable field, mirroring
      * {@link #fileUploadChannel}, so the demo tree's identity (and any provider-internal caching) survives across
      * renders instead of being rebuilt per request.
      */
-    private final ShowcaseTreeTableDataProvider treeTableDataProvider                     = new ShowcaseTreeTableDataProvider();
+    private final ShowcaseTreeTableDataProvider treeTableDataProvider                        = new ShowcaseTreeTableDataProvider();
 
     /**
      * plan-235 S3: genuine server-side drag-and-drop demo state (AC-BROWSER-1..5/7). {@code dragDropCardLabel}
@@ -158,21 +251,21 @@ public class ComponentShowcaseUI
      * child of that card, one level of nesting, rendered indented under it). Mutated only from
      * {@link #handleDragDropEvent(String, DropEvent)}, which every demo {@link DropTarget} card shares.
      */
-    private final Map<String, String>           dragDropCardLabel                         = new ConcurrentHashMap<>();
-    private final Map<String, List<String>>     dragDropContainerChildren                 = new ConcurrentHashMap<>();
+    private final Map<String, String>           dragDropCardLabel                            = new ConcurrentHashMap<>();
+    private final Map<String, List<String>>     dragDropContainerChildren                    = new ConcurrentHashMap<>();
 
     /**
      * plan-235 S3 AC-BROWSER-6: bumped by the {@link org.omnaest.react4j.domain.Button} added inside the
      * IntervalRerenderingContainer card's refreshed content, alongside the pre-existing "Server time" paragraph -
      * proves the interval-wrapped subtree still handles a click while it keeps ticking on its own timer.
      */
-    private final AtomicInteger                 intervalClickCount                        = new AtomicInteger(0);
+    private final AtomicInteger                 intervalClickCount                           = new AtomicInteger(0);
 
     /**
      * plan-262 S1: bumped by the {@code Breadcrumb} demo's "Library" entry {@code onClick} - demonstrates the
      * new per-entry server-side click handler alongside the existing link-only entries.
      */
-    private final AtomicInteger                 breadcrumbClickCount                      = new AtomicInteger(0);
+    private final AtomicInteger                 breadcrumbClickCount                         = new AtomicInteger(0);
 
     @PostConstruct
     public void init()
@@ -403,7 +496,59 @@ public class ComponentShowcaseUI
                                            .withTitle(DIAGRAM_VIEWER_NON_INTERACTIVE_CARD_TITLE)
                                            .withContent(factory.newDiagramViewer()
                                                                .withSvg(DIAGRAM_VIEWER_NON_INTERACTIVE_SVG)
-                                                               .withInteractive(false)));
+                                                               .withInteractive(false)))
+                      // --- plan-266 Cliff N4 / AC-N11: the four intrinsic-size-relationship fixtures. Each
+                      // gets an explicit height for the same measured reason as the cover battery pair above
+                      // (see DIAGRAM_VIEWER_COVER_WIDE_FLAT_CARD_TITLE's javadoc) - without it, a fixture
+                      // whose natural width-bound height stays under the 60vh ceiling (the width-only-larger
+                      // shape) cannot make its host height definite, and cover's min-height silently fails to
+                      // resolve. ---
+                      .addComponent(factory.newCard()
+                                           .withTitle(DIAGRAM_VIEWER_SMALLER_BOTH_AXES_CARD_TITLE)
+                                           .withContent(factory.newDiagramViewer()
+                                                               .withSvg(DIAGRAM_VIEWER_SMALLER_BOTH_AXES_SVG)
+                                                               .withHeight("400px")
+                                                               .withInteractive(true)))
+                      .addComponent(factory.newCard()
+                                           .withTitle(DIAGRAM_VIEWER_LARGER_BOTH_AXES_CARD_TITLE)
+                                           .withContent(factory.newDiagramViewer()
+                                                               .withSvg(DIAGRAM_VIEWER_LARGER_BOTH_AXES_SVG)
+                                                               .withHeight("400px")
+                                                               .withInteractive(true)))
+                      .addComponent(factory.newCard()
+                                           .withTitle(DIAGRAM_VIEWER_LARGER_WIDTH_ONLY_CARD_TITLE)
+                                           .withContent(factory.newDiagramViewer()
+                                                               .withSvg(DIAGRAM_VIEWER_LARGER_WIDTH_ONLY_SVG)
+                                                               .withHeight("400px")
+                                                               .withInteractive(true)))
+                      .addComponent(factory.newCard()
+                                           .withTitle(DIAGRAM_VIEWER_LARGER_HEIGHT_ONLY_CARD_TITLE)
+                                           .withContent(factory.newDiagramViewer()
+                                                               .withSvg(DIAGRAM_VIEWER_LARGER_HEIGHT_ONLY_SVG)
+                                                               .withHeight("400px")
+                                                               .withInteractive(true)))
+                      // --- plan-266 AC-N7: fixed, page-layout-independent box so the viewBox can be
+                      // calibrated to match the host's own content-box aspect exactly ---
+                      .addComponent(factory.newCard()
+                                           .withTitle(DIAGRAM_VIEWER_SQUARE_ASPECT_CARD_TITLE)
+                                           .withContent(factory.newDiagramViewer()
+                                                               .withSvg(DIAGRAM_VIEWER_SQUARE_ASPECT_SVG)
+                                                               .withWidth("800px")
+                                                               .withHeight("300px")
+                                                               .withInteractive(true)))
+                      // --- plan-266 AC-N1/N2/N3/N4/N5/N9/N10: definite-height cover battery fixtures ---
+                      .addComponent(factory.newCard()
+                                           .withTitle(DIAGRAM_VIEWER_COVER_WIDE_FLAT_CARD_TITLE)
+                                           .withContent(factory.newDiagramViewer()
+                                                               .withSvg(DIAGRAM_VIEWER_WIDE_FLAT_SVG)
+                                                               .withHeight("400px")
+                                                               .withInteractive(true)))
+                      .addComponent(factory.newCard()
+                                           .withTitle(DIAGRAM_VIEWER_COVER_TALL_NARROW_CARD_TITLE)
+                                           .withContent(factory.newDiagramViewer()
+                                                               .withSvg(DIAGRAM_VIEWER_TALL_NARROW_SVG)
+                                                               .withHeight("400px")
+                                                               .withInteractive(true)));
     }
 
     /**

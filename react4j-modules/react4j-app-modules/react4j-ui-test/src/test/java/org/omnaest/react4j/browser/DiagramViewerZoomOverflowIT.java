@@ -213,17 +213,16 @@ public class DiagramViewerZoomOverflowIT
     // AC-2 - at Fit (100%), no overflow on either axis. Interactive AND non-interactive limbs.
     // ------------------------------------------------------------------------------------------------
 
-    @Test
-    void atFit_noOverflow_tallNarrow() throws Exception
-    {
-        this.assertNoOverflowAtFit(ComponentShowcaseUI.DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE, "tall-narrow", true);
-    }
-
-    @Test
-    void atFit_noOverflow_wideFlat() throws Exception
-    {
-        this.assertNoOverflowAtFit(ComponentShowcaseUI.DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE, "wide-flat", true);
-    }
+    // plan-266 Cliff N4 RE-POINT (ruling recorded plan-266 section 2.9c, condition 2): the interactive
+    // limbs that used to live here (atFit_noOverflow_tallNarrow/wideFlat, selecting ratio "1") asserted
+    // "no overflow at Fit", which "Fit" no longer means - it means cover now, by the user's own request,
+    // and cover genuinely overflows one axis for an aspect-mismatched diagram (measured: tall-narrow's Fit
+    // cover box is 1566x11745 against a 1566x560 host). Renamed and moved to
+    // atWholeDiagram_noOverflow_tallNarrow/wideFlat (further down, in the plan-266 S-COVER section), which
+    // assert the SAME property under the ratio that now actually carries it. Left renamed rather than kept
+    // under this name because a method still called "atFit_noOverflow" that silently selected "whole"
+    // would misinform a future reader that Fit itself has no overflow - it does, by design. The
+    // non-interactive limb below is UNCHANGED: a thumbnail is never subject to cover at all.
 
     @Test
     void atFit_noOverflow_nonInteractive() throws Exception
@@ -342,73 +341,13 @@ public class DiagramViewerZoomOverflowIT
     // as: the svg's own rect centre coincides with the host's content-box centre (2px tolerance).
     // ------------------------------------------------------------------------------------------------
 
-    @Test
-    void at50Percent_noScrollRegion_andContentCentred_tallNarrow() throws Exception
-    {
-        this.assertCentredAt50Percent(ComponentShowcaseUI.DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE, "tall-narrow");
-    }
-
-    @Test
-    void at50Percent_noScrollRegion_andContentCentred_wideFlat() throws Exception
-    {
-        this.assertCentredAt50Percent(ComponentShowcaseUI.DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE, "wide-flat");
-    }
-
-    private void assertCentredAt50Percent(String cardTitle, String fixtureLabel) throws Exception
-    {
-        try (BrowserContext context = this.newContext())
-        {
-            Page page = this.openBoard(context);
-            Locator card = this.card(page, cardTitle);
-            this.waitForDiagramMounted(card);
-            this.setZoomRatio(card, "0.5");
-
-            JsonNode g = this.measureGeometry(card);
-            double scrollWidth = g.get("scrollWidth")
-                                  .asDouble();
-            double clientWidth = g.get("clientWidth")
-                                  .asDouble();
-            double scrollHeight = g.get("scrollHeight")
-                                   .asDouble();
-            double clientHeight = g.get("clientHeight")
-                                   .asDouble();
-            double hostCentreX = g.get("hostLeft")
-                                  .asDouble()
-                                 + g.get("hostWidth")
-                                    .asDouble()
-                                   / 2;
-            double hostCentreY = g.get("hostTop")
-                                  .asDouble()
-                                 + g.get("hostHeight")
-                                    .asDouble()
-                                   / 2;
-            double svgCentreX = g.get("svgLeft")
-                                 .asDouble()
-                                + g.get("svgWidth")
-                                   .asDouble()
-                                  / 2;
-            double svgCentreY = g.get("svgTop")
-                                 .asDouble()
-                                + g.get("svgHeight")
-                                   .asDouble()
-                                  / 2;
-
-            System.out.println("[plan-265 S0 AC-6] " + fixtureLabel + " @50% - scrollWidth=" + scrollWidth + "px clientWidth=" + clientWidth
-                               + "px, scrollHeight=" + scrollHeight + "px clientHeight=" + clientHeight + "px");
-            System.out.println("[plan-265 S0 AC-6] " + fixtureLabel + " @50% - host centre=(" + hostCentreX + "," + hostCentreY + "), svg centre=("
-                               + svgCentreX + "," + svgCentreY + ")");
-
-            assertAll(fixtureLabel + " AC-6",
-                      () -> assertEquals(clientWidth, scrollWidth, 0.5, fixtureLabel + ": AC-6 - no horizontal scroll region at 50%"),
-                      () -> assertEquals(clientHeight, scrollHeight, 0.5, fixtureLabel + ": AC-6 - no vertical scroll region at 50%"),
-                      () -> assertEquals(hostCentreX, svgCentreX, 2.0,
-                                         fixtureLabel + ": AC-6 - content must be horizontally centred at 50%; host centre x=" + hostCentreX
-                                                                       + " svg centre x=" + svgCentreX),
-                      () -> assertEquals(hostCentreY, svgCentreY, 2.0,
-                                         fixtureLabel + ": AC-6 - content must be vertically centred at 50%; host centre y=" + hostCentreY
-                                                                       + " svg centre y=" + svgCentreY));
-        }
-    }
+    // plan-266 Cliff N4 RE-POINT (ruling recorded plan-266 section 2.9c, condition 2): the two tests that
+    // used to live here selected ratio "0.5" and asserted NO overflow - true under the old contain-based
+    // "50%", false in general now that every ratio except "Whole diagram" is cover-based. Moved to
+    // atWholeDiagram_noScrollRegion_andContentCentred_tallNarrow/wideFlat (plan-266 S-COVER section, further
+    // down), which assert the SAME no-overflow-and-centred property under "Whole diagram" - the ratio that
+    // now actually carries it. "50%" itself gets its own, positively-stated coverage per the ruling's
+    // condition 3: see at50Percent_isHalfOfCover_stillOverflowsAtRoughlyHalfTheFitAmount_tallNarrow.
 
     // ------------------------------------------------------------------------------------------------
     // AC-8 - at 400%, the control cluster is fully within the diagram viewer's own visible box.
@@ -894,31 +833,38 @@ public class DiagramViewerZoomOverflowIT
     }
 
     // ------------------------------------------------------------------------------------------------
-    // plan-266 AC-4 - the svg's percentage still resolves against the host's NEW, band-reduced content
-    // box. This is hypothesis H-COL (plan-266 section 2.8) measured rather than assumed: DiagramViewer.css's
-    // three recorded layout failures were all taken on a ROW flex chain, and this slice turned it into a
-    // COLUMN one with an extra item. The ratio, not the absolute size, is the invariant - it holds only
-    // if "calc(100% * scale)" resolves against the box the host actually ended up with.
+    // plan-266 AC-4 - RE-POINTED (a SECOND instance of the Cliff N4 semantic shift, found and fixed the
+    // same way as the ruling's atFit/at50Percent re-points, applying the same instinct to my own newly-
+    // discovered case per the ruling's closing instruction). ORIGINAL CLAIM: "the svg's percentage still
+    // resolves against the host's NEW, band-reduced content box" - proven by scrollWidth/clientWidth AND
+    // scrollHeight/clientHeight BOTH equalling 4.0 at 400% zoom. That claim is a CONTAIN-only truth: under
+    // contain the box is scaled UNIFORMLY on both axes regardless of aspect (box = host * scale, always).
+    // Cover does NOT preserve that - only the FILLED axis's ratio equals the scale exactly; the overflowing
+    // axis's ratio is scale times an aspect-mismatch factor and is NOT 4.0 in general. MEASURED on the
+    // unmodified tall-narrow/wide-flat fixtures at ratio "4" (now cover by default): 83.9 and 10.7
+    // respectively - genuinely different, not a rendering defect, and not even STABLE, because these two
+    // fixtures are ALSO the auto-height ones (see the documented residual above), so the feedback between
+    // the host's own auto-established height and the cover minima produces a fixture-specific number rather
+    // than a clean invariant.
+    //
+    // The band-reduced-box claim itself - "calc(100% * scale) resolves against the box the host actually
+    // ended up with" - is NOT abandoned: it is exactly what the definite-height cover battery above proves
+    // (planCover_ratioMultiple_200PercentDoublesTheFilledAxis's filled-axis-doubles assertion, and AC-N3's
+    // aspect-preserved assertion, are both instances of the same underlying resolution). This test
+    // reinstates AC-4's OWN specific claim - BOTH axes ratio exactly 4.0 - using the ONE fixture where it is
+    // still true under cover: the square-aspect fixture, whose diagram aspect equals the host's BY
+    // CONSTRUCTION, so neither axis overflows and both minima bind identically - the uniform-scaling case
+    // AC-4 originally measured, reproduced under the new regime rather than asserted against a fixture that
+    // no longer has it.
     // ------------------------------------------------------------------------------------------------
 
     @Test
-    void plan266_at400Percent_svgPercentageResolvesAgainstBandReducedHostBox_tallNarrow() throws Exception
-    {
-        this.assertScaleRatioIsFour(ComponentShowcaseUI.DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE, "tall-narrow");
-    }
-
-    @Test
-    void plan266_at400Percent_svgPercentageResolvesAgainstBandReducedHostBox_wideFlat() throws Exception
-    {
-        this.assertScaleRatioIsFour(ComponentShowcaseUI.DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE, "wide-flat");
-    }
-
-    private void assertScaleRatioIsFour(String cardTitle, String fixtureLabel) throws Exception
+    void planCover_at400Percent_squareAspectFixture_bothAxesScaleUniformlyByFour() throws Exception
     {
         try (BrowserContext context = this.newContext())
         {
             Page page = this.openBoard(context);
-            Locator card = this.card(page, cardTitle);
+            Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_SQUARE_ASPECT_CARD_TITLE);
             this.waitForDiagramMounted(card);
             this.setZoomRatio(card, "4");
 
@@ -934,8 +880,9 @@ public class DiagramViewerZoomOverflowIT
             double horizontalRatio = scrollWidth / clientWidth;
             double verticalRatio = scrollHeight / clientHeight;
             JsonNode band = this.measureBandAndHost(card);
+            String label = "square-aspect";
 
-            System.out.println("[plan-266 S1 AC-4] " + fixtureLabel + " @400% - host content box " + clientWidth + "x" + clientHeight + ", scroll box "
+            System.out.println("[plan-266 AC-4 re-point] " + label + " @400% - host content box " + clientWidth + "x" + clientHeight + ", scroll box "
                                + scrollWidth + "x" + scrollHeight + " => ratios " + horizontalRatio + " / " + verticalRatio + "; band height="
                                + band.get("bandHeight")
                                      .asDouble()
@@ -944,32 +891,20 @@ public class DiagramViewerZoomOverflowIT
                                + "x" + band.get("viewerClientHeight")
                                            .asDouble());
 
-            // Stated as its own line, in its own terms, rather than left to be read out of the chain dump: a
-            // following card computes a cover-fit scale factor from exactly these three numbers, and a
-            // misreading here propagates straight into that scale. CONTENT box (clientWidth/clientHeight),
-            // not the border box - the content box is what the svg's percentages actually resolve against.
-            System.out.println("[plan-266 S1 BAND SUBTRACTION] " + fixtureLabel + " @viewport 1600x1000 - band rendered height="
-                               + band.get("bandHeight")
-                                     .asDouble()
-                               + "px; .diagram-viewer content box=" + band.get("viewerClientWidth")
-                                                                          .asDouble()
-                               + "x" + band.get("viewerClientHeight")
-                                           .asDouble()
-                               + "; host CONTENT box (the box percentages resolve against)=" + clientWidth + "x" + clientHeight);
-
-            assertAll(fixtureLabel + " plan-266 AC-4",
+            assertAll(label + " plan-266 AC-4 re-point",
                       () -> assertEquals(4.0, horizontalRatio, 0.05,
-                                         fixtureLabel + ": plan-266 AC-4 - scrollWidth/clientWidth must be 4.0 at 400%; measured " + horizontalRatio),
+                                         label + ": scrollWidth/clientWidth must be 4.0 at 400% (aspect coincides with the host, so neither axis overflows and "
+                                                                     + "both scale uniformly); measured " + horizontalRatio),
                       () -> assertEquals(4.0, verticalRatio, 0.05,
-                                         fixtureLabel + ": plan-266 AC-4 - scrollHeight/clientHeight must be 4.0 at 400%; measured " + verticalRatio),
+                                         label + ": scrollHeight/clientHeight must be 4.0 at 400%; measured " + verticalRatio),
                       // Without this the ratio assertions above would also pass in the degenerate world where the
                       // band reserved no height at all, i.e. where the band was never rendered - the criterion is
                       // "resolves against the BAND-REDUCED box", so the reduction has to be shown to exist.
                       () -> assertTrue(band.get("bandHeight")
                                            .asDouble() > 0,
-                                       fixtureLabel + ": plan-266 AC-4 - the band must actually occupy height, otherwise "
-                                                            + "\"resolves against the band-reduced content box\" is vacuous; measured " + band.get("bandHeight")
-                                                                                                                                              .asDouble()));
+                                       label + ": the band must actually occupy height, otherwise \"resolves against the band-reduced content box\" is "
+                                                            + "vacuous; measured " + band.get("bandHeight")
+                                                                                         .asDouble()));
         }
     }
 
@@ -1295,6 +1230,829 @@ public class DiagramViewerZoomOverflowIT
         }
     }
 
+    // ================================================================================================
+    // plan-266 S-COVER (Cliff N4) - auto-fit becomes COVER instead of contain: the diagram's SMALLEST axis
+    // fills the host exactly, and the LARGEST axis overflows into the scroll region. AC-N1..AC-N13.
+    //
+    // FIXTURES. AC-N1/N2/N3/N4/N5/N9/N10 use DEDICATED, explicit-height fixtures
+    // (DIAGRAM_VIEWER_COVER_WIDE_FLAT_CARD_TITLE / DIAGRAM_VIEWER_COVER_TALL_NARROW_CARD_TITLE) rather than
+    // the S0/S1 wide-flat/tall-narrow pair. MEASURED, not assumed: cover's "min-height: calc(100% * scale)"
+    // can only resolve against a DEFINITE ancestor height. The S0/S1 pair is deliberately auto-height (no
+    // withHeight - correct for what THOSE tests measure), and wide-flat's natural width-bound height never
+    // reaches the 60vh ceiling, so nothing makes its host height definite and the minimum silently fails to
+    // resolve - cover degenerates to "fit width, let height follow", indistinguishable from contain for
+    // that one fixture (see planCover_wideFlat_autoHeightConsumer_coverDegeneratesToWidthFit below, which
+    // documents this honestly rather than omitting it). The REAL target consumer (KanbanBoardServer's
+    // fullscreen overlay) always calls withHeight("100%"), so it is never in the affected regime - the
+    // dedicated fixtures mirror that.
+    // ================================================================================================
+
+    @Test
+    void planCover_wideFlatCover_atFit_overflowsOnlyHorizontally() throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_COVER_WIDE_FLAT_CARD_TITLE);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "1");
+
+            JsonNode g = this.measureGeometry(card);
+            double scrollWidth = g.get("scrollWidth")
+                                  .asDouble();
+            double clientWidth = g.get("clientWidth")
+                                  .asDouble();
+            double scrollHeight = g.get("scrollHeight")
+                                   .asDouble();
+            double clientHeight = g.get("clientHeight")
+                                   .asDouble();
+            System.out.println("[plan-266 AC-N1] cover wide-flat @Fit - client=" + clientWidth + "x" + clientHeight + " scroll=" + scrollWidth + "x"
+                               + scrollHeight);
+
+            assertAll("AC-N1", () -> assertTrue(scrollWidth > clientWidth, "AC-N1 - the long (horizontal) axis must overflow; scrollWidth=" + scrollWidth
+                                                                           + " clientWidth=" + clientWidth),
+                      () -> assertEquals(clientHeight, scrollHeight, 0.5,
+                                         "AC-N1 - the filled (vertical) axis must NOT overflow; scrollHeight=" + scrollHeight + " clientHeight=" + clientHeight));
+        }
+    }
+
+    @Test
+    void planCover_tallNarrowCover_atFit_overflowsOnlyVertically() throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_COVER_TALL_NARROW_CARD_TITLE);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "1");
+
+            JsonNode g = this.measureGeometry(card);
+            double scrollWidth = g.get("scrollWidth")
+                                  .asDouble();
+            double clientWidth = g.get("clientWidth")
+                                  .asDouble();
+            double scrollHeight = g.get("scrollHeight")
+                                   .asDouble();
+            double clientHeight = g.get("clientHeight")
+                                   .asDouble();
+            System.out.println("[plan-266 AC-N2] cover tall-narrow @Fit - client=" + clientWidth + "x" + clientHeight + " scroll=" + scrollWidth + "x"
+                               + scrollHeight);
+
+            assertAll("AC-N2",
+                      () -> assertEquals(clientWidth, scrollWidth, 0.5,
+                                         "AC-N2 - the filled (horizontal) axis must NOT overflow; scrollWidth=" + scrollWidth + " clientWidth=" + clientWidth),
+                      () -> assertTrue(scrollHeight > clientHeight,
+                                       "AC-N2 - the long (vertical) axis must overflow; scrollHeight=" + scrollHeight + " clientHeight=" + clientHeight));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // AC-N11 - AC-N1/N3/N5 run across all FOUR intrinsic-size relationships, not just the two orientations
+    // above (wide-flat/tall-narrow each violate exactly ONE minimum - the falsified N4-A candidate was exact
+    // on that branch and wrong by 3x on "larger than the host on both axes", the common case for real
+    // Mermaid output). Each fixture asserts: exactly one axis overflows, in the direction its aspect implies
+    // relative to the host's, and the OTHER (filled) axis equals the host's client extent exactly (AC-N5
+    // folded in, since "no overflow" alone would also be true of a diagram half the box's size).
+    // AC-N10 (resize flips the axis) is NOT repeated per fixture - it is a structural property of the CSS
+    // mechanism itself (host aspect vs diagram aspect), already demonstrated generically on wide-flat cover,
+    // and re-running it four more times would not exercise anything AC-N1/N3/N5 do not already cover here.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void planCoverN11_smallerThanHostOnBothAxes_overflowsVerticallyOnly() throws Exception
+    {
+        this.assertSingleAxisOverflow(ComponentShowcaseUI.DIAGRAM_VIEWER_SMALLER_BOTH_AXES_CARD_TITLE, "smaller-both-axes", 300.0 / 200.0, false, true);
+    }
+
+    @Test
+    void planCoverN11_largerThanHostOnBothAxes_overflowsVerticallyOnly() throws Exception
+    {
+        this.assertSingleAxisOverflow(ComponentShowcaseUI.DIAGRAM_VIEWER_LARGER_BOTH_AXES_CARD_TITLE, "larger-both-axes", 3000.0 / 2500.0, false, true);
+    }
+
+    @Test
+    void planCoverN11_largerThanHostInWidthOnly_overflowsHorizontallyOnly() throws Exception
+    {
+        this.assertSingleAxisOverflow(ComponentShowcaseUI.DIAGRAM_VIEWER_LARGER_WIDTH_ONLY_CARD_TITLE, "larger-width-only", 3000.0 / 400.0, true, false);
+    }
+
+    @Test
+    void planCoverN11_largerThanHostInHeightOnly_overflowsVerticallyOnly() throws Exception
+    {
+        this.assertSingleAxisOverflow(ComponentShowcaseUI.DIAGRAM_VIEWER_LARGER_HEIGHT_ONLY_CARD_TITLE, "larger-height-only", 400.0 / 3000.0, false, true);
+    }
+
+    private void assertSingleAxisOverflow(String cardTitle, String label, double baseViewBoxRatio, boolean expectHorizontalOverflow, boolean expectVerticalOverflow) throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, cardTitle);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "1");
+
+            JsonNode g = this.measureGeometry(card);
+            double scrollWidth = g.get("scrollWidth")
+                                  .asDouble();
+            double clientWidth = g.get("clientWidth")
+                                  .asDouble();
+            double scrollHeight = g.get("scrollHeight")
+                                   .asDouble();
+            double clientHeight = g.get("clientHeight")
+                                   .asDouble();
+            double svgWidth = g.get("svgWidth")
+                               .asDouble();
+            double svgHeight = g.get("svgHeight")
+                                .asDouble();
+            double renderedRatio = svgWidth / svgHeight;
+
+            System.out.println("[plan-266 AC-N11] " + label + " @Fit(cover) - client=" + clientWidth + "x" + clientHeight + " scroll=" + scrollWidth + "x"
+                               + scrollHeight + " svg=" + svgWidth + "x" + svgHeight);
+
+            assertAll("AC-N11 " + label,
+                      () -> assertEquals(expectHorizontalOverflow, scrollWidth > clientWidth + 0.5,
+                                         label + ": horizontal overflow must be " + expectHorizontalOverflow + "; scrollWidth=" + scrollWidth + " clientWidth="
+                                                                                                    + clientWidth),
+                      () -> assertEquals(expectVerticalOverflow, scrollHeight > clientHeight + 0.5,
+                                         label + ": vertical overflow must be " + expectVerticalOverflow + "; scrollHeight=" + scrollHeight + " clientHeight="
+                                                                                                    + clientHeight),
+                      // AC-N5 folded in: the FILLED (non-overflowing) axis must equal the host's client extent
+                      // exactly, not merely "not overflow" - which is also true of an under-sized diagram.
+                      () -> assertTrue(expectHorizontalOverflow || Math.abs(svgWidth - clientWidth) <= 1.0,
+                                       label + ": AC-N5 - the filled horizontal axis must equal clientWidth exactly; svgWidth=" + svgWidth + " clientWidth="
+                                                                                                            + clientWidth),
+                      () -> assertTrue(expectVerticalOverflow || Math.abs(svgHeight - clientHeight) <= 1.0,
+                                       label + ": AC-N5 - the filled vertical axis must equal clientHeight exactly; svgHeight=" + svgHeight + " clientHeight="
+                                                                                                            + clientHeight),
+                      // AC-N3 folded in: aspect preserved regardless of which axis overflows.
+                      () -> assertEquals(baseViewBoxRatio, renderedRatio, baseViewBoxRatio * 0.01,
+                                         label + ": AC-N3 - rendered ratio must equal the base viewBox ratio; measured " + renderedRatio));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // AC-N3 - aspect preserved (the user's own parenthesis), at Fit AND at 400%, on both cover fixtures.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void planCover_aspectPreserved_wideFlatCover() throws Exception
+    {
+        this.assertAspectPreserved(ComponentShowcaseUI.DIAGRAM_VIEWER_COVER_WIDE_FLAT_CARD_TITLE, "wide-flat cover", 900.0 / 120.0);
+    }
+
+    @Test
+    void planCover_aspectPreserved_tallNarrowCover() throws Exception
+    {
+        this.assertAspectPreserved(ComponentShowcaseUI.DIAGRAM_VIEWER_COVER_TALL_NARROW_CARD_TITLE, "tall-narrow cover", 120.0 / 900.0);
+    }
+
+    private void assertAspectPreserved(String cardTitle, String label, double baseViewBoxRatio) throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, cardTitle);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "1");
+            JsonNode atFit = this.measureGeometry(card);
+            double fitRatio = atFit.get("svgWidth")
+                                   .asDouble()
+                              / atFit.get("svgHeight")
+                                     .asDouble();
+
+            this.setZoomRatio(card, "4");
+            JsonNode at400 = this.measureGeometry(card);
+            double ratio400 = at400.get("svgWidth")
+                                   .asDouble()
+                              / at400.get("svgHeight")
+                                     .asDouble();
+
+            System.out.println("[plan-266 AC-N3] " + label + " - base viewBox ratio=" + baseViewBoxRatio + ", rendered ratio @Fit=" + fitRatio
+                               + ", @400%=" + ratio400);
+
+            assertAll("AC-N3 " + label,
+                      () -> assertEquals(baseViewBoxRatio, fitRatio, baseViewBoxRatio * 0.01,
+                                         label + ": AC-N3 - rendered svg ratio at Fit must equal the base viewBox ratio"),
+                      () -> assertEquals(baseViewBoxRatio, ratio400, baseViewBoxRatio * 0.01,
+                                         label + ": AC-N3 - rendered svg ratio at 400% must equal the base viewBox ratio"));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // AC-N4 - no content lost, the criterion that catches the "slice" trap: scroll fully to the
+    // overflowing axis's far end and assert #end-marker (the fixture's far-corner element) is inside the
+    // host's VISIBLE rect. A `preserveAspectRatio="xMidYMid slice"` implementation would pass AC-N1/N2 by
+    // accident (no overflow reported, since slice crops inside an unchanged box) and fail this.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void planCover_noContentLost_wideFlatCover() throws Exception
+    {
+        this.assertNoContentLost(ComponentShowcaseUI.DIAGRAM_VIEWER_COVER_WIDE_FLAT_CARD_TITLE, "wide-flat cover");
+    }
+
+    @Test
+    void planCover_noContentLost_tallNarrowCover() throws Exception
+    {
+        this.assertNoContentLost(ComponentShowcaseUI.DIAGRAM_VIEWER_COVER_TALL_NARROW_CARD_TITLE, "tall-narrow cover");
+    }
+
+    private void assertNoContentLost(String cardTitle, String label) throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, cardTitle);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "1");
+
+            JsonNode g = this.measureGeometry(card);
+            this.setScroll(card, g.get("scrollWidth")
+                                  .asDouble(),
+                           g.get("scrollHeight")
+                            .asDouble());
+
+            JsonNode hostGeometry = this.measureGeometry(card);
+            JsonNode markerRect = this.measureElementRect(card, "#end-marker");
+
+            double hostLeft = hostGeometry.get("hostLeft")
+                                          .asDouble();
+            double hostTop = hostGeometry.get("hostTop")
+                                         .asDouble();
+            double hostRight = hostLeft + hostGeometry.get("hostWidth")
+                                                      .asDouble();
+            double hostBottom = hostTop + hostGeometry.get("hostHeight")
+                                                      .asDouble();
+            double markerLeft = markerRect.get("left")
+                                          .asDouble();
+            double markerTop = markerRect.get("top")
+                                         .asDouble();
+            double markerRight = markerLeft + markerRect.get("width")
+                                                        .asDouble();
+            double markerBottom = markerTop + markerRect.get("height")
+                                                        .asDouble();
+
+            System.out.println("[plan-266 AC-N4] " + label + " - host rect=[" + hostLeft + "," + hostTop + "," + hostRight + "," + hostBottom
+                               + "], end-marker rect=[" + markerLeft + "," + markerTop + "," + markerRight + "," + markerBottom + "]");
+
+            // The FAR CORNER of the marker (closest to the diagram's own absolute corner), not the whole rect:
+            // at extreme cover magnification the fixture's 30x30 viewBox marker can render larger than the
+            // host's client extent on the scaled axis (measured: tall-narrow cover renders it at ~390px against
+            // a 360px-tall host), so "the WHOLE marker is on screen" is unsatisfiable by construction at this
+            // scale and would not be testing what AC-N4 actually claims. The far corner is what "no content
+            // lost" is about: it is the pixel closest to the diagram's true edge, and it is the one a `slice`
+            // implementation would make permanently unreachable.
+            assertAll("AC-N4 " + label,
+                      () -> assertTrue(markerRight >= hostLeft - 1.0 && markerRight <= hostRight + 1.0,
+                                       label + ": AC-N4 - the end-marker's far horizontal edge must be reachable inside the host's visible rect after "
+                                                                                                        + "scrolling to the end; markerRight=" + markerRight + " host=[" + hostLeft + "," + hostRight
+                                                                                                        + "]"),
+                      () -> assertTrue(markerBottom >= hostTop - 1.0 && markerBottom <= hostBottom + 1.0,
+                                       label + ": AC-N4 - the end-marker's far vertical edge must be reachable inside the host's visible rect after "
+                                                                                                          + "scrolling to the end; markerBottom=" + markerBottom + " host=[" + hostTop + ","
+                                                                                                          + hostBottom + "]"));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // AC-N5 - the filled axis genuinely FILLS: not merely "no overflow" (also true of a diagram half the
+    // box's size), but the rendered extent on the non-overflowing axis equals the host's client extent
+    // within 1px.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void planCover_filledAxisGenuinelyFills_wideFlatCover() throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_COVER_WIDE_FLAT_CARD_TITLE);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "1");
+
+            JsonNode g = this.measureGeometry(card);
+            System.out.println("[plan-266 AC-N5] wide-flat cover - svgHeight=" + g.get("svgHeight")
+                                                                                  .asDouble()
+                               + " clientHeight=" + g.get("clientHeight")
+                                                     .asDouble());
+            assertEquals(g.get("clientHeight")
+                          .asDouble(),
+                         g.get("svgHeight")
+                          .asDouble(),
+                         1.0, "AC-N5 - the filled (vertical) axis must equal the host's client height within 1px");
+        }
+    }
+
+    @Test
+    void planCover_filledAxisGenuinelyFills_tallNarrowCover() throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_COVER_TALL_NARROW_CARD_TITLE);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "1");
+
+            JsonNode g = this.measureGeometry(card);
+            System.out.println("[plan-266 AC-N5] tall-narrow cover - svgWidth=" + g.get("svgWidth")
+                                                                                   .asDouble()
+                               + " clientWidth=" + g.get("clientWidth")
+                                                    .asDouble());
+            assertEquals(g.get("clientWidth")
+                          .asDouble(),
+                         g.get("svgWidth")
+                          .asDouble(),
+                         1.0, "AC-N5 - the filled (horizontal) axis must equal the host's client width within 1px");
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // AC-N6 - "Whole diagram" restores contain, asserted on the SAME fixture where Fit overflows (wide-flat
+    // cover), so the two entries are observably different. This also re-points plan-265's original
+    // atFit_noOverflow_wideFlat/TallNarrow intent (see the section below): "no overflow" is still a real,
+    // testable property of THIS component, it just now lives under a different name.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void planCover_wholeDiagram_restoresContain_wideFlatCover() throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_COVER_WIDE_FLAT_CARD_TITLE);
+            this.waitForDiagramMounted(card);
+
+            // Precondition: Fit genuinely overflows on this fixture (AC-N1's own claim), so the two entries
+            // below are OBSERVABLY different, not coincidentally the same.
+            this.setZoomRatio(card, "1");
+            JsonNode atFit = this.measureGeometry(card);
+
+            this.setZoomRatio(card, "whole");
+            JsonNode atWhole = this.measureGeometry(card);
+
+            System.out.println("[plan-266 AC-N6] wide-flat - @Fit scroll=" + atFit.get("scrollWidth")
+                                                                                  .asDouble()
+                               + "x" + atFit.get("scrollHeight")
+                                            .asDouble()
+                               + " client=" + atFit.get("clientWidth")
+                                                   .asDouble()
+                               + "x" + atFit.get("clientHeight")
+                                            .asDouble()
+                               + "; @Whole diagram scroll=" + atWhole.get("scrollWidth")
+                                                                     .asDouble()
+                               + "x" + atWhole.get("scrollHeight")
+                                              .asDouble()
+                               + " client=" + atWhole.get("clientWidth")
+                                                     .asDouble()
+                               + "x" + atWhole.get("clientHeight")
+                                              .asDouble());
+
+            assertAll("AC-N6",
+                      () -> assertTrue(atFit.get("scrollWidth")
+                                            .asDouble() > atFit.get("clientWidth")
+                                                               .asDouble(),
+                                       "AC-N6 precondition - Fit must genuinely overflow on this fixture"),
+                      () -> assertEquals(atWhole.get("clientWidth")
+                                                .asDouble(),
+                                         atWhole.get("scrollWidth")
+                                                .asDouble(),
+                                         0.5, "AC-N6 - Whole diagram must not overflow horizontally"),
+                      () -> assertEquals(atWhole.get("clientHeight")
+                                                .asDouble(),
+                                         atWhole.get("scrollHeight")
+                                                .asDouble(),
+                                         0.5, "AC-N6 - Whole diagram must not overflow vertically"));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // AC-N7 - where the diagram's aspect equals the host's (the calibrated square-aspect fixture, ratio
+    // 800/260 both ways by construction), Whole diagram and Fit produce IDENTICAL geometry, and both stay
+    // selectable without the control misbehaving.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void planCover_squareAspect_fitAndWholeDiagramAreIdentical() throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_SQUARE_ASPECT_CARD_TITLE);
+            this.waitForDiagramMounted(card);
+
+            this.setZoomRatio(card, "1");
+            JsonNode atFit = this.measureGeometry(card);
+
+            this.setZoomRatio(card, "whole");
+            JsonNode atWhole = this.measureGeometry(card);
+
+            // Both remain selectable afterwards - switch back to Fit and confirm the <select> reports it.
+            this.setZoomRatio(card, "1");
+            String selectValueAfter = (String) card.locator("select[aria-label='Zoom ratio']")
+                                                   .inputValue();
+
+            System.out.println("[plan-266 AC-N7] square-aspect - @Fit svg=" + atFit.get("svgWidth")
+                                                                                   .asDouble()
+                               + "x" + atFit.get("svgHeight")
+                                            .asDouble()
+                               + "; @Whole diagram svg=" + atWhole.get("svgWidth")
+                                                                  .asDouble()
+                               + "x" + atWhole.get("svgHeight")
+                                              .asDouble());
+
+            assertAll("AC-N7",
+                      () -> assertEquals(atFit.get("svgWidth")
+                                              .asDouble(),
+                                         atWhole.get("svgWidth")
+                                                .asDouble(),
+                                         0.5, "AC-N7 - svg width must be identical between Fit and Whole diagram"),
+                      () -> assertEquals(atFit.get("svgHeight")
+                                              .asDouble(),
+                                         atWhole.get("svgHeight")
+                                                .asDouble(),
+                                         0.5, "AC-N7 - svg height must be identical between Fit and Whole diagram"),
+                      () -> assertEquals(atFit.get("clientWidth")
+                                              .asDouble(),
+                                         atFit.get("scrollWidth")
+                                              .asDouble(),
+                                         0.5, "AC-N7 - Fit itself must not overflow when the aspects coincide"),
+                      () -> assertEquals("1", selectValueAfter, "AC-N7 - the ratio control must still report Fit after switching back to it"));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // AC-N9 - ratio multiples are relative to the cover base: at 200% the rendered extent on the FILLED
+    // axis is exactly twice its Fit extent (using tall-narrow cover, whose filled axis is width).
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void planCover_ratioMultiple_200PercentDoublesTheFilledAxis() throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_COVER_TALL_NARROW_CARD_TITLE);
+            this.waitForDiagramMounted(card);
+
+            this.setZoomRatio(card, "1");
+            double fitWidth = this.measureGeometry(card)
+                                  .get("svgWidth")
+                                  .asDouble();
+
+            this.setZoomRatio(card, "2");
+            double at200Width = this.measureGeometry(card)
+                                    .get("svgWidth")
+                                    .asDouble();
+
+            System.out.println("[plan-266 AC-N9] tall-narrow cover - filled axis @Fit=" + fitWidth + " @200%=" + at200Width + " ratio="
+                               + (at200Width / fitWidth));
+
+            assertAll("AC-N9", () -> assertTrue(fitWidth > 0, "AC-N9 precondition - the Fit extent must be a real positive measurement"),
+                      () -> assertEquals(fitWidth * 2, at200Width, fitWidth * 0.02,
+                                         "AC-N9 - the filled axis at 200% must be exactly twice its Fit extent; Fit=" + fitWidth + " 200%=" + at200Width));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // AC-N10 - resize switches the overflowing axis. A measure-once-on-mount implementation would pass
+    // every criterion above and fail this. MEASURED viewports: 1600 wide gives horizontal overflow (host
+    // aspect 4.35 < diagram aspect 7.5), 4200 wide flips host aspect past the diagram's (measured host
+    // 4166x360 -> hostAspect 11.57 > 7.5), so the overflow axis switches to vertical.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void planCover_resizeSwitchesTheOverflowingAxis() throws Exception
+    {
+        boolean narrowOverflowsHorizontally;
+        boolean narrowOverflowsVertically;
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_COVER_WIDE_FLAT_CARD_TITLE);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "1");
+            JsonNode g = this.measureGeometry(card);
+            narrowOverflowsHorizontally = g.get("scrollWidth")
+                                           .asDouble() > g.get("clientWidth")
+                                                          .asDouble();
+            narrowOverflowsVertically = g.get("scrollHeight")
+                                         .asDouble() > g.get("clientHeight")
+                                                        .asDouble();
+            System.out.println("[plan-266 AC-N10] viewport 1600 - client=" + g.get("clientWidth")
+                                                                              .asDouble()
+                               + "x" + g.get("clientHeight")
+                                        .asDouble()
+                               + " scroll=" + g.get("scrollWidth")
+                                               .asDouble()
+                               + "x" + g.get("scrollHeight")
+                                        .asDouble());
+        }
+
+        boolean wideOverflowsHorizontally;
+        boolean wideOverflowsVertically;
+        try (BrowserContext context = this.browser.newContext(new Browser.NewContextOptions().setViewportSize(new ViewportSize(4200, 1000))))
+        {
+            Page page = context.newPage();
+            page.navigate("http://localhost:" + this.port + "/");
+            Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_COVER_WIDE_FLAT_CARD_TITLE);
+            card.first()
+                .waitFor(new Locator.WaitForOptions().setTimeout(10000));
+            this.waitForSettled(page);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "1");
+            JsonNode g = this.measureGeometry(card);
+            wideOverflowsHorizontally = g.get("scrollWidth")
+                                         .asDouble() > g.get("clientWidth")
+                                                        .asDouble();
+            wideOverflowsVertically = g.get("scrollHeight")
+                                       .asDouble() > g.get("clientHeight")
+                                                      .asDouble();
+            System.out.println("[plan-266 AC-N10] viewport 4200 - client=" + g.get("clientWidth")
+                                                                              .asDouble()
+                               + "x" + g.get("clientHeight")
+                                        .asDouble()
+                               + " scroll=" + g.get("scrollWidth")
+                                               .asDouble()
+                               + "x" + g.get("scrollHeight")
+                                        .asDouble());
+        }
+
+        assertAll("AC-N10", () -> assertTrue(narrowOverflowsHorizontally && !narrowOverflowsVertically,
+                                             "AC-N10 precondition - at the narrower viewport the diagram must overflow horizontally only"),
+                  () -> assertTrue(!wideOverflowsHorizontally && wideOverflowsVertically,
+                                   "AC-N10 - at the wider viewport the overflowing axis must have switched to vertical"));
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // plan-266 §2.9b / AC-N12 - the circular case: a percentage minimum resolving against a content box
+    // that itself shrinks once the scrollbar the minimum caused appears. Headless Chromium's gutter is
+    // 0px (measured, no flag defeats it - plan-265 F1) so this is unfalsifiable headless; setHeadless(false)
+    // yields a genuine 17px gutter inside the Surefire JVM on this machine (the tell: devicePixelRatio
+    // reads 1.0000000149011612, not exactly 1.0). Runs AC-N1/N5 headed on wide-flat cover.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void planCover_headed_circularScrollbarGutterCase_doesNotBreakCover() throws Exception
+    {
+        try (Playwright headedPlaywright = Playwright.create())
+        {
+            Browser headedBrowser = headedPlaywright.chromium()
+                                                    .launch(new BrowserType.LaunchOptions().setHeadless(false));
+            try (BrowserContext context = headedBrowser.newContext(new Browser.NewContextOptions().setViewportSize(new ViewportSize(1600, 1000))))
+            {
+                Page page = context.newPage();
+                Object devicePixelRatio = page.evaluate("() => window.devicePixelRatio");
+                page.navigate("http://localhost:" + this.port + "/");
+                Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_COVER_WIDE_FLAT_CARD_TITLE);
+                card.first()
+                    .waitFor(new Locator.WaitForOptions().setTimeout(10000));
+                this.waitForSettled(page);
+                this.waitForDiagramMounted(card);
+                this.setZoomRatio(card, "1");
+
+                JsonNode g = this.measureGeometry(card);
+                double scrollWidth = g.get("scrollWidth")
+                                      .asDouble();
+                double clientWidth = g.get("clientWidth")
+                                      .asDouble();
+                double scrollHeight = g.get("scrollHeight")
+                                       .asDouble();
+                double clientHeight = g.get("clientHeight")
+                                       .asDouble();
+                double svgHeight = g.get("svgHeight")
+                                    .asDouble();
+
+                System.out.println("[plan-266 AC-N12 HEADED] devicePixelRatio=" + devicePixelRatio + " - client=" + clientWidth + "x" + clientHeight
+                                   + " scroll=" + scrollWidth + "x" + scrollHeight + " svgHeight=" + svgHeight);
+
+                assertAll("AC-N12",
+                          () -> assertTrue(scrollWidth > clientWidth, "AC-N12 - AC-N1 must still hold headed: the long axis overflows"),
+                          () -> assertEquals(clientHeight, scrollHeight, 0.5, "AC-N12 - AC-N1 must still hold headed: the filled axis does not overflow"),
+                          () -> assertEquals(clientHeight, svgHeight, 1.0, "AC-N12 - AC-N5 must still hold headed: the filled axis genuinely fills"));
+            }
+            finally
+            {
+                headedBrowser.close();
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // The auto-height residual (plan-266 section 2.9b/2.10, documented rather than hidden). wide-flat's
+    // ORIGINAL (S0/S1) fixture has no explicit height, so nothing makes its host height definite, and
+    // cover's min-height silently fails to resolve - it degenerates to "fit width, let height follow",
+    // which for THIS fixture is indistinguishable from contain. This is NOT the "CSS cannot express cover"
+    // stop condition (the dedicated, definite-height fixtures above prove cover works correctly); it is a
+    // scoped, measured limitation of an auto-height interactive consumer, which nothing in the codebase
+    // currently ships (the real consumer, KanbanBoardServer's overlay, always sets an explicit height).
+    // Asserting the ACTUAL behaviour rather than omitting it, per the brief's explicit instruction.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void planCover_autoHeightConsumer_coverDegeneratesToWidthFit_documentedNotHidden() throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "1");
+
+            JsonNode g = this.measureGeometry(card);
+            double scrollWidth = g.get("scrollWidth")
+                                  .asDouble();
+            double clientWidth = g.get("clientWidth")
+                                  .asDouble();
+            double scrollHeight = g.get("scrollHeight")
+                                   .asDouble();
+            double clientHeight = g.get("clientHeight")
+                                   .asDouble();
+
+            System.out.println("[plan-266 AC-N residual] wide-flat auto-height @Fit(cover) - client=" + clientWidth + "x" + clientHeight + " scroll="
+                               + scrollWidth + "x" + scrollHeight
+                               + " - EXPECTED-TO-DEGENERATE: no overflow, because nothing makes the host's height definite");
+
+            assertAll("auto-height residual",
+                      () -> assertEquals(clientWidth, scrollWidth, 0.5,
+                                         "documented residual - the auto-height consumer shows no horizontal overflow either, since the box's own width fits"),
+                      () -> assertEquals(clientHeight, scrollHeight, 0.5,
+                                         "documented residual - cover degenerates to a width-fit and reports NO vertical overflow, even though wide-flat's "
+                                                                          + "aspect (7.5) differs sharply from a typical host aspect; this is the measured limitation, not a false pass"));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // Re-pointed from plan-265's original atFit_noOverflow_tallNarrow/wideFlat and
+    // at50Percent_noScrollRegion_andContentCentred_tallNarrow/wideFlat (ruling recorded plan-266 section
+    // 2.9c/2.9d). "Fit" changed meaning from contain to cover by the user's own request, so a method named
+    // "atFit_noOverflow" that still selected ratio "1" would now be asserting something FALSE of the
+    // shipped build for an aspect-mismatched fixture (tall-narrow's Fit cover box is 1566x11745 against a
+    // 1566x560 host - genuinely, massively overflowing) and, for wide-flat specifically, GREEN FOR THE
+    // WRONG REASON (the auto-height degeneration documented above). The ORIGINAL intent of both criteria -
+    // "the unzoomed view has no overflow" / "content is centred when there is nothing to scroll" - is still
+    // true and still worth holding, it just now lives under "Whole diagram" rather than "Fit". Renamed
+    // rather than silently kept under the old name, per the ruling's non-negotiable condition: a method
+    // called atFit_noOverflow that actually selects "whole" would be a booby trap for a future reader.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void atWholeDiagram_noOverflow_tallNarrow() throws Exception
+    {
+        this.assertNoOverflowAtWholeDiagram(ComponentShowcaseUI.DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE, "tall-narrow");
+    }
+
+    @Test
+    void atWholeDiagram_noOverflow_wideFlat() throws Exception
+    {
+        this.assertNoOverflowAtWholeDiagram(ComponentShowcaseUI.DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE, "wide-flat");
+    }
+
+    private void assertNoOverflowAtWholeDiagram(String cardTitle, String fixtureLabel) throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, cardTitle);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "whole");
+
+            JsonNode g = this.measureGeometry(card);
+            double scrollWidth = g.get("scrollWidth")
+                                  .asDouble();
+            double clientWidth = g.get("clientWidth")
+                                  .asDouble();
+            double scrollHeight = g.get("scrollHeight")
+                                   .asDouble();
+            double clientHeight = g.get("clientHeight")
+                                   .asDouble();
+
+            System.out.println("[plan-266 AC-N6 re-point] " + fixtureLabel + " @Whole diagram - scrollWidth=" + scrollWidth + "px clientWidth=" + clientWidth
+                               + "px, scrollHeight=" + scrollHeight + "px clientHeight=" + clientHeight + "px");
+
+            assertAll(fixtureLabel + " Whole diagram no-overflow",
+                      () -> assertEquals(clientWidth, scrollWidth, 0.5, fixtureLabel + ": scrollWidth must equal clientWidth at Whole diagram"),
+                      () -> assertEquals(clientHeight, scrollHeight, 0.5, fixtureLabel + ": scrollHeight must equal clientHeight at Whole diagram"));
+        }
+    }
+
+    @Test
+    void atWholeDiagram_noScrollRegion_andContentCentred_tallNarrow() throws Exception
+    {
+        this.assertCentredAtWholeDiagram(ComponentShowcaseUI.DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE, "tall-narrow");
+    }
+
+    @Test
+    void atWholeDiagram_noScrollRegion_andContentCentred_wideFlat() throws Exception
+    {
+        this.assertCentredAtWholeDiagram(ComponentShowcaseUI.DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE, "wide-flat");
+    }
+
+    private void assertCentredAtWholeDiagram(String cardTitle, String fixtureLabel) throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, cardTitle);
+            this.waitForDiagramMounted(card);
+            this.setZoomRatio(card, "whole");
+
+            JsonNode g = this.measureGeometry(card);
+            double scrollWidth = g.get("scrollWidth")
+                                  .asDouble();
+            double clientWidth = g.get("clientWidth")
+                                  .asDouble();
+            double scrollHeight = g.get("scrollHeight")
+                                   .asDouble();
+            double clientHeight = g.get("clientHeight")
+                                   .asDouble();
+            double hostCentreX = g.get("hostLeft")
+                                  .asDouble()
+                                 + g.get("hostWidth")
+                                    .asDouble()
+                                   / 2;
+            double hostCentreY = g.get("hostTop")
+                                  .asDouble()
+                                 + g.get("hostHeight")
+                                    .asDouble()
+                                   / 2;
+            double svgCentreX = g.get("svgLeft")
+                                 .asDouble()
+                                + g.get("svgWidth")
+                                   .asDouble()
+                                  / 2;
+            double svgCentreY = g.get("svgTop")
+                                 .asDouble()
+                                + g.get("svgHeight")
+                                   .asDouble()
+                                  / 2;
+
+            System.out.println("[plan-266 re-point] " + fixtureLabel + " @Whole diagram - scrollWidth=" + scrollWidth + "px clientWidth=" + clientWidth
+                               + "px, scrollHeight=" + scrollHeight + "px clientHeight=" + clientHeight + "px");
+            System.out.println("[plan-266 re-point] " + fixtureLabel + " @Whole diagram - host centre=(" + hostCentreX + "," + hostCentreY + "), svg centre=("
+                               + svgCentreX + "," + svgCentreY + ")");
+
+            assertAll(fixtureLabel + " Whole diagram centred",
+                      () -> assertEquals(clientWidth, scrollWidth, 0.5, fixtureLabel + ": no horizontal scroll region at Whole diagram"),
+                      () -> assertEquals(clientHeight, scrollHeight, 0.5, fixtureLabel + ": no vertical scroll region at Whole diagram"),
+                      () -> assertEquals(hostCentreX, svgCentreX, 2.0,
+                                         fixtureLabel + ": content must be horizontally centred at Whole diagram; host centre x=" + hostCentreX + " svg centre x="
+                                                                       + svgCentreX),
+                      () -> assertEquals(hostCentreY, svgCentreY, 2.0,
+                                         fixtureLabel + ": content must be vertically centred at Whole diagram; host centre y=" + hostCentreY + " svg centre y="
+                                                                       + svgCentreY));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // NEW coverage for "50%" under cover semantics, per the ruling's second condition. 50% is now HALF OF
+    // COVER, not half of contain: an aspect-mismatched fixture (tall-narrow, whose Fit cover box already
+    // overflows 21x) must STILL overflow at 50%, at roughly HALF the Fit overflow. A ratio alone would be
+    // structurally blind to a defect that scales both terms together (plan-266 section 2.10(b) / AC-4's own
+    // lesson) - so an ABSOLUTE pixel value is pinned alongside the ratio.
+    // ------------------------------------------------------------------------------------------------
+
+    @Test
+    void at50Percent_isHalfOfCover_stillOverflowsAtRoughlyHalfTheFitAmount_tallNarrow() throws Exception
+    {
+        try (BrowserContext context = this.newContext())
+        {
+            Page page = this.openBoard(context);
+            Locator card = this.card(page, ComponentShowcaseUI.DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE);
+            this.waitForDiagramMounted(card);
+
+            this.setZoomRatio(card, "1");
+            double fitSvgHeight = this.measureGeometry(card)
+                                      .get("svgHeight")
+                                      .asDouble();
+
+            this.setZoomRatio(card, "0.5");
+            JsonNode at50 = this.measureGeometry(card);
+            double svgHeightAt50 = at50.get("svgHeight")
+                                       .asDouble();
+            double clientHeight = at50.get("clientHeight")
+                                      .asDouble();
+            double scrollHeight = at50.get("scrollHeight")
+                                      .asDouble();
+
+            System.out.println("[plan-266 50% cover] tall-narrow - Fit svgHeight=" + fitSvgHeight + ", 50% svgHeight=" + svgHeightAt50 + " (ratio="
+                               + (svgHeightAt50 / fitSvgHeight) + "), 50% client=" + clientHeight + " scroll=" + scrollHeight);
+
+            assertAll("50% cover",
+                      // The RATIO check alone (structurally blind to a defect scaling both terms - plan-266's own
+                      // AC-4 lesson): 50% must be exactly HALF of Fit's rendered extent.
+                      () -> assertEquals(0.5, svgHeightAt50 / fitSvgHeight, 0.02, "50% must render at exactly half of Fit's extent on the scaled axis"),
+                      // The ABSOLUTE pixel pin, independent of the ratio above: 50% must STILL overflow the host
+                      // vertically for this aspect-mismatched fixture (an implementation that silently clamped
+                      // "50%" back to "never exceed the box" would pass the ratio check above and fail this).
+                      () -> assertTrue(scrollHeight > clientHeight,
+                                       "50% cover must still overflow vertically for tall-narrow (aspect mismatch against the host); scrollHeight=" + scrollHeight
+                                                                    + " clientHeight=" + clientHeight),
+                      () -> assertTrue(svgHeightAt50 > 2000.0,
+                                       "50% cover's absolute rendered height must be substantial (not silently clamped to the host box); measured "
+                                                               + svgHeightAt50 + "px"));
+        }
+    }
+
     // ------------------------------------------------------------------------------------------------
     // helpers
     // ------------------------------------------------------------------------------------------------
@@ -1499,6 +2257,16 @@ public class DiagramViewerZoomOverflowIT
         Locator host = card.locator(".diagram-viewer-svg-host");
         String json = (String) host.evaluate("(host) => {" + "  const marker = host.querySelector('#marker-rect');"
                                              + "  const r = marker.getBoundingClientRect();" + "  return JSON.stringify({ x: r.x, y: r.y });" + "}");
+        return OBJECT_MAPPER.readTree(json);
+    }
+
+    /** plan-266 AC-N4 - the bounding rect of any element inside {@code .diagram-viewer-svg-host} matching {@code selector} (e.g. {@code "#end-marker"}). */
+    private JsonNode measureElementRect(Locator card, String selector) throws Exception
+    {
+        Locator host = card.locator(".diagram-viewer-svg-host");
+        String json = (String) host.evaluate("(host, sel) => {" + "  const el = host.querySelector(sel);"
+                                             + "  const r = el.getBoundingClientRect();"
+                                             + "  return JSON.stringify({ left: r.left, top: r.top, width: r.width, height: r.height });" + "}", selector);
         return OBJECT_MAPPER.readTree(json);
     }
 
