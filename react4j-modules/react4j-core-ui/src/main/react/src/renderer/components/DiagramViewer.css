@@ -56,6 +56,74 @@
  * never the SVG's oversized intrinsic height, and the on-card thumbnail and maximized overlay both show
  * the correctly scaled-down whole diagram rather than a cropped top slice.
  *
+ * TWO-AXIS NATIVE SCROLL CONTAINER (plan-265 S1, Cliffs C1-A / C2-B / C3-B). The zoom mechanism moved
+ * OUT of the injected <svg>'s viewBox attribute and INTO this element's own rendered box size, because a
+ * viewBox rewrite shows LESS of the diagram in the same box and therefore produces nothing to scroll at
+ * any zoom level. The svg's box is now "calc(100% * var(--diagram-viewer-scale, 1))" on BOTH axes, the
+ * custom property being written by DiagramViewer.tsx as an inline style on the host, and the host is
+ * "overflow: auto" - so at scale 4 the svg's box is 4x the host's content box on both axes and the
+ * browser's own scrollbars, wheel, shift+wheel and arrow keys drive it. The viewBox is never rewritten
+ * after mount.
+ *
+ * The "var(..., 1)" FALLBACK IS LOAD-BEARING, not defensive: a non-interactive thumbnail sets no custom
+ * property at all, so its svg computes to exactly "100%" on both axes - byte-identically the old Fit
+ * rendering, with no overflow and therefore no scrollbar, BY CONSTRUCTION rather than by a condition
+ * somebody has to remember to write. The same holds for an interactive viewer sitting at Fit, where
+ * DiagramViewer.tsx deliberately omits the property rather than emitting the value 1.
+ *
+ * "flex: none" ON THE SVG IS LOAD-BEARING. A flex item's default "flex: 0 1 auto" carries
+ * "flex-shrink: 1", which would shrink a "width: 400%" item back to the flex line's size and silently
+ * undo the whole feature - the symptom would be "no horizontal overflow, and the CSS looks right".
+ *
+ * CENTRING IS "margin: auto" ON THE SVG AND MUST NEVER BECOME "justify-content: center" ON THE HOST.
+ * Both centre correctly at scale < 1, and only one of them is usable at scale > 1. In a scroll container
+ * a flex item centred by "justify-content: center" has its START-EDGE overflow UNREACHABLE, because
+ * scrollLeft/scrollTop cannot go negative - so at 400% the left and top of the diagram are permanently
+ * cut off, while every "does it overflow / does scrolling move it" assertion still passes. "margin: auto"
+ * absorbs only POSITIVE free space; with negative free space the auto margins compute to 0, so all
+ * overflow stays in the end direction and the whole diagram is reachable. Vertical centring is why the
+ * host has to be a flex container at all - auto margins cannot centre vertically in normal flow.
+ * Guarded by plan-265 AC-10 plus mutation M2 (swap in justify-content: center -> AC-10 reds); the
+ * centring half is guarded from the other side by mutation M3 (delete margin: auto -> AC-6 reds).
+ *
+ * "overscroll-behavior: contain" STOPS THE PAGE MOVING OUT FROM UNDER A TRACED LINE. Reaching the
+ * diagram's edge mid-trace must not chain the wheel gesture out to the modal or the page. It costs
+ * nothing at Fit: an element whose content does not overflow is not a scroll target for the gesture at
+ * all, so a thumbnail and an unzoomed viewer still let the wheel reach the page exactly as before - the
+ * containment only engages once there is genuinely a diagram to scroll.
+ *
+ * .diagram-viewer-controls MOVED FROM top/right TO top/left (plan-265 Cliff C3-B). Both new scrollbars
+ * live on the host's right and bottom edges, and the host's right edge IS .diagram-viewer's right edge,
+ * so an absolutely-positioned cluster at "right: 4px" would sit on top of the vertical scrollbar's
+ * track. Top-left is the only corner clear of BOTH scrollbars. Guarded by AC-8b, which is green before
+ * and after only because of this declaration.
+ *
+ * MEASURED 2026-09-27 in real headless Chromium (plan-265 S1), appended to the record above rather than
+ * replacing it - the three findings above are still true of the pre-plan-265 configuration and are why
+ * the flex chain looks as it does. The chain SURVIVED the change and was re-measured rather than
+ * assumed, including the thumbnail box the 616.5px failure lived in:
+ *   - tall-narrow interactive (max-height 60vh, viewport 1600x1000): at Fit, scrollWidth/scrollHeight
+ *     1566/600 against clientWidth/clientHeight 1566/600 - equal, so no scroll region. At 400%,
+ *     scrollWidth/scrollHeight 6264/2400 against 1566/600 - exactly 4x on BOTH axes. So "calc(100% * s)"
+ *     DOES resolve against the host's content box for s != 1 exactly as the plain "100%" already did at
+ *     s = 1, which was the open risk this change was most likely to founder on.
+ *   - wide-flat interactive: 1566/209 == 1566/209 at Fit; 6264/2400 against 1566/600 at 400%. The
+ *     riskiest axis (a percentage height against an ancestor whose own height is content-determined,
+ *     with no explicit height anywhere in the chain) resolves correctly too. NOTE the host's own
+ *     clientHeight grows 209 -> 600 on zoom: .diagram-viewer has no explicit height in this fixture, so
+ *     its auto height follows its content up to the max-height bound. A consumer that sets a height
+ *     (KanbanBoardServer's maximized overlay uses withHeight("100%")) keeps a fixed box; a thumbnail is
+ *     non-interactive and never zooms, so no shipped rendering changes size unexpectedly.
+ *   - at 50%: no scroll region on either axis (1566/600 == 1566/600 tall-narrow, 1566/104 == 1566/104
+ *     wide-flat) and the svg's centre coincides with the host's to within 0.01px - margin:auto centring.
+ *   - non-interactive thumbnail (no custom property emitted at all): 1566/600 == 1566/600 - no overflow
+ *     and no scrollbar, which is the "Fit is unchanged" guarantee measured rather than argued.
+ *   - SCROLLBAR GUTTER MEASURED AT 0 in this headless Chromium: the host's clientWidth (1566) equals
+ *     .diagram-viewer's full border-box width even while scrollWidth is 6264, i.e. the scrollbars are
+ *     OVERLAY, not classic. Recorded because it bounds what AC-8b can prove: on this platform the
+ *     cluster would clear the gutter at top-right too, so the top-left move above is justified by the
+ *     reviewed screenshot and by classic-scrollbar platforms, not by that numeric check passing here.
+ *
  * WHITE BACKGROUND (plan-261 S2 / 3.1): explicit and here, in the framework component's own stylesheet,
  * NOT in an application's custom.css. custom.css is the slot an application customises - anything
  * structural placed there is lost the moment an app ships its own copy, silently, with only a layout
@@ -76,19 +144,23 @@
     flex: 1 1 auto;
     min-height: 0;
     min-width: 0;
-    overflow: hidden;
+    overflow: auto;
+    display: flex;
+    overscroll-behavior: contain;
 }
 
 .diagram-viewer-svg-host > svg {
     display: block;
-    width: 100%;
-    height: 100%;
+    flex: none;
+    margin: auto;
+    width: calc(100% * var(--diagram-viewer-scale, 1));
+    height: calc(100% * var(--diagram-viewer-scale, 1));
 }
 
 .diagram-viewer-controls {
     position: absolute;
     top: 4px;
-    right: 4px;
+    left: 4px;
     display: flex;
     gap: 4px;
     z-index: 1;

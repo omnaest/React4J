@@ -130,7 +130,9 @@ public class DiagramViewerImpl extends AbstractUIComponent<DiagramViewer> implem
             @Override
             public void manageEventHandler(EventHandlerRegistrationSupport eventHandlerRegistrationSupport)
             {
-                // purely client-side interaction (zoom/pan) - there is no server EventHandler to register
+                // purely client-side interaction (zoom, and scrolling driven by the browser's own scroll
+                // container) - there is no server EventHandler to register, and the scale is client state
+                // only, so nothing about this interaction reaches DiagramViewerNode or the wire
             }
 
             @Override

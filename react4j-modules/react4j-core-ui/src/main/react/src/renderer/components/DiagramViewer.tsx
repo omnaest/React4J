@@ -60,26 +60,68 @@ interface ViewBox {
     height: number;
 }
 
+/**
+ * A drag in progress, captured at mousedown: the pointer's start position plus the scroll offsets the
+ * host held at that moment. Drag-pan writes `scrollLeft`/`scrollTop` (plan-265) - it no longer rewrites
+ * the `viewBox`, so it needs no viewBox units and no host measurement to convert into them.
+ */
 interface PanState {
     startClientX: number;
     startClientY: number;
-    originX: number;
-    originY: number;
+    originScrollLeft: number;
+    originScrollTop: number;
+}
+
+/** The host's scroll offsets and content-box size, sampled BEFORE a scale change (see adjustScrollToPreserveCentre). */
+interface ScrollViewport {
+    scrollLeft: number;
+    scrollTop: number;
+    clientWidth: number;
+    clientHeight: number;
 }
 
 const ZOOM_FACTOR = 1.2;
 
 /**
+ * The CSS custom property through which the current zoom scale reaches layout - the single seam between
+ * this component's React state and DiagramViewer.css, one-way and private to the pair. The stylesheet
+ * sizes the injected `<svg>` as `calc(100% * var(--diagram-viewer-scale, 1))` on both axes.
+ *
+ * The property is deliberately OMITTED rather than emitted as `1` at Fit, and omitted entirely for a
+ * non-interactive viewer: the stylesheet's `var(..., 1)` fallback then makes "Fit renders exactly as it
+ * always did, with no scroll region" structural rather than conditional - there is no value to get wrong
+ * and no branch to forget. See DiagramViewer.css for the full mechanism and its measurements.
+ */
+const SCALE_CSS_PROPERTY = "--diagram-viewer-scale";
+
+/**
  * Displays an SVG diagram, fitted into its container by default via pure CSS (viewBox +
  * preserveAspectRatio letterboxing, no measurement - see DiagramViewer.css), with optional zoom (in /
- * out / reset) and pan by rewriting the rendered `<svg>`'s `viewBox` around a base captured on mount.
+ * out / reset) and two-axis scrolling.
+ *
+ * Zoom changes the injected `<svg>`'s RENDERED BOX SIZE, never its `viewBox`: the scale is published to
+ * DiagramViewer.css through the {@link SCALE_CSS_PROPERTY} custom property, the stylesheet sizes the svg
+ * at `calc(100% * scale)` on both axes, and the host is `overflow: auto`. So zooming in makes the element
+ * genuinely larger than its scroll container and the browser's own scrollbars, wheel, shift+wheel, arrow
+ * keys and (retargeted) drag-pan all traverse it on both axes - which is what lets a user follow a long
+ * edge across a zoomed diagram without losing their place. **The `viewBox` is read once on mount and
+ * never written after**, and that invariant is load-bearing: element-sizing zoom and viewBox zoom are
+ * mutually exclusive mechanisms, and running both would fight. It is pinned by a test
+ * (DiagramViewer.test.tsx) and by plan-265 AC-4.
+ *
+ * Changing the scale preserves the point the viewport was centred on, by adjusting the scroll offsets in
+ * proportion to the scale change (see adjustScrollToPreserveCentre) - so zooming does not throw away
+ * where the user had scrolled to. Returning to Fit needs no explicit scroll reset: at scale 1 the svg's
+ * box equals the host's content box, the scrollable overflow disappears, and the browser clamps both
+ * offsets back to 0 on its own.
  *
  * The root `<svg>`'s own `width`/`height` attributes are left untouched - CSS overrides them (see
  * DiagramViewer.css); stripping them while leaving `viewBox` alone renders at roughly 9x natural size,
  * a measured workspace finding.
  *
  * An SVG with no `viewBox` degrades to a static render: `hasViewBox` stays `false`, so the zoom/pan
- * controls are never shown and the pan handlers no-op - the diagram itself still renders normally.
+ * controls are never shown and the scale never leaves 1 - the diagram itself still renders normally, and
+ * with no overflow there is nothing for a drag or a key press to move.
  */
 export class DiagramViewer extends React.Component<Props, State> {
     public static TYPE: string = "DIAGRAMVIEWER";
@@ -139,40 +181,54 @@ export class DiagramViewer extends React.Component<Props, State> {
         }
     }
 
-    private currentViewBox(): ViewBox | null {
-        const svg = this.getSvgElement();
-        return svg ? this.parseViewBox(svg.getAttribute("viewBox")) : null;
+    /**
+     * The single place the scale is changed. Publishes the new scale to state (and from there, via render,
+     * to {@link SCALE_CSS_PROPERTY}), then re-centres the viewport on whatever it was centred on before.
+     *
+     * The viewport sample has to be taken HERE, before `setState`, because by the time the adjustment runs
+     * the layout has already changed and the old offsets are gone. The adjustment itself runs in the
+     * `setState` completion callback, which React invokes after the DOM has been updated - so reading
+     * `scrollWidth`/`clientWidth` there reflects the new box (the read forces the pending layout), while
+     * `componentDidUpdate` would need a prevState comparison to tell a scale change from any other
+     * re-render.
+     */
+    private applyScale(scale: number): void {
+        const host = this.svgHostRef.current;
+        const before: ScrollViewport | null = host
+            ? { scrollLeft: host.scrollLeft, scrollTop: host.scrollTop, clientWidth: host.clientWidth, clientHeight: host.clientHeight }
+            : null;
+        const previousScale = this.state.scale;
+        this.setState({ scale }, () => this.adjustScrollToPreserveCentre(before, previousScale, scale));
     }
 
-    private applyViewBox(viewBox: ViewBox): void {
-        const svg = this.getSvgElement();
-        if (!svg) {
+    /**
+     * Keeps the point the viewport was centred on centred across a scale change. A content offset `p` in
+     * the old layout lands at `p * (scale / previousScale)` in the new one, and the old viewport centre sat
+     * at `scrollLeft + clientWidth / 2` - so the new offset is that, rescaled, minus half the viewport.
+     * Clamped into the host's actual scrollable range, which also covers the Fit case: at scale 1 there is
+     * no scrollable range at all, so both offsets clamp to 0 and returning to Fit needs no special case.
+     */
+    private adjustScrollToPreserveCentre(before: ScrollViewport | null, previousScale: number, scale: number): void {
+        const host = this.svgHostRef.current;
+        if (!host || !before || previousScale <= 0) {
             return;
         }
-        svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
+        const factor = scale / previousScale;
+        const targetLeft = (before.scrollLeft + before.clientWidth / 2) * factor - host.clientWidth / 2;
+        const targetTop = (before.scrollTop + before.clientHeight / 2) * factor - host.clientHeight / 2;
+        host.scrollLeft = Math.max(0, Math.min(targetLeft, host.scrollWidth - host.clientWidth));
+        host.scrollTop = Math.max(0, Math.min(targetTop, host.scrollHeight - host.clientHeight));
     }
 
     private zoom(factor: number): void {
         if (!this.baseViewBox) {
             return;
         }
-        const current = this.currentViewBox() || this.baseViewBox;
-        const newWidth = current.width / factor;
-        const newHeight = current.height / factor;
-        // Zoom around the CURRENT viewBox's center, so repeated zoom-in/out keeps whatever the user has
-        // already panned to centered, rather than recentering on the base every time.
-        const centerX = current.x + current.width / 2;
-        const centerY = current.y + current.height / 2;
-        this.applyViewBox({
-            x: centerX - newWidth / 2,
-            y: centerY - newHeight / 2,
-            width: newWidth,
-            height: newHeight
-        });
-        // Keep the explicit scale state in sync (plan-261 Cliff C4). +/- multiply by ZOOM_FACTOR, so the
-        // result generally lands BETWEEN the fixed ratios - the ratio control shows a neutral "Custom"
-        // marker in that case rather than snapping to a misleading nearest label (see CUSTOM_RATIO_VALUE).
-        this.setState({ scale: this.baseViewBox.width / newWidth });
+        // Relative to the CURRENT scale, so repeated zoom-in/out compounds from where the user is, exactly
+        // as the previous viewBox-rewriting implementation did. +/- multiply by ZOOM_FACTOR, so the result
+        // generally lands BETWEEN the fixed ratios - the ratio control shows a neutral "Custom" marker in
+        // that case rather than snapping to a misleading nearest label (see CUSTOM_RATIO_VALUE).
+        this.applyScale(this.state.scale * factor);
     }
 
     private zoomIn = (): void => {
@@ -185,26 +241,14 @@ export class DiagramViewer extends React.Component<Props, State> {
 
     /**
      * Applies one of the fixed RATIO_OPTIONS ratios (everything except Fit/100%, which is wired straight
-     * to resetZoom below and never recomputed - plan-261 Cliff C4). Jumps to an absolute view at the
-     * requested ratio, centered on the BASE viewBox's center - a deterministic preset, not a relative
-     * adjustment of wherever the user last panned to.
+     * to resetZoom below - plan-261 Cliff C4). Jumps to an absolute scale, keeping the currently centred
+     * point centred like every other scale change.
      */
     private applyRatio(ratio: number): void {
         if (!this.baseViewBox) {
             return;
         }
-        const base = this.baseViewBox;
-        const newWidth = base.width / ratio;
-        const newHeight = base.height / ratio;
-        const centerX = base.x + base.width / 2;
-        const centerY = base.y + base.height / 2;
-        this.applyViewBox({
-            x: centerX - newWidth / 2,
-            y: centerY - newHeight / 2,
-            width: newWidth,
-            height: newHeight
-        });
-        this.setState({ scale: ratio });
+        this.applyScale(ratio);
     }
 
     private selectRatio = (event: React.ChangeEvent<HTMLSelectElement>): void => {
@@ -214,19 +258,24 @@ export class DiagramViewer extends React.Component<Props, State> {
         }
         const ratio = Number(value);
         if (ratio === FIT_RATIO) {
-            // Fit and 100% are one entry, wired to the existing resetZoom, which restores baseViewBox
-            // EXACTLY - not recomputed via applyRatio(1), which would (redundantly, but not identically
-            // in a floating-point sense) reconstruct the same box from its own center/width/height parts.
+            // Fit and 100% are one entry, wired to the existing resetZoom (plan-261 Cliff C4).
             this.resetZoom();
             return;
         }
         this.applyRatio(ratio);
     };
 
+    /**
+     * Returns to Fit. The scroll position needs no explicit reset and deliberately does not get one: at
+     * scale 1 the svg's box equals the host's content box, so the scrollable overflow disappears and the
+     * browser clamps both offsets to 0 by itself (the clamp in adjustScrollToPreserveCentre lands on the
+     * same answer). That is why this button's label stays "Reset zoom" and not "Reset view" - resetting
+     * the zoom is the whole action; losing the scroll offset is a consequence of there being nowhere left
+     * to scroll, not a second thing the button does.
+     */
     private resetZoom = (): void => {
         if (this.baseViewBox) {
-            this.applyViewBox(this.baseViewBox);
-            this.setState({ scale: FIT_RATIO });
+            this.applyScale(FIT_RATIO);
         }
     };
 
@@ -240,43 +289,43 @@ export class DiagramViewer extends React.Component<Props, State> {
         window.removeEventListener("mouseup", this.handleWindowMouseUp);
     }
 
+    /**
+     * Drag-pan, RETARGETED from the `viewBox` to the host's own scroll offsets (plan-265 constraint 3 -
+     * kept, not deleted). Dragging still moves the diagram; only the mechanism underneath changed, and it
+     * got simpler: screen pixels are now scroll pixels, so there is no conversion into viewBox units and no
+     * host measurement to do it with.
+     *
+     * `preventDefault` suppresses the browser's own text/image drag, which would otherwise hijack the
+     * gesture. Because that also suppresses the click's implicit focus, focus is then moved explicitly -
+     * losing it would make the scroll host silently un-keyboard-drivable straight after a drag, which is
+     * exactly the interaction a user tracing a line reaches for next.
+     */
     private handleMouseDown = (event: React.MouseEvent<HTMLDivElement>): void => {
-        if (!this.props.node.interactive || !this.baseViewBox) {
+        const host = this.svgHostRef.current;
+        if (!this.props.node.interactive || !host) {
             return;
         }
-        const current = this.currentViewBox() || this.baseViewBox;
+        event.preventDefault();
+        host.focus();
         this.panState = {
             startClientX: event.clientX,
             startClientY: event.clientY,
-            originX: current.x,
-            originY: current.y
+            originScrollLeft: host.scrollLeft,
+            originScrollTop: host.scrollTop
         };
         this.attachWindowDragListeners();
     };
 
     private handleWindowMouseMove = (event: MouseEvent): void => {
-        if (!this.panState || !this.baseViewBox) {
-            return;
-        }
-        const current = this.currentViewBox() || this.baseViewBox;
         const host = this.svgHostRef.current;
-        if (!host) {
+        if (!this.panState || !host) {
             return;
         }
-        // Convert a screen-pixel drag distance into viewBox units via the host's rendered size, so pan
-        // speed matches whatever the current zoom level is, not the base one. Falls back to a 1:1 scale
-        // when the host has no measured size yet (e.g. not yet laid out).
-        const rect = host.getBoundingClientRect();
-        const scaleX = rect.width > 0 ? current.width / rect.width : 1;
-        const scaleY = rect.height > 0 ? current.height / rect.height : 1;
-        const deltaX = (event.clientX - this.panState.startClientX) * scaleX;
-        const deltaY = (event.clientY - this.panState.startClientY) * scaleY;
-        this.applyViewBox({
-            x: this.panState.originX - deltaX,
-            y: this.panState.originY - deltaY,
-            width: current.width,
-            height: current.height
-        });
+        // Content follows the pointer: dragging LEFT moves the diagram left, i.e. reveals content further
+        // to the right, i.e. INCREASES scrollLeft - hence "origin minus delta". The browser clamps both
+        // assignments into the host's scrollable range, so no clamping is needed here.
+        host.scrollLeft = this.panState.originScrollLeft - (event.clientX - this.panState.startClientX);
+        host.scrollTop = this.panState.originScrollTop - (event.clientY - this.panState.startClientY);
     };
 
     private handleWindowMouseUp = (): void => {
@@ -297,12 +346,27 @@ export class DiagramViewer extends React.Component<Props, State> {
         const showControls = node.interactive && this.state.hasViewBox;
         const selectedRatioOption = RATIO_OPTIONS.find((option) => option.value === this.state.scale);
         const ratioSelectValue = selectedRatioOption ? String(selectedRatioOption.value) : CUSTOM_RATIO_VALUE;
+        // Emitted ONLY away from Fit, and only for an interactive viewer: the stylesheet's var(..., 1)
+        // fallback then renders a thumbnail and an unzoomed viewer at exactly 100% with no scroll region,
+        // by construction rather than by a value this branch has to get right (see SCALE_CSS_PROPERTY).
+        const hostStyle: React.CSSProperties | undefined =
+            node.interactive && this.state.scale !== FIT_RATIO
+                ? ({ [SCALE_CSS_PROPERTY]: String(this.state.scale) } as React.CSSProperties)
+                : undefined;
 
         return (
             <div className="diagram-viewer" style={style}>
                 <div
                     ref={this.svgHostRef}
                     className="diagram-viewer-svg-host"
+                    style={hostStyle}
+                    // The scroll host must be genuinely drivable, not merely scrollable: a tabIndex is what
+                    // makes the browser's own arrow-key scrolling reach it, and the labelled region is what
+                    // names it for a screen reader. Non-interactive thumbnails get none of this - they have
+                    // no overflow to traverse and must stay byte-identically unchanged.
+                    tabIndex={node.interactive ? 0 : undefined}
+                    role={node.interactive ? "region" : undefined}
+                    aria-label={node.interactive ? "Scrollable diagram" : undefined}
                     onMouseDown={node.interactive ? this.handleMouseDown : undefined}
                     // eslint-disable-next-line react/no-danger -- server-rendered SVG markup; see class doc
                     dangerouslySetInnerHTML={{ __html: node.svg || "" }}

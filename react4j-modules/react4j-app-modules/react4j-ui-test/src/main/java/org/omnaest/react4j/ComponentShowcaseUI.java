@@ -84,28 +84,71 @@ import jakarta.annotation.PostConstruct;
 @Profile("!treeTableFullWindow")
 public class ComponentShowcaseUI
 {
-    private static final String                 NAV_TARGET_A_LOCATOR      = "nav-target-a";
-    private static final String                 NAV_TARGET_B_LOCATOR      = "nav-target-b";
+    private static final String                 NAV_TARGET_A_LOCATOR                      = "nav-target-a";
+    private static final String                 NAV_TARGET_B_LOCATOR                      = "nav-target-b";
+
+    /**
+     * plan-265 S0: three addressable {@link org.omnaest.react4j.domain.DiagramViewer} showcase fixtures -
+     * before this slice {@code newDiagramViewer} appeared nowhere in {@code react4j-ui-test} (verified:
+     * zero occurrences across its whole {@code src} tree, main and test), so there was nothing to point a
+     * browser at. Each card's TITLE is the handle a test addresses it by - a deliberate contract, not an
+     * incidental selector: this class and {@code browser.DiagramViewerZoomOverflowIT} are both compiled in
+     * this SAME Maven module (main and test sources share one compile scope), so the IT references these
+     * constants directly rather than a hand-duplicated string literal that could silently drift out of
+     * sync. Two clearly different aspect ratios (roughly 120x900 and 900x120) are used deliberately - a
+     * square fixture could not distinguish a scroll axis that was wired from one that was never touched.
+     */
+    public static final String                  DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE     = "DiagramViewer Tall Narrow (interactive)";
+    public static final String                  DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE       = "DiagramViewer Wide Flat (interactive)";
+    public static final String                  DIAGRAM_VIEWER_NON_INTERACTIVE_CARD_TITLE = "DiagramViewer Thumbnail (non-interactive)";
+
+    /**
+     * Hand-written literal SVGs (plan-265 S0 brief - preferred over pulling in a diagram renderer for a
+     * measuring-instrument fixture). Each carries both a parseable {@code viewBox} AND its own
+     * {@code width}/{@code height} attributes - what real server-rendered diagram SVG looks like, and what
+     * {@code DiagramViewer.tsx}'s {@code hasViewBox} state gates the zoom/pan controls on.
+     * {@code marker-rect} is the SVG-interior element a scroll-geometry test can measure the position of.
+     */
+    private static final String                 DIAGRAM_VIEWER_TALL_NARROW_SVG            = "<svg viewBox=\"0 0 120 900\" width=\"120\" height=\"900\" "
+                                                                                            + "xmlns=\"http://www.w3.org/2000/svg\">"
+                                                                                            + "<rect x=\"0\" y=\"0\" width=\"120\" height=\"900\" fill=\"#eef2ff\" />"
+                                                                                            + "<rect id=\"marker-rect\" x=\"10\" y=\"10\" width=\"30\" height=\"30\" fill=\"#0066cc\" />"
+                                                                                            + "<line x1=\"0\" y1=\"450\" x2=\"120\" y2=\"450\" stroke=\"#333333\" stroke-width=\"2\" />"
+                                                                                            + "<rect x=\"80\" y=\"860\" width=\"30\" height=\"30\" fill=\"#cc0066\" />"
+                                                                                            + "<text x=\"10\" y=\"890\" font-size=\"20\">Tall</text>" + "</svg>";
+
+    private static final String                 DIAGRAM_VIEWER_WIDE_FLAT_SVG              = "<svg viewBox=\"0 0 900 120\" width=\"900\" height=\"120\" "
+                                                                                            + "xmlns=\"http://www.w3.org/2000/svg\">"
+                                                                                            + "<rect x=\"0\" y=\"0\" width=\"900\" height=\"120\" fill=\"#eefaef\" />"
+                                                                                            + "<rect id=\"marker-rect\" x=\"10\" y=\"10\" width=\"30\" height=\"30\" fill=\"#0066cc\" />"
+                                                                                            + "<line x1=\"450\" y1=\"0\" x2=\"450\" y2=\"120\" stroke=\"#333333\" stroke-width=\"2\" />"
+                                                                                            + "<rect x=\"860\" y=\"80\" width=\"30\" height=\"30\" fill=\"#cc0066\" />"
+                                                                                            + "<text x=\"10\" y=\"110\" font-size=\"20\">Wide</text>" + "</svg>";
+
+    private static final String                 DIAGRAM_VIEWER_NON_INTERACTIVE_SVG        = "<svg viewBox=\"0 0 200 200\" width=\"200\" height=\"200\" "
+                                                                                            + "xmlns=\"http://www.w3.org/2000/svg\">"
+                                                                                            + "<rect x=\"0\" y=\"0\" width=\"200\" height=\"200\" fill=\"#fefeee\" />"
+                                                                                            + "<rect x=\"20\" y=\"20\" width=\"40\" height=\"40\" fill=\"#666666\" />" + "</svg>";
 
     @Autowired
     private ReactUIService                      uiService;
 
-    private final AtomicBoolean                 modalVisible              = new AtomicBoolean(false);
-    private final AtomicBoolean                 offcanvasVisible          = new AtomicBoolean(false);
-    private final AtomicBoolean                 toggleButtonPressed       = new AtomicBoolean(false);
+    private final AtomicBoolean                 modalVisible                              = new AtomicBoolean(false);
+    private final AtomicBoolean                 offcanvasVisible                          = new AtomicBoolean(false);
+    private final AtomicBoolean                 toggleButtonPressed                       = new AtomicBoolean(false);
 
     /**
      * Stable {@link ByteArrayChannel} instance held across renders (required by {@link org.omnaest.react4j.component.form.upload.UploadChannel}'s usage
      * contract) so a repeat upload against the same rendered {@code uploadId} keeps working.
      */
-    private final ByteArrayChannel              fileUploadChannel         = ByteArrayChannel.create();
+    private final ByteArrayChannel              fileUploadChannel                         = ByteArrayChannel.create();
 
     /**
      * Small in-memory multi-level tree (plan-76 Slice 8) held as a stable field, mirroring
      * {@link #fileUploadChannel}, so the demo tree's identity (and any provider-internal caching) survives across
      * renders instead of being rebuilt per request.
      */
-    private final ShowcaseTreeTableDataProvider treeTableDataProvider     = new ShowcaseTreeTableDataProvider();
+    private final ShowcaseTreeTableDataProvider treeTableDataProvider                     = new ShowcaseTreeTableDataProvider();
 
     /**
      * plan-235 S3: genuine server-side drag-and-drop demo state (AC-BROWSER-1..5/7). {@code dragDropCardLabel}
@@ -115,21 +158,21 @@ public class ComponentShowcaseUI
      * child of that card, one level of nesting, rendered indented under it). Mutated only from
      * {@link #handleDragDropEvent(String, DropEvent)}, which every demo {@link DropTarget} card shares.
      */
-    private final Map<String, String>           dragDropCardLabel         = new ConcurrentHashMap<>();
-    private final Map<String, List<String>>     dragDropContainerChildren = new ConcurrentHashMap<>();
+    private final Map<String, String>           dragDropCardLabel                         = new ConcurrentHashMap<>();
+    private final Map<String, List<String>>     dragDropContainerChildren                 = new ConcurrentHashMap<>();
 
     /**
      * plan-235 S3 AC-BROWSER-6: bumped by the {@link org.omnaest.react4j.domain.Button} added inside the
      * IntervalRerenderingContainer card's refreshed content, alongside the pre-existing "Server time" paragraph -
      * proves the interval-wrapped subtree still handles a click while it keeps ticking on its own timer.
      */
-    private final AtomicInteger                 intervalClickCount        = new AtomicInteger(0);
+    private final AtomicInteger                 intervalClickCount                        = new AtomicInteger(0);
 
     /**
      * plan-262 S1: bumped by the {@code Breadcrumb} demo's "Library" entry {@code onClick} - demonstrates the
      * new per-entry server-side click handler alongside the existing link-only entries.
      */
-    private final AtomicInteger                 breadcrumbClickCount      = new AtomicInteger(0);
+    private final AtomicInteger                 breadcrumbClickCount                      = new AtomicInteger(0);
 
     @PostConstruct
     public void init()
@@ -344,7 +387,23 @@ public class ComponentShowcaseUI
                                            .withContent(factory.newTreeTable()
                                                                .withColumns(TreeTableColumn.of("name", "Name"), TreeTableColumn.of("kind", "Kind"))
                                                                .withDataProvider(this.treeTableDataProvider)
-                                                               .withWindowSize(3)));
+                                                               .withWindowSize(3)))
+                      // --- plan-265 S0: DiagramViewer showcase fixtures (measuring instrument, no production change) ---
+                      .addComponent(factory.newCard()
+                                           .withTitle(DIAGRAM_VIEWER_TALL_NARROW_CARD_TITLE)
+                                           .withContent(factory.newDiagramViewer()
+                                                               .withSvg(DIAGRAM_VIEWER_TALL_NARROW_SVG)
+                                                               .withInteractive(true)))
+                      .addComponent(factory.newCard()
+                                           .withTitle(DIAGRAM_VIEWER_WIDE_FLAT_CARD_TITLE)
+                                           .withContent(factory.newDiagramViewer()
+                                                               .withSvg(DIAGRAM_VIEWER_WIDE_FLAT_SVG)
+                                                               .withInteractive(true)))
+                      .addComponent(factory.newCard()
+                                           .withTitle(DIAGRAM_VIEWER_NON_INTERACTIVE_CARD_TITLE)
+                                           .withContent(factory.newDiagramViewer()
+                                                               .withSvg(DIAGRAM_VIEWER_NON_INTERACTIVE_SVG)
+                                                               .withInteractive(false)));
     }
 
     /**

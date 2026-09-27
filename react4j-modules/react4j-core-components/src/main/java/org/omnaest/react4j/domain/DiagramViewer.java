@@ -18,8 +18,11 @@ package org.omnaest.react4j.domain;
 /**
  * Displays an SVG diagram and, by default, fits the whole diagram into its container - no clipping, no
  * scrolling required to see its extremities. When {@link #withInteractive(boolean)} is left at its default
- * ({@code true}), the client additionally supports zoom (in / out / reset) and pan by rewriting the rendered
- * {@code <svg>}'s {@code viewBox} around a base captured on mount; reset restores that base exactly.
+ * ({@code true}), the client additionally supports zoom (in / out / reset) and two-axis scrolling: zoom
+ * changes the rendered {@code <svg>}'s own box size rather than its {@code viewBox}, so a zoomed diagram
+ * genuinely overflows its container and the browser's native scrollbars, wheel, shift+wheel, arrow keys and
+ * drag traverse it on both axes - which is what lets a long edge be followed from one end to the other.
+ * Reset returns to the fitted view. The {@code viewBox} is read once on mount and never rewritten.
  * <p>
  * Own node type ({@code DIAGRAMVIEWER}), own client renderer - unlike {@link SVGContainer}, which is a thin
  * delegation to {@link NativeHtml}'s raw-HTML escape hatch and therefore cannot host any client-side
@@ -81,7 +84,9 @@ public interface DiagramViewer extends UIComponent<DiagramViewer>
     public DiagramViewer withHeight(String cssValue);
 
     /**
-     * Whether the client renders zoom/pan controls and wires up the corresponding interaction. Default is
+     * Whether the client renders the zoom controls and wires up the corresponding interaction - zooming,
+     * drag-to-scroll, and the scroll region itself (a non-interactive viewer is never scaled above the
+     * fitted view, so it has no overflow to scroll and stays out of the keyboard tab order). Default is
      * {@code true}. Set to {@code false} for a click-to-open thumbnail that should not itself react to
      * wheel/drag - e.g. an on-card preview whose click opens a separate, interactive rendering elsewhere.
      *
