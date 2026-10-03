@@ -5,7 +5,6 @@ import { Backend } from './backend/Backend';
 import { AxiosHelper } from './utils/AxiosHelper';
 import { InFlightTracker } from './backend/InFlightTracker';
 import { BusyIndicator } from './renderer/components/BusyIndicator';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 interface State {

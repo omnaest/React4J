@@ -21,6 +21,12 @@ memory) for why automocking `Backend`/axios needs an explicit factory mock rathe
 `jest.mock(path)` with no factory - axios's real ESM build is not transformable by CRA's default Jest
 config.
 
+The Bootstrap stylesheets are **not** in the bundle any more: the `prebuild` npm script (`scripts/build-theme.js`, Sass
+1.105) compiles `src/theme/react4j-modern.scss` into `public/css/theme/` (modern plus a stock `bootstrap.min.css`), and
+`react4j-core`'s `IndexHtmlController` links one of them (see "Theme" in its CLAUDE.md). `src/main/react/.npmrc` sets
+`legacy-peer-deps=true` because `npm install` otherwise aborts with ERESOLVE (react-scripts 5 peers TypeScript 3/4, the
+project uses 5); the Maven `npm install` execution relies on it.
+
 ## File upload: two client-side transports
 
 `FileUpload.tsx` renders one `<input type=file>` regardless of which transport the server rendered for

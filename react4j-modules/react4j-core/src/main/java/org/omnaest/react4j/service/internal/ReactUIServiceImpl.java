@@ -31,6 +31,7 @@ import org.omnaest.react4j.domain.ReactUI;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.configuration.HomePageConfiguration;
+import org.omnaest.react4j.domain.configuration.ThemeConfiguration;
 import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.context.data.source.DataSource;
 import org.omnaest.react4j.domain.context.data.source.registry.DataSourceRegistry;
@@ -65,6 +66,7 @@ import org.omnaest.react4j.service.internal.service.NodeHierarchyStaticRenderer;
 import org.omnaest.react4j.service.internal.service.NodeHierarchyStaticRenderer.NodeHierarchyRenderingProcessor;
 import org.omnaest.react4j.service.internal.service.ReactUIContextManager;
 import org.omnaest.react4j.service.internal.service.ReactUIContextManager.ReactUIInternalProvider;
+import org.omnaest.react4j.service.internal.service.ThemeConfigurationService;
 import org.omnaest.react4j.service.internal.service.UIComponentFactoryService;
 import org.omnaest.react4j.service.internal.service.internal.LocationSupportImpl;
 import org.omnaest.react4j.service.internal.service.internal.RenderingProcessorImpl;
@@ -90,6 +92,9 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
 
     @Autowired
     protected HomePageConfigurationService    homePageConfigurationService;
+
+    @Autowired
+    protected ThemeConfigurationService       themeConfigurationService;
 
     @Autowired
     protected NodeHierarchyStaticRenderer     nodeHierarchyStaticRenderer;
@@ -345,6 +350,13 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
                 ReactUIServiceImpl.this.configureHomePage(configurationConsumer);
                 return this;
             }
+
+            @Override
+            public ReactUI configureTheme(Consumer<ThemeConfiguration> configurationConsumer)
+            {
+                ReactUIServiceImpl.this.configureTheme(configurationConsumer);
+                return this;
+            }
         };
     }
 
@@ -407,6 +419,14 @@ public class ReactUIServiceImpl implements ReactUIService, RootNodeResolverServi
     {
         Optional.ofNullable(configurationConsumer)
                 .ifPresent(consumer -> consumer.accept(this.homePageConfigurationService));
+        return this;
+    }
+
+    @Override
+    public ReactUIService configureTheme(Consumer<ThemeConfiguration> configurationConsumer)
+    {
+        Optional.ofNullable(configurationConsumer)
+                .ifPresent(consumer -> consumer.accept(this.themeConfigurationService));
         return this;
     }
 

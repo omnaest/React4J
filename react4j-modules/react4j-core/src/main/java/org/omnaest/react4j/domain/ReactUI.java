@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 import org.omnaest.react4j.domain.NavigationBar.NavigationBarConsumer;
 import org.omnaest.react4j.domain.NavigationBar.NavigationBarProvider;
 import org.omnaest.react4j.domain.configuration.HomePageConfiguration;
+import org.omnaest.react4j.domain.configuration.ThemeConfiguration;
 
 /**
  * Root of an {@link ReactUI} application page
@@ -28,6 +29,7 @@ import org.omnaest.react4j.domain.configuration.HomePageConfiguration;
  * @see #addComponent(UIComponent)
  * @see #addNewComponent(org.omnaest.react4j.domain.support.UIComponentFactoryFunction)
  * @see #configureHomePage(Consumer)
+ * @see #configureTheme(Consumer)
  * @author omnaest
  */
 public interface ReactUI extends CompositeBase<ReactUI>
@@ -54,4 +56,20 @@ public interface ReactUI extends CompositeBase<ReactUI>
      * @return
      */
     public ReactUI configureHomePage(Consumer<HomePageConfiguration> configurationConsumer);
+
+    /**
+     * Configures the visual theme of the index.html, i.e. the linked Bootstrap stylesheet. By default the built-in modern theme is active.
+     * <br>
+     * <br>
+     * Disable the theme and fall back to stock Bootstrap with {@code reactUI.configureTheme(ThemeConfiguration::disable)}.
+     * <br>
+     * <br>
+     * The configuration is global for the application, not specific to this {@link ReactUI} root.
+     * 
+     * @param configurationConsumer
+     *            null is tolerated and ignored
+     * @return
+     * @see ThemeConfiguration
+     */
+    public ReactUI configureTheme(Consumer<ThemeConfiguration> configurationConsumer);
 }

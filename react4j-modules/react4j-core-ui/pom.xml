@@ -32,13 +32,16 @@
                     <execution>
                         <id>npm install</id>
                         <goals>
-                            <goal>install-node-and-npm</goal>
+                            <goal>npm</goal>
                         </goals>
                         <phase>generate-resources</phase>
-                        <!-- Optional configuration which provides for running
-                        any npm command -->
+                        <!-- plan-274 S1: this execution used to bind goal install-node-and-npm, so `npm install`
+                        never ran and the build depended on whatever node_modules already existed. The Sass build
+                        (prebuild script) needs the `sass` devDependency, so a checkout without it must fetch it.
+                        The prefer-offline flag keeps a satisfied node_modules a fast no-op and only goes to the network
+                        for what is missing. Peer-dependency handling is configured in src/main/react/.npmrc. -->
                         <configuration>
-                            <arguments>install</arguments>
+                            <arguments>install --prefer-offline --no-audit --no-fund</arguments>
                         </configuration>
                     </execution>
                     <execution>

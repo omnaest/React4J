@@ -17,6 +17,89 @@ No embedded servlet container is on this module's classpath (it parents `Commons
 `webEnvironment = RANDOM_PORT` does not, for want of a real embedded container - see "Real-container upload
 tests live in `react4j-ui-test`" below before adding one.
 
+## Theme: server-selected Bootstrap stylesheet (plan-274)
+
+Bootstrap CSS is no longer part of the `react4j-core-ui` JS bundle. `IndexHtmlController` links it into
+`index.html` itself, so the server decides between the **modern** theme (a Bootstrap 5.3 build compiled from Sass,
+accent `#4f46e5`, radius 8px) and **stock** Bootstrap.
+
+- **API** (`org.omnaest.react4j.domain.configuration.ThemeConfiguration`, reached via
+  `ReactUI#configureTheme(Consumer)` or `ReactUIService#configureTheme(Consumer)`, a null consumer is ignored):
+  `useDefault()`, `disable()`, `colorMode(ColorMode.LIGHT|DARK|AUTO)`, `addStylesheet(url)` (null/blank rejected).
+  The configuration is application-global, not per root.
+- **Default is ON** and needs no call: modern, `LIGHT`, no added sheets. `useDefault()` re-enables after a `disable()`
+  and keeps the colour mode and added sheets.
+- **`disable()` means stock Bootstrap only**, as before the theme existed: the single link
+  `/css/theme/bootstrap.min.css`, no `data-bs-theme` attribute (the colour mode is ignored), no added sheets, no
+  `<style>` block. `ColorMode.AUTO` emits no server attribute but a tiny inline head script (before the stylesheet
+  links) that sets `light`/`dark` on `<html>` from `prefers-color-scheme`.
+- **Template placeholders** in the core-ui `public/index.html`, verified in the BUILT copy (CRA's minifier strips
+  comments but keeps these): the empty element `<react4j-theme/>` right after `<title>`, and the attribute text
+  `data-bs-theme="%BS_THEME%"` on `<html>`. Both are replaced by `IndexHtmlController` (cached 5 s like every other
+  placeholder, so a `configureTheme` change shows within that window). A new placeholder must be written exactly as
+  the minifier emits it.
+- **Design tokens** (S4, additive on `ThemeConfiguration`, each returns the configuration): `primaryColor`,
+  `secondaryColor`, `successColor`, `infoColor`, `warningColor`, `dangerColor` (`#rgb` / `#rrggbb` only),
+  `fontFamily` (names or quoted names, at most 20 entries and 300 characters), `baseFontSize` and `borderRadius`
+  (`<number><px|rem>`, at most four digits before and after the point), `shadowStrength(ShadowStrength.NONE|SUBTLE|DEFAULT|STRONG)`.
+  **Validation is the only injection defence and it is by construction**: the setter parses into a typed value
+  (`RgbColor`, `CssLength`, `FontFamily`) before touching state, so an invalid value throws `IllegalArgumentException`
+  and leaves the configuration unchanged; the renderer only ever prints typed values and constants, never raw text.
+  `ThemeHeadRenderer.styleBlock` additionally throws `IllegalStateException` if the CSS contains `<`. Tokens are kept
+  by `disable()` and `useDefault()` but only take effect while the theme is enabled. No token set means no `<style>`
+  and a head byte-identical to the S3 head.
+- **Why per-variant rules**: Bootstrap 5.3.2 compiles component variables as literals, so a root `--bs-primary` does not
+  recolour `.btn-primary` or the form focus rings. `ThemeTokenCss` therefore emits, for each set colour, the root and
+  dark-mode variables plus the rules of every component that bakes the colour in (buttons, outline buttons, `text-bg`,
+  link helpers, table variants, and for the primary the form controls, switches, range, dropdown, nav pills,
+  accordion, pagination, progress, list group, close button).
+  The Sass colour functions are mirrored in pure Java (`BootstrapColorFunctions` and `BootstrapColorDeriver`, no
+  runtime Sass): `mix`/`tint`/`shade`/`shift`, the 10-digit rounded luminance, and `color-contrast` (first of white,
+  black above 4.5). Output is Sass-formatted (`CssText`: short hex for integer channels, otherwise `rgb(P%, ...)`).
+  **The Java mirrors theme settings that live in `react4j-modern.scss`** (focus ring alpha 0.4 and width 0.25rem, body
+  background `#f7f8fa`, the shadow shapes and default alphas, radius ratios 0.75 / 1.5 / 2). Change one in the scss and
+  the compiled-sheet equality test goes red until `ThemeTokenCss` follows.
+- **Guards, in the order they bite**: (1) `BootstrapColorFunctionsTest` and `BootstrapColorDeriverTest` against
+  `src/test/resources/theme/golden/bootstrap-function-golden.json` (21 colours incl. extremes, a yellow contrast flip,
+  `#4f46e5`, plus a 256-step grey luminance ramp, produced by Bootstrap's own Sass); (2) `ThemeTokenCssSheetGoldenTest`
+  against `theme-sheet-golden.json`, the FULL modern theme compiled with swapped Sass variables for 20 token sets (every
+  declaration Sass changed must be emitted with the same value, every emitted declaration must equal what Sass
+  compiled); (3) `ThemeTokenCssCompiledSheetTest`: at the theme's own defaults the renderer must equal the shipped
+  `react4j-modern.css`, and a **coverage guard** feeds a marker colour in place of each default and fails if the shipped
+  sheet still holds a declaration with the default colour that the renderer does not emit. That guard keeps an
+  `ALLOWLIST` of four gray-600 coincidences for `secondary` (`.blockquote-footer`, `.btn-link`, `.dropdown-menu`,
+  `.form-floating` disabled label), whose default `#6c757d` equals Bootstrap's gray-600 by palette coincidence.
+  **Regenerate both goldens with `node regenerate-golden.js`** in `src/test/resources/theme/golden/` (it requires `sass`
+  and `postcss` from `react4j-core-ui/src/main/react/node_modules`, so run `npm install` there first); commit the
+  result. Never edit a golden by hand.
+- **Known limits**: `baseFontSize` does not rescale headings (Bootstrap sizes them in rem from the root); a re-emitted rule
+  sits after the whole sheet, so `.text-bg-<role>` beats a `.text-*` utility on the same element (the stock sheet orders
+  them the other way); the inline `<style>` needs `style-src 'unsafe-inline'` where an app sets a Content-Security-Policy.
+- **Cascade order**: theme link, then the token `<style>` block (only when a token is set), then added sheets, then the app's
+  `/css/color.css`, `/css/print.css`, `/css/custom.css`, then the bundle CSS. App CSS therefore wins equal-specificity
+  ties against Bootstrap in **both** modes, including disabled.
+- **URL namespace**: the stylesheets are served from the core-ui jar at `/css/theme/react4j-modern.css` and
+  `/css/theme/bootstrap.min.css`. They stay under `/css/**` on purpose: the security chains of the consuming apps
+  (e.g. Deployer, SecureVault) permit only `/css/**` unauthenticated, any other path would render the page unstyled.
+- **Internals** (not public, no new public bean): `ThemeConfigurationService` (read view `getSettings()` returning the
+  immutable `ThemeSettings` snapshot) is implemented by `ThemeConfigurationServiceImpl`; `ThemeHeadRenderer` is a pure
+  function snapshot to head markup and attribute (`service.internal.service.internal.theme`).
+- **Tests**: `ThemeHeadRendererTest` and `ThemeHeadRendererTokenTest` (no mocks), the token suites listed under
+  "Guards", `ThemeConfigurationServiceImplTokenTest` (injection list, state unchanged on rejection), and one MockMvc
+  class per mode (`IndexHtmlController*ThemeTest`, `*TokenThemeTest`) against the real core-ui template. Each mode needs
+  its own Spring context because the rendered page is cached. The browser side is `react4j-ui-test`
+  `browser.theme.ModernThemeIT` / `DisabledThemeIT` (the disabled one activates the `theme-disabled` profile and must
+  equal the stock baseline fixture with zero deltas) and `TokenThemeIT` (profile `theme-tokens`: primary `#0f766e`,
+  radius `12px`; asserts the served head carries the block, then the computed background, hover background and radius
+  of the showcase's "Open modal" button). The hover expectation is read through the same route a button takes
+  (stylesheet rule reading a custom property): a browser rounds a channel sitting on x.5 differently for an inline
+  `style.color` than for that route.
+  **ui-test hazard, not theme related**: surefire redirects `java.io.tmpdir` to `target/surefire-java-io-tmpdir`. After
+  many runs without `mvn clean` the accumulated `tomcat.*` directories slow the 1 ms spill sampler of
+  `UnbufferedUploadTransportEndToEndTest` until its positive control fails; after a `clean` that directory does not
+  exist and Mockito's agent cannot start (`IOException ... path not found`) in the first Mockito test class. Fix the first by
+  deleting `target/surefire-java-io-tmpdir`'s contents, the second by creating the directory, not by touching either test.
+
 ## File upload: two transports
 
 `FileUploadController` exposes two upload endpoints. Both funnel through the same

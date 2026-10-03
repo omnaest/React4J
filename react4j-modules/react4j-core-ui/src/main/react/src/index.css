@@ -2,17 +2,14 @@ html {
   height: 100%;
 }
 
+/*
+ * No font-family on body or code here, on purpose. The font stack belongs to Bootstrap (--bs-body-font-family /
+ * --bs-font-monospace) so that the selected theme decides it. The CRA defaults that used to sit here only
+ * "worked" because Bootstrap was bundled after this file and silently overrode them (plan-274 S2).
+ */
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   height: 100%;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
 }

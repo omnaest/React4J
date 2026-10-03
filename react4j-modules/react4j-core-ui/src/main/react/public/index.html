@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="%LOCALE%">
+<html lang="%LOCALE%" data-bs-theme="%BS_THEME%">
 
 <head>
   <meta charset="utf-8" />
@@ -26,6 +26,11 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
   <title>$TITLE$</title>
+
+  <!-- Server-side theme slot (plan-274): replaced by IndexHtmlController with the Bootstrap stylesheet link (modern or stock),
+       optional added sheets and the colour-mode script. It must stay BEFORE the app stylesheets below so that the app CSS
+       wins equal-specificity ties. A custom empty element, like <hreflang />, survives the CRA html minifier; a comment would not. -->
+  <react4j-theme />
 
   <link rel="stylesheet" href="/css/color.css?$RANDOM_NUMBER$" />
   <link rel="stylesheet" href="/css/print.css?$RANDOM_NUMBER$" media="print" />

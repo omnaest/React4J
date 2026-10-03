@@ -1,0 +1,64 @@
+// React4J "modern light" theme: a FULL Bootstrap 5.3 build compiled from source with modern light variables.
+//
+// Compiled by scripts/build-theme.js (npm "prebuild") to public/css/theme/react4j-modern.css, which the build copies
+// to /css/theme/react4j-modern.css. It REPLACES the stock Bootstrap stylesheet (it is not an add-on to it).
+//
+// RULES FOR THIS FILE
+// 1. Variable overrides go here, BEFORE the Bootstrap import, and must not use Bootstrap's Sass functions
+//    (they are not loaded yet at this point). Plain literals and native Sass functions only.
+// 2. NEVER nest or scope the Bootstrap import under a selector or attribute. `html[x] { @import ... }` turns
+//    `:root{--bs-*}` into `html[x] :root`, which matches nothing, and every var(--bs-*) in the page goes dead.
+//    The output must keep top-level `:root,[data-bs-theme=light]{...}` and `[data-bs-theme=dark]{...}` blocks.
+// 3. Settings that a later slice mirrors in Java (S4 colour deriver) are deliberately left at Bootstrap's defaults:
+//    $btn-hover-bg-shade-amount, $btn-active-bg-shade-amount, $btn-hover-border-shade-amount,
+//    $btn-active-border-shade-amount, $min-contrast-ratio, $color-contrast-dark, $color-contrast-light and the
+//    theme-colour tint/shade levels. Do not change them here without changing the Java mirror.
+
+// ---- Colour modes: keep dark mode, switched through the data-bs-theme attribute --------------------------------
+$enable-dark-mode: true;
+$color-mode-type: data;
+
+// ---- Accent and surfaces ---------------------------------------------------------------------------------------
+$primary: #4f46e5; // indigo 600; white text on it has a contrast ratio of about 6.3
+$body-bg: #f7f8fa; // neutral near-white page, so that white cards lift off it
+$body-color: #1f2430;
+$body-secondary-color: rgba(31, 36, 48, .68);
+$body-tertiary-bg: #f1f3f6;
+
+// ---- Typography (Inter is NOT bundled: it applies where installed, system-ui everywhere else) -----------------
+$font-family-sans-serif: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+// Bootstrap's default is var(--bs-font-sans-serif); a literal makes --bs-body-font-family itself start with Inter.
+$font-family-base: $font-family-sans-serif;
+$line-height-base: 1.55;
+$headings-font-weight: 600;
+
+// ---- Shape: radii 8-12px, hairline borders, soft shadows -------------------------------------------------------
+$border-width: 1px;
+$border-color: #e4e7ec;
+$border-radius: 8px;
+$border-radius-sm: 6px;
+$border-radius-lg: 12px;
+$border-radius-xl: 16px;
+$box-shadow-sm: 0 1px 2px rgba(16, 24, 40, .06);
+$box-shadow: 0 4px 12px rgba(16, 24, 40, .08);
+$box-shadow-lg: 0 12px 32px rgba(16, 24, 40, .14);
+
+// ---- Roomier spacing -------------------------------------------------------------------------------------------
+$input-btn-padding-y: .5rem;
+$input-btn-padding-x: 1rem;
+$btn-font-weight: 500;
+$input-padding-x: .875rem;
+$card-spacer-y: 1.25rem;
+$card-spacer-x: 1.5rem;
+$card-box-shadow: $box-shadow-sm;
+$nav-link-padding-y: .625rem;
+$table-cell-padding-y: .625rem;
+$table-cell-padding-x: .75rem;
+
+// ---- Clear, visible keyboard focus ------------------------------------------------------------------------------
+$focus-ring-width: .25rem;
+$focus-ring-opacity: .4;
+$input-btn-focus-width: .25rem;
+$input-btn-focus-color-opacity: .4;
+
+@import "bootstrap/scss/bootstrap";

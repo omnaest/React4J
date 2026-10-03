@@ -34,6 +34,9 @@ import org.omnaest.react4j.service.internal.controller.sitemap.SiteMapGenerator.
 import org.omnaest.react4j.service.internal.nodes.service.RootNodeResolverService;
 import org.omnaest.react4j.service.internal.service.ContextService;
 import org.omnaest.react4j.service.internal.service.HomePageConfigurationService;
+import org.omnaest.react4j.service.internal.service.ThemeConfigurationService;
+import org.omnaest.react4j.service.internal.service.internal.theme.ThemeHead;
+import org.omnaest.react4j.service.internal.service.internal.theme.ThemeHeadRenderer;
 import org.omnaest.react4j.service.internal.service.internal.translation.component.LocaleService;
 import org.omnaest.utils.ClassUtils;
 import org.omnaest.utils.ClassUtils.Resource;
@@ -57,10 +60,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class IndexHtmlController
 {
-    private static final Logger            LOG            = LoggerFactory.getLogger(IndexHtmlController.class);
+    private static final Logger            LOG                              = LoggerFactory.getLogger(IndexHtmlController.class);
+
+    /** The head slot of the index.html template, replaced by the theme stylesheet links (plan-274). Must keep this exact spelling: it is what the CRA html minifier writes. */
+    private static final String            THEME_HEAD_PLACEHOLDER           = "<react4j-theme/>";
+
+    /** The colour mode attribute of the html element in the index.html template, replaced by the complete attribute or by an empty string. */
+    private static final String            THEME_HTML_ATTRIBUTE_PLACEHOLDER = "data-bs-theme=\"%BS_THEME%\"";
 
     @Autowired
     protected HomePageConfigurationService homePageConfigurationService;
+
+    @Autowired
+    protected ThemeConfigurationService    themeConfigurationService;
 
     @Autowired
     private RootNodeResolverService        resolverService;
@@ -77,26 +89,13 @@ public class IndexHtmlController
     @Value("${react4j.language-redirect:false}")
     private boolean                        languageRedirectEnabled;
 
-    private Counter                        pageHitCounter = Counter.fromZero();
+    private Counter                        pageHitCounter                   = Counter.fromZero();
 
-    private CachedElement<String>          indexHtml      = CachedElement.of(() -> ClassUtils.loadResource(this, "/public/index.html")
-                                                                                             .map(Resource::asString)
-                                                                                             .map(content -> MatcherUtils.replacer()
-                                                                                                                         .addExactMatchReplacement("$RANDOM_NUMBER$", ""
-                                                                                                                                                                      + Math.abs((""
-                                                                                                                                                                                  + Math.random()).hashCode()))
-                                                                                                                         .addExactMatchReplacements(this.homePageConfigurationService.getConfigurations())
-                                                                                                                         .addExactMatchReplacement("$STATIC_HTML_CONTENT$",
-                                                                                                                                                   this.resolverService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML))
-                                                                                                                         .addExactMatchReplacement("%LOCALE%",
-                                                                                                                                                   this.localeService.getRequestLocale()
-                                                                                                                                                                     .orElse(Locale.US)
-                                                                                                                                                                     .toLanguageTag())
-                                                                                                                         .addExactMatchReplacement("<hreflang/>",
-                                                                                                                                                   this.generateHrefLangRelatedLinkTags())
-                                                                                                                         .findAndReplaceAllIn(content))
-                                                                                             .orElseThrow(() -> new IllegalStateException("Could not load index.html from classpath")))
-                                                                         .asDurationLimitedCachedElement(TimeDuration.of(5, TimeUnit.SECONDS));
+    private CachedElement<String>          indexHtml                        = CachedElement.of(() -> ClassUtils.loadResource(this, "/public/index.html")
+                                                                                                               .map(Resource::asString)
+                                                                                                               .map(this::replacePlaceholders)
+                                                                                                               .orElseThrow(() -> new IllegalStateException("Could not load index.html from classpath")))
+                                                                                           .asDurationLimitedCachedElement(TimeDuration.of(5, TimeUnit.SECONDS));
 
     @GetMapping(path = {"/", "/index.html", "{languageTag:[a-zA-Z\\-]+}", "{languageTag}/index.html", "{languageTag}/"}, produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> getLanguageSpecific(@PathVariable(name = "languageTag", required = false) String languageTag)
@@ -145,6 +144,23 @@ public class IndexHtmlController
         return ResponseEntity.ok(this.siteMapGenerator.generateSiteMap(locations));
     }
 
+    private String replacePlaceholders(String content)
+    {
+        String randomNumber = "" + Math.abs(("" + Math.random()).hashCode());
+        ThemeHead themeHead = ThemeHeadRenderer.render(this.themeConfigurationService.getSettings(), randomNumber);
+
+        return MatcherUtils.replacer()
+                           .addExactMatchReplacement("$RANDOM_NUMBER$", randomNumber)
+                           .addExactMatchReplacements(this.homePageConfigurationService.getConfigurations())
+                           .addExactMatchReplacement(THEME_HEAD_PLACEHOLDER, themeHead.getHeadMarkup())
+                           .addExactMatchReplacement(THEME_HTML_ATTRIBUTE_PLACEHOLDER, themeHead.getHtmlAttribute())
+                           .addExactMatchReplacement("$STATIC_HTML_CONTENT$", this.resolverService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML))
+                           .addExactMatchReplacement("%LOCALE%", this.localeService.getRequestLocale()
+                                                                                   .orElse(Locale.US)
+                                                                                   .toLanguageTag())
+                           .addExactMatchReplacement("<hreflang/>", this.generateHrefLangRelatedLinkTags())
+                           .findAndReplaceAllIn(content);
+    }
     private String generatePublicRootUrl()
     {
         return this.contextService.getPublicDomainUrl()

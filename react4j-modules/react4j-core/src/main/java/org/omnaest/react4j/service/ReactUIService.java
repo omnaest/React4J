@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 
 import org.omnaest.react4j.domain.ReactUI;
 import org.omnaest.react4j.domain.configuration.HomePageConfiguration;
+import org.omnaest.react4j.domain.configuration.ThemeConfiguration;
 
 public interface ReactUIService
 {
@@ -39,4 +40,17 @@ public interface ReactUIService
     public ReactUIService withCacheDurationInSeconds(int cacheDurationInSeconds);
 
     public ReactUIService configureHomePage(Consumer<HomePageConfiguration> configurationConsumer);
+
+    /**
+     * Configures the visual theme of the index.html, i.e. the linked Bootstrap stylesheet. By default the built-in modern theme is active.
+     * <br>
+     * <br>
+     * Disable the theme and fall back to stock Bootstrap with {@code reactUIService.configureTheme(ThemeConfiguration::disable)}.
+     * 
+     * @param configurationConsumer
+     *            null is tolerated and ignored
+     * @return
+     * @see ThemeConfiguration
+     */
+    public ReactUIService configureTheme(Consumer<ThemeConfiguration> configurationConsumer);
 }

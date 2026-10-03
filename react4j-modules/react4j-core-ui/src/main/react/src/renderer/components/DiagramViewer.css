@@ -268,7 +268,8 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    background-color: #ffffff;
+    /* --bs-white, not --bs-body-bg: a diagram is authored for a light background, so it must stay light in dark mode. */
+    background-color: var(--bs-white, #ffffff);
 }
 
 /* Rules below are ordered OUTSIDE-IN by nesting depth - viewer, viewport, host, svg - and the band's rules
@@ -405,7 +406,7 @@
     align-items: center;
     gap: 4px;
     padding: 4px;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
 }
 
 /*
@@ -421,4 +422,26 @@
 .diagram-viewer-controls > select {
     flex: none;
     width: auto;
+}
+
+/*
+ * THE BAND'S HEIGHT IS PINNED, NOT DERIVED FROM TEXT METRICS (plan-274 S3b). The band is subtracted from the
+ * viewer's definite height to give the scroll host its box, and the host's box is what cover and contain
+ * both measure against - so any theme that changes the controls' line-height moves the host's height and
+ * with it every "aspect equals the host's" coincidence. MEASURED: under the stock Bootstrap sheet the
+ * tallest control (the form-select-sm) is 31px, so the band is 4+31+4+1 = 40px; under the modern theme
+ * ($line-height-base 1.55) the same select is 31.688px (line-height 21.7px instead of 21px) and the band
+ * 40.688px, which left the host at 259.3125px instead of 260px and made contain (259.3125) differ from
+ * cover (260) on a diagram whose aspect was calibrated to that host (plan-266 AC-N7).
+ *
+ * Every control in the band therefore gets one explicit border-box height and an explicit line-height, so
+ * the band is 40px under any theme. A theme that wants a different control look still can; it just cannot
+ * resize the band. 31px is the stock select height, so the stock look is unchanged to within 1px (the
+ * three plain buttons were 30px).
+ */
+.diagram-viewer-controls > select,
+.diagram-viewer-controls > button {
+    box-sizing: border-box;
+    height: 31px;
+    line-height: 1.5;
 }
