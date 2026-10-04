@@ -87,6 +87,43 @@
     <build>
         <plugins>
             <plugin>
+                <!-- plan-277 section 11 / kanban b3f28832: creates the directory the surefire argLine below points
+                     java.io.tmpdir at. A JVM does NOT create the directory named by -Djava.io.tmpdir, and nothing
+                     else in the build did, so after `mvn clean` a one-step `mvn clean install` ran its first
+                     Mockito/@TempDir test class against a missing temp directory (Mockito's inline mock maker
+                     could not start: "IOException ... path not found"; measured 18 tests run, 10 errors). The
+                     earlier workaround was a manual mkdir between clean and test. The directory is created in
+                     generate-test-resources, so any invocation that reaches `test` (install, verify, test,
+                     -Dtest=...) finds it present before the surefire fork starts. It is created EMPTY and lives
+                     under target/, which `mvn clean` owns; keep the path identical to the argLine below.
+                     Mechanism: maven-resources-plugin's copy-resources, with a source include that matches
+                     nothing - it copies no file but creates its outputDirectory (log: "Copying 0 resource ...").
+                     maven-antrun-plugin (mkdir) was tried first and does not resolve offline: only its own jar is
+                     cached, not org.apache.ant:ant, so `mvn -o` failed with "Plugin ... or one of its dependencies
+                     could not be resolved". The plugin version is inherited, not pinned here. -->
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>create-surefire-java-io-tmpdir</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/surefire-java-io-tmpdir</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/test</directory>
+                                    <includes>
+                                        <include>no-file-is-ever-copied</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <!-- plan-154 AC-R3: UnbufferedUploadTransportEndToEndTest/UnbufferedUploadTransportGlobalCeilingTest
                      redirect java.io.tmpdir to a fresh, empty directory so their in-process temp-tree sampler can
                      watch it cheaply (a walk of the real system temp is infeasible - measured 3.3-3.6s per round).
