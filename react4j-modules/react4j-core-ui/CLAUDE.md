@@ -48,7 +48,8 @@ static }` (equal to Bootstrap's default, needed because Tabler makes `.card-body
 `.sr-only-focusable`, `:root .fa-flip-*`/`.fa-rotate-*`), `@font-face` and the `fa-spin` keyframes: no element selector and no custom property. Do not edit
 it; update it by replacing it with the file of the new package version. Guard: `ShowcaseCoverageChecks.testEveryStandardIconRendersARealGlyphFromTheFontAwesomeFace`
 (the face is `loaded`, every `StandardIcon`'s `::before` is a private-use glyph in `Font Awesome 5 Free` with a non-zero rendered width); without the link
-the page has no such face at all.
+the page has no such face at all. Only the stylesheet and the 15 `public/webfonts/` files of Font Awesome ship: the package's unused `svgs/` icon files (1,591) were
+removed in plan-277 section 9 (nothing referenced them; the three `fa-*-*.svg` files in `webfonts/` are SVG web fonts, kept).
 
 ## File upload: two client-side transports
 

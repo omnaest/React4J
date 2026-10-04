@@ -1,7 +1,7 @@
 # Third-party notices
 
 React4J itself is licensed under the terms of the `LICENSE` file at the root of this repository. This file reproduces the
-notices of the third-party works that are shipped in the `react4j-core-ui` jar: the stylesheets, the icon sets and web
+notices of the third-party works that are shipped in the `react4j-core-ui` jar: the stylesheets, the icon web
 fonts, the Create React App template images and the JavaScript bundle. It is the one
 source of these notices: the `react4j-core-ui` build copies it into the jar as `META-INF/THIRD-PARTY-NOTICES.md`
 (`maven-resources-plugin`, execution `copy-third-party-notices`), so keep it here and do not maintain a second copy.
@@ -104,10 +104,13 @@ outside `@tabler/core/scss` and `src/theme`, and when the compiled stylesheet me
 - Version: 5.13.0 (npm package `@fortawesome/fontawesome-free`)
 - Attribution line embedded in the web font files: "Font Awesome Free 5.13.0 by @fontawesome - https://fontawesome.com
   License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)"
-- Provenance: the files below were committed to this repository by hand and are not installed from npm. Every one of them
-  was compared by SHA-256 with the files of the `@fortawesome/fontawesome-free@5.13.0` npm package (`svgs/<same path>` and
-  `webfonts/<same name>`) and is byte-identical: 443 of 443 in `svgs/brands`, 152 of 152 in `svgs/regular`, 996 of 996 in
-  `svgs/solid` and 15 of 15 in `webfonts`, none different and none missing from the package.
+- Provenance: the files below (the 15 web fonts and the stylesheet) were committed to this repository by hand and are not
+  installed from npm. Every one of them was compared by SHA-256 with the files of the `@fortawesome/fontawesome-free@5.13.0`
+  npm package (`webfonts/<same name>` and `css/all.min.css`) and is byte-identical: 15 of 15 in `webfonts` and the
+  stylesheet, none different and none missing from the package.
+- Not shipped: no Font Awesome SVG icon file (the `svgs/` directory of the package) is shipped. They were removed as unused. The
+  CC BY 4.0 text is nevertheless kept as [Appendix A](#appendix-a-creative-commons-attribution-40-international-legal-code),
+  a conservative attribution (see the "Applies to" line there).
 - Modifications: none. The files are shipped exactly as published in the Free package.
 - Licence declaration of the package: its `package.json` has `"license": "(CC-BY-4.0 AND OFL-1.1 AND MIT)"`. Its
   `LICENSE.txt` assigns the licences by file type, as quoted below.
@@ -150,22 +153,6 @@ trademarks does not indicate endorsement of the trademark holder by Font
 Awesome, nor vice versa. **Please do not use brand logos for any purpose except
 to represent the company, product, or service to which they refer.**
 ```
-
-### Font Awesome Free: SVG icons (CC BY 4.0)
-
-- Shipped paths: `public/svgs/brands/*.svg` (443 files), `public/svgs/regular/*.svg` (152 files) and
-  `public/svgs/solid/*.svg` (996 files). Each of the three directories also holds `font-awesome-logo-full.svg`, the Font
-  Awesome logo, which is part of the counts above.
-- Licence: Creative Commons Attribution 4.0 International (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/.
-  The full legal code is in [Appendix A](#appendix-a-creative-commons-attribution-40-international-legal-code).
-- Attribution: Font Awesome Free 5.13.0 by @fontawesome, https://fontawesome.com, licensed under CC BY 4.0
-  ( https://creativecommons.org/licenses/by/4.0/ ). No modification was made to the icons.
-- The SVG files carry no embedded notice of their own; this section and Appendix A are the notice for them.
-- Trademarks: the brand icons in `public/svgs/brands/` are trademarks of their respective owners, and the Font Awesome logo
-  and wordmark (`font-awesome-logo-full.svg`) are trademarks of their owner. Their use here does not indicate
-  endorsement by the trademark holders. The licence grants no trademark rights (CC BY 4.0, Section 2(b)(2): "Patent and
-  trademark rights are not licensed under this Public License."). The brand logos may be used only to represent the
-  company, product or service to which they refer.
 
 ### Font Awesome Free: web fonts (SIL OFL 1.1)
 
@@ -406,8 +393,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ## Appendix A: Creative Commons Attribution 4.0 International legal code
 
-Applies to: the Font Awesome Free 5.13.0 SVG icons, `public/svgs/**` (see
-[Font Awesome Free: SVG icons](#font-awesome-free-svg-icons-cc-by-40)). Verbatim from the file `LICENSE` of the npm package
+Applies to: no Font Awesome Free SVG icon file is shipped (the former `public/svgs/**` was removed). The CC BY 4.0 legal code is kept
+as a conservative attribution for Font Awesome Free 5.13.0 by @fontawesome, https://fontawesome.com, because the `LICENSE.txt` of
+Font Awesome Free (quoted [above](#font-awesome-free-5130)) assigns CC BY 4.0 to "icons packaged as SVG and JS file types", three of
+the shipped web fonts are SVG-format files (`public/webfonts/fa-*-*.svg`, see
+[Font Awesome Free: web fonts](#font-awesome-free-web-fonts-sil-ofl-11)), and the banner embedded in the shipped web fonts and in
+`public/css/fontawesome-free-all.min.css` names CC BY 4.0. Under the plain reading of that `LICENSE.txt` the web fonts are
+SIL OFL 1.1 (Appendix B), not CC BY 4.0. Verbatim from the file `LICENSE` of the npm package
 `caniuse-lite`, which carries the same CC BY 4.0 legal code.
 
 ```
