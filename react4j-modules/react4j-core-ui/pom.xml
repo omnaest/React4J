@@ -121,6 +121,28 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <!-- plan-277 T5: the ONE third-party notices file of the repository (React4J root) ships in the jar
+                        as META-INF/THIRD-PARTY-NOTICES.md, next to the CSS that carries Bootstrap's and Tabler's MIT notices.
+                        Copied, never duplicated: there is no second hand-maintained copy under this module. -->
+                        <id>copy-third-party-notices</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/META-INF</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/../..</directory>
+                                    <includes>
+                                        <include>THIRD-PARTY-NOTICES.md</include>
+                                    </includes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>

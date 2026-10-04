@@ -78,6 +78,10 @@ li {
 
 .card-body {
 	overflow-x: auto;
+	/* plan-277: pin Bootstrap's own default. Tabler gives .card-body `position: relative`, which would make it the containing block of the
+	   Toaster's absolutely positioned container and let the overflow above clip the toast; with the default the containing block is the .card
+	   as under the modern theme, whose computed style this leaves unchanged. */
+	position: static;
 }
 
 .width-max-content {	

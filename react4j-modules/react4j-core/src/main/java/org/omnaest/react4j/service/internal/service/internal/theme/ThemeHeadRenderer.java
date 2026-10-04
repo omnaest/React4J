@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.omnaest.react4j.domain.configuration.ThemeConfiguration.ColorMode;
+import org.omnaest.react4j.domain.configuration.ThemeConfiguration.ThemePreset;
 import org.omnaest.react4j.service.internal.service.ThemeSettings;
 
 /**
@@ -27,13 +28,16 @@ import org.omnaest.react4j.service.internal.service.ThemeSettings;
  * <br>
  * <br>
  * Head order of the modern theme: (colour mode script for {@link ColorMode#AUTO}) - modern stylesheet link - (design token style block, only if a token is set)
- * - added stylesheets. A disabled theme renders the stock Bootstrap link and nothing else.
+ * - added stylesheets. The {@link ThemePreset#TABLER} preset has the same order with the Tabler stylesheet link and, instead of the {@link ThemeTokenCss}
+ * block, the one of {@link TablerTokenCss} (base custom properties only). A disabled theme renders the stock Bootstrap link and nothing else, whatever
+ * the preset.
  *
  * @author omnaest
  */
 public final class ThemeHeadRenderer
 {
     public static final String  MODERN_STYLESHEET_PATH = "/css/theme/react4j-modern.css";
+    public static final String  TABLER_STYLESHEET_PATH = "/css/theme/react4j-tabler.css";
     public static final String  STOCK_STYLESHEET_PATH  = "/css/theme/bootstrap.min.css";
 
     private static final String COLOR_MODE_ATTRIBUTE   = "data-bs-theme";
@@ -64,8 +68,8 @@ public final class ThemeHeadRenderer
         {
             markup.add(AUTO_COLOR_MODE_SCRIPT);
         }
-        markup.add(stylesheetLink(MODERN_STYLESHEET_PATH + "?" + cacheBuster));
-        String tokenCss = ThemeTokenCss.render(settings.getTokens());
+        markup.add(stylesheetLink(presetStylesheetPath(settings.getPreset()) + "?" + cacheBuster));
+        String tokenCss = presetTokenCss(settings);
         if (!tokenCss.isEmpty())
         {
             markup.add(styleBlock(tokenCss));
@@ -76,6 +80,32 @@ public final class ThemeHeadRenderer
                 .forEach(markup::add);
 
         return new ThemeHead(String.join("\n", markup), colorModeAttribute(settings.getColorMode()));
+    }
+
+    private static String presetStylesheetPath(ThemePreset preset)
+    {
+        switch (preset)
+        {
+            case TABLER :
+                return TABLER_STYLESHEET_PATH;
+            default :
+                return MODERN_STYLESHEET_PATH;
+        }
+    }
+
+    /**
+     * The design token CSS of the preset: {@link TablerTokenCss} (base custom properties only) for {@link ThemePreset#TABLER}, {@link ThemeTokenCss}
+     * (Bootstrap component overrides, which must never apply to Tabler) for the others. Empty if the preset's writer has nothing to write.
+     */
+    private static String presetTokenCss(ThemeSettings settings)
+    {
+        switch (settings.getPreset())
+        {
+            case TABLER :
+                return TablerTokenCss.render(settings.getTokens());
+            default :
+                return ThemeTokenCss.render(settings.getTokens());
+        }
     }
 
     /**

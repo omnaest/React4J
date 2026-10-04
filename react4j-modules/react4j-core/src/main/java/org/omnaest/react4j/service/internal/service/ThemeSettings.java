@@ -18,6 +18,7 @@ package org.omnaest.react4j.service.internal.service;
 import java.util.List;
 
 import org.omnaest.react4j.domain.configuration.ThemeConfiguration.ColorMode;
+import org.omnaest.react4j.domain.configuration.ThemeConfiguration.ThemePreset;
 
 import lombok.Builder;
 import lombok.Singular;
@@ -25,7 +26,7 @@ import lombok.Value;
 
 /**
  * An immutable snapshot of the {@link org.omnaest.react4j.domain.configuration.ThemeConfiguration} state, as read by the index.html rendering.
- * The default instance is: modern theme enabled, {@link ColorMode#LIGHT}, no added stylesheets.
+ * The default instance is: theme enabled, {@link ThemePreset#MODERN}, {@link ColorMode#LIGHT}, no added stylesheets.
  *
  * @see ThemeConfigurationService#getSettings()
  * @author omnaest
@@ -39,6 +40,12 @@ public class ThemeSettings
      */
     @Builder.Default
     boolean      enabled   = true;
+
+    /**
+     * Which built-in stylesheet is linked. Ignored while not {@link #isEnabled()}.
+     */
+    @Builder.Default
+    ThemePreset  preset    = ThemePreset.MODERN;
 
     @Builder.Default
     ColorMode    colorMode = ColorMode.LIGHT;

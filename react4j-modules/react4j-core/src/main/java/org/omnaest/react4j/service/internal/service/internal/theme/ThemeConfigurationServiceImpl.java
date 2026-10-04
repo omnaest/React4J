@@ -44,6 +44,7 @@ public class ThemeConfigurationServiceImpl implements ThemeConfigurationService
     {
         return this.update(current -> current.toBuilder()
                                              .enabled(true)
+                                             .preset(ThemePreset.MODERN)
                                              .build());
     }
 
@@ -52,6 +53,18 @@ public class ThemeConfigurationServiceImpl implements ThemeConfigurationService
     {
         return this.update(current -> current.toBuilder()
                                              .enabled(false)
+                                             .build());
+    }
+
+    @Override
+    public ThemeConfiguration preset(ThemePreset preset)
+    {
+        if (preset == null)
+        {
+            throw new IllegalArgumentException("The theme preset must not be null");
+        }
+        return this.update(current -> current.toBuilder()
+                                             .preset(preset)
                                              .build());
     }
 

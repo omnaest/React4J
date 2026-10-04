@@ -48,6 +48,10 @@
     ]
   },
   "devDependencies": {
+    "@tabler/core": "1.6.1",
+    "autoprefixer": "10.4.17",
+    "postcss": "8.4.35",
+    "postcss-prefix-custom-properties": "0.1.0",
     "sass": "1.105.1"
   }
 }

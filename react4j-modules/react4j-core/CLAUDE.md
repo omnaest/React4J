@@ -25,10 +25,20 @@ accent `#4f46e5`, radius 8px) and **stock** Bootstrap.
 
 - **API** (`org.omnaest.react4j.domain.configuration.ThemeConfiguration`, reached via
   `ReactUI#configureTheme(Consumer)` or `ReactUIService#configureTheme(Consumer)`, a null consumer is ignored):
-  `useDefault()`, `disable()`, `colorMode(ColorMode.LIGHT|DARK|AUTO)`, `addStylesheet(url)` (null/blank rejected).
+  `useDefault()`, `disable()`, `preset(ThemePreset)`, `colorMode(ColorMode.LIGHT|DARK|AUTO)`, `addStylesheet(url)` (null/blank rejected).
   The configuration is application-global, not per root.
 - **Default is ON** and needs no call: modern, `LIGHT`, no added sheets. `useDefault()` re-enables after a `disable()`
   and keeps the colour mode and added sheets.
+- **Preset** (plan-277 T2): `preset(ThemePreset.MODERN|TABLER)`, `ThemePreset` nested in `ThemeConfiguration` like `ColorMode`,
+  null throws `IllegalArgumentException` and leaves the state unchanged. `TABLER` links `/css/theme/react4j-tabler.css`
+  (same cache-buster query) INSTEAD of `react4j-modern.css`, so a MODERN-only app is byte-identical. Semantics: `preset(X)`
+  never changes `enabled`; `disable()` keeps the preset (like colour mode, sheets and tokens) but while disabled the output is the
+  stock link only; `useDefault()` sets `enabled=true` AND `preset=MODERN`, so Tabler after a `disable()` is
+  `useDefault().preset(ThemePreset.TABLER)`. `colorMode()` and `addStylesheet()` behave the same on TABLER (same attribute and
+  AUTO script, added sheets after the theme link). The design tokens on TABLER are written by `TablerTokenCss`, never by
+  `ThemeTokenCss` (see "Design tokens on TABLER" below). **Browser floor of TABLER: Chrome 123+, Firefox 128+, Safari 17.5+**: Tabler derives
+  its colour shades in the browser with `color-mix()`, `light-dark()` and `oklch()`, and its `-darken` hover shade with relative colour
+  syntax, which Firefox supports from 128. See `.claude/plans/plan-277-react4j-tabler-theme-preset.md`.
 - **`disable()` means stock Bootstrap only**, as before the theme existed: the single link
   `/css/theme/bootstrap.min.css`, no `data-bs-theme` attribute (the colour mode is ignored), no added sheets, no
   `<style>` block. `ColorMode.AUTO` emits no server attribute but a tiny inline head script (before the stylesheet
@@ -75,6 +85,27 @@ accent `#4f46e5`, radius 8px) and **stock** Bootstrap.
 - **Known limits**: `baseFontSize` does not rescale headings (Bootstrap sizes them in rem from the root); a re-emitted rule
   sits after the whole sheet, so `.text-bg-<role>` beats a `.text-*` utility on the same element (the stock sheet orders
   them the other way); the inline `<style>` needs `style-src 'unsafe-inline'` where an app sets a Content-Security-Policy.
+- **Design tokens on TABLER** (plan-277 T3): the same setters, but `TablerTokenCss` (`service.internal.service.internal.theme`, a pure function
+  `ThemeTokens -> String`, selected by `ThemeHeadRenderer` per preset) writes **base custom properties only**, in ONE rule with the selector
+  `:root,[data-bs-theme=light],[data-theme=light]` after the Tabler link, and never a component rule (no `.btn-primary`, no
+  `BootstrapColorDeriver`): Tabler derives hover, active and subtle shades in the browser. The rule ties the sheet's highest-specificity declaring
+  selector and comes later, so it wins in light AND dark mode (the sheet's dark block redefines none of these variables). Per token: a colour
+  writes `--bs-<role>` (hex) and `--bs-<role>-rgb` (`r, g, b`) and nothing else; **`--bs-<role>-fg` is NOT derived** (Tabler's
+  `var(--bs-light)`), so choose role colours dark enough for light text; `fontFamily` writes `--bs-font-sans-serif` (the body family follows),
+  `baseFontSize` writes `--bs-body-font-size`; `borderRadius(r)` writes `--bs-border-radius-md` = r (`--bs-border-radius` follows) and
+  sm/lg/xl/xxl as `calc(r * 2 / 3)`, `4 / 3`, `8 / 3`, `16 / 3` (Tabler's own ratios to its 6px base, exact and unit preserving for px and
+  rem; `-xs` is unread and not written); `shadowStrength` scales the alpha of `--bs-shadow-color` (`light-dark(rgba(18, 18, 23, 0.4), #000)`)
+  by 0 / 0.5 / 1 / 2 in both arms (the opaque dark arm is capped at 1, so STRONG equals DEFAULT in dark mode), DEFAULT writes nothing, and every
+  non-default strength pins `--bs-shadow-border` (the 1px ring of mentions and avatars, a border drawn as a shadow) to its default so a strength
+  never changes a border; focus rings are outlines and are untouched. A block with no declaration (no token, or only `DEFAULT` strength) is not
+  emitted at all.
+- **Tabler guards** (`TablerTokenCssSheetGuardTest`, against the SHIPPED `/public/css/theme/react4j-tabler.css` of the installed core-ui jar, so
+  install `react4j-core-ui` before running `react4j-core` tests): (1) every custom property the writer can emit is READ in the sheet
+  (`var(--name` followed by `)` or `,`; a name that is only declared fails, e.g. Tabler declares `--bs-<role>-lt-rgb` and never reads it),
+  collected by rendering every token combination and pinned to an explicit list; (2) every declaration of an emitted name sits in a selector the
+  writer's rule ties, so a Tabler update declaring one in the dark block or in a more specific selector fails; (3) the mirrored Tabler constants
+  (the radius ratios against the base size, the default shadow colour and alpha, the shape of `--bs-shadow-border`) equal the sheet. Each guard
+  has a negative control against a doctored sheet. A red guard means Tabler changed: update `TablerTokenCss` deliberately, never the guard.
 - **Cascade order**: theme link, then the token `<style>` block (only when a token is set), then added sheets, then the app's
   `/css/color.css`, `/css/print.css`, `/css/custom.css`, then the bundle CSS. App CSS therefore wins equal-specificity
   ties against Bootstrap in **both** modes, including disabled.
@@ -84,7 +115,8 @@ accent `#4f46e5`, radius 8px) and **stock** Bootstrap.
 - **Internals** (not public, no new public bean): `ThemeConfigurationService` (read view `getSettings()` returning the
   immutable `ThemeSettings` snapshot) is implemented by `ThemeConfigurationServiceImpl`; `ThemeHeadRenderer` is a pure
   function snapshot to head markup and attribute (`service.internal.service.internal.theme`).
-- **Tests**: `ThemeHeadRendererTest` and `ThemeHeadRendererTokenTest` (no mocks), the token suites listed under
+- **Tests**: `ThemeHeadRendererTest`, `ThemeHeadRendererTokenTest`, `ThemeHeadRendererPresetTest` and `ThemeHeadRendererTablerTokenTest` (no
+  mocks), `TablerTokenCssTest`, the token suites listed under
   "Guards", `ThemeConfigurationServiceImplTokenTest` (injection list, state unchanged on rejection), and one MockMvc
   class per mode (`IndexHtmlController*ThemeTest`, `*TokenThemeTest`) against the real core-ui template. Each mode needs
   its own Spring context because the rendered page is cached. The browser side is `react4j-ui-test`
@@ -94,11 +126,25 @@ accent `#4f46e5`, radius 8px) and **stock** Bootstrap.
   of the showcase's "Open modal" button). The hover expectation is read through the same route a button takes
   (stylesheet rule reading a custom property): a browser rounds a channel sitting on x.5 differently for an inline
   `style.color` than for that route.
+  `TablerTokenThemeIT` (profile `theme-tabler-tokens`: TABLER, primary `#0f766e`, radius `12px`) proves the TABLER tokens in a real
+  browser: the served head and the served sheet first (freshness), then the "Open modal" background and radius, a hover shade that is
+  darker and differs from Tabler's OWN hover (measured in a second same-origin document, an iframe loading the same sheet without the
+  token block), the breadcrumb "Home" link colour (Tabler draws it from the primary), and the primary again with `data-bs-theme=dark`
+  set in the page (with a control that the dark scope really took effect). Tabler's primary button has a TRANSPARENT border, so the
+  modern test's border-colour assertion does not transfer. `getComputedStyle` serialises `oklch()`/`color-mix()` results in their own
+  space, so colours are compared as sRGB bytes read through a canvas, not as `rgb()` text.
   **ui-test hazard, not theme related**: surefire redirects `java.io.tmpdir` to `target/surefire-java-io-tmpdir`. After
   many runs without `mvn clean` the accumulated `tomcat.*` directories slow the 1 ms spill sampler of
   `UnbufferedUploadTransportEndToEndTest` until its positive control fails; after a `clean` that directory does not
   exist and Mockito's agent cannot start (`IOException ... path not found`) in the first Mockito test class. Fix the first by
   deleting `target/surefire-java-io-tmpdir`'s contents, the second by creating the directory, not by touching either test.
+  **Tabler ITs (plan-277 T4)**: `TablerThemeIT` (profile `theme-tabler`: served head, sheet loaded once, primary 6,111,209 from the served sheet's own
+  `--bs-primary-rgb`, DiagramViewer band 40px/controls 31px, dropdown menu reachable, toast not clipped, badge readable, modal), the screenshot ITs
+  `ShowcaseScreenshotTablerDarkIT` and `ShowcaseScreenshotTablerComparisonIT` (pins its own profile and starts a second in-process Tabler app, so one
+  browser session captures both themes into `docs/theme-screenshots/tabler/`). Whole suite on Tabler: `mvn verify "-DexcludedGroups="
+  "-Dspring.profiles.active=theme-tabler" "-Dit.test=*IT,!ShowcaseScreenshotModernIT"` (the `*IT` include is required: an exclusion-only `it.test`
+  makes failsafe run every `*Test` class too, without surefire's tmpdir argLine); `ModernThemeIT` is expected red there. Server-side showcase state
+  (an open modal or offcanvas) is shared by every IT of one Spring context, so an IT that opens one must close it in a `finally`.
 
 ## File upload: two transports
 

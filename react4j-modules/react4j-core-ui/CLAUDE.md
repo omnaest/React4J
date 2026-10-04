@@ -27,6 +27,18 @@ The Bootstrap stylesheets are **not** in the bundle any more: the `prebuild` npm
 `legacy-peer-deps=true` because `npm install` otherwise aborts with ERESOLVE (react-scripts 5 peers TypeScript 3/4, the
 project uses 5); the Maven `npm install` execution relies on it.
 
+The same `prebuild` script also builds `public/css/theme/react4j-tabler.css` (plan-277): Tabler 1.6.1 (`@tabler/core`, exact pin in
+`package.json`, MIT) compiled from its **Sass sources only** through the wrapper `src/theme/react4j-tabler.scss` (which also holds the few
+React4J adjustments, each with the defect it fixes), then PostCSS renames the custom properties from `--tblr-*` to `--bs-*`
+(`postcss-prefix-custom-properties`), autoprefixer runs, and a banner with the MIT notices is prepended. This pipeline is separate from the
+modern one, whose output (`react4j-modern.css`, `bootstrap.min.css`) must stay byte-identical. The build **fails** (non-zero exit, no CSS) on:
+a Sass source loaded from outside `@tabler/core/scss` and `src/theme` (`assertTablerSourcesOnly`, keeps `dist/libs` and its non-MIT plugins
+out); forbidden text in the output (`fonts.googleapis`, `fonts.gstatic`, `apexcharts`, `dist/libs`) or a custom property outside `--bs-`
+(`assertTablerOutput`); a Tabler package not declaring MIT. The licences are reproduced in the repository's `THIRD-PARTY-NOTICES.md`, which the
+`copy-third-party-notices` execution of this module's pom copies into the jar as `META-INF/THIRD-PARTY-NOTICES.md`. To update Tabler see the
+README of the repository ("How to update Tabler"). `public/css/custom.css` is loaded AFTER the theme sheet, so its `.card-body { position:
+static }` (equal to Bootstrap's default, needed because Tabler makes `.card-body` `position: relative`) wins on every preset.
+
 ## File upload: two client-side transports
 
 `FileUpload.tsx` renders one `<input type=file>` regardless of which transport the server rendered for
@@ -68,3 +80,13 @@ either would leave a literal `+` in the header, and the server would silently tu
 corrupting any filename containing one. `Backend.uploadFileRaw` always encodes with
 `encodeURIComponent(file.name)`. Pinned by `Backend.uploadFileRaw.test.ts` over two filenames: one
 containing a space, one containing a literal `+`.
+
+## Known defect classes
+
+Recorded by the orchestrator, keyed by the property that was violated, not the symptom (full-stack-engineer step 13c). Look up a new
+defect here by its property before diagnosing it.
+
+| Class (property) | Occurrences | Guard | Status |
+|---|---|---|---|
+| An absolutely positioned overlay (dropdown menu, toast container) must not be clipped by an ancestor's `overflow`. React4J's global `custom.css` gives `.card-body` `overflow-x:auto` | plan-277 T4: dropdown menus clipped on MODERN (pre-existing) and TABLER; toast clipped on TABLER once Tabler made `.card-body` `position:relative` | TABLER: `react4j-tabler.scss` rule 1 + `custom.css` `position:static`, pinned by `TablerThemeIT` reachability tests (shown red). MODERN dropdown: none (user decision, kanban card 7db7a6ea) | open on MODERN |
+| A visibility/clipping assertion must sample the overlay's edges, not only its centre: a centre probe stays green while the edges are cut | plan-277 T4 gap G1 (`testToastIsNotClippedByItsCard` stayed green without its fix); workspace class testing P13 (tests unable to fail), also guarded in plan-274 | `TablerThemeIT.assertEveryEdgeMidpointReachable` (test-local). Proposed, unscheduled: lift it into `ThemeBrowserSupport` and use it for every overlay check | guarded locally |

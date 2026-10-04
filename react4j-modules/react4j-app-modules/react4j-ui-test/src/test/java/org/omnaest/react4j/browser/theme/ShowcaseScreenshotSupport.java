@@ -31,24 +31,36 @@ abstract class ShowcaseScreenshotSupport extends ThemeBrowserSupport
      */
     protected Path openShowcaseAndPersistScreenshot(String fileName) throws IOException
     {
-        this.openShowcaseAndLocateOpenModalButton();
-        this.page.waitForFunction("document.querySelector('.App')?.getAttribute('data-inflight-count') === '0'");
-        this.page.evaluate("document.fonts.ready.then(() => true)");
+        return persistShowcaseScreenshot(this.page, this.baseUrl(), fileName);
+    }
+
+    /**
+     * Same as {@link #openShowcaseAndPersistScreenshot(String)} for an arbitrary page and server, so that one test can capture two servers (two
+     * themes) in one browser session. {@code fileName} may name a sub directory of {@code docs/theme-screenshots}.
+     */
+    protected static Path persistShowcaseScreenshot(Page page, String baseUrl, String fileName) throws IOException
+    {
+        page.setViewportSize(ComputedStyleProbes.VIEWPORT_WIDTH, ComputedStyleProbes.VIEWPORT_HEIGHT);
+        page.navigate(baseUrl + "/");
+        page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Open modal")
+                                                                                                    .setExact(true))
+            .waitFor(new Locator.WaitForOptions().setTimeout(15000));
+        page.waitForFunction("document.querySelector('.App')?.getAttribute('data-inflight-count') === '0'");
+        page.evaluate("document.fonts.ready.then(() => true)");
 
         // The showcase scrolls inside an internal container, so a plain full-page capture shows one viewport only. Grow the viewport by the largest
         // hidden overflow (capped) so that the whole showcase is on the image; the width stays fixed.
-        int hiddenOverflow = ((Number) this.page.evaluate("Math.max(0, ...Array.from(document.querySelectorAll('*')).map(e => e.scrollHeight - e.clientHeight))")).intValue();
-        this.page.setViewportSize(ComputedStyleProbes.VIEWPORT_WIDTH, ComputedStyleProbes.VIEWPORT_HEIGHT + Math.min(hiddenOverflow, MAX_EXTRA_HEIGHT));
-        this.page.waitForFunction("document.querySelector('.App')?.getAttribute('data-inflight-count') === '0'");
+        int hiddenOverflow = ((Number) page.evaluate("Math.max(0, ...Array.from(document.querySelectorAll('*')).map(e => e.scrollHeight - e.clientHeight))")).intValue();
+        page.setViewportSize(ComputedStyleProbes.VIEWPORT_WIDTH, ComputedStyleProbes.VIEWPORT_HEIGHT + Math.min(hiddenOverflow, MAX_EXTRA_HEIGHT));
+        page.waitForFunction("document.querySelector('.App')?.getAttribute('data-inflight-count') === '0'");
 
-        Files.createDirectories(SCREENSHOT_DIRECTORY);
         Path target = SCREENSHOT_DIRECTORY.resolve(fileName)
                                           .normalize();
-        this.page.screenshot(new Page.ScreenshotOptions().setPath(target)
-                                                         .setFullPage(true));
+        Files.createDirectories(target.getParent());
+        page.screenshot(new Page.ScreenshotOptions().setPath(target)
+                                                    .setFullPage(true));
         return target;
     }
-
     /**
      * The {@code data-bs-theme} attribute of the {@code <html>} element, or {@code null} when it is absent
      */

@@ -57,6 +57,15 @@ abstract class ThemeBrowserSupport
         }
     }
 
+    /**
+     * A page in a context of its own: {@link #page} was opened by {@code Browser.newPage()}, whose implicit context cannot open further pages
+     */
+    protected Page newIsolatedPage()
+    {
+        return this.browser.newContext()
+                           .newPage();
+    }
+
     protected String baseUrl()
     {
         return "http://localhost:" + this.port;
