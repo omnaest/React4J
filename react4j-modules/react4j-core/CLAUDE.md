@@ -134,10 +134,13 @@ accent `#4f46e5`, radius 8px) and **stock** Bootstrap.
   modern test's border-colour assertion does not transfer. `getComputedStyle` serialises `oklch()`/`color-mix()` results in their own
   space, so colours are compared as sRGB bytes read through a canvas, not as `rgb()` text.
   **ui-test hazard, not theme related**: surefire redirects `java.io.tmpdir` to `target/surefire-java-io-tmpdir`. After
-  many runs without `mvn clean` the accumulated `tomcat.*` directories slow the 1 ms spill sampler of
-  `UnbufferedUploadTransportEndToEndTest` until its positive control fails; after a `clean` that directory does not
-  exist and Mockito's agent cannot start (`IOException ... path not found`) in the first Mockito test class. Fix the first by
-  deleting `target/surefire-java-io-tmpdir`'s contents, the second by creating the directory, not by touching either test.
+  many runs without `mvn clean` the accumulated `tomcat.*` directories make one scan of the spill sampler of
+  `UnbufferedUploadTransportEndToEndTest` take 20-35 ms instead of 1 ms (measured, plan-277 section 8), longer than the multipart spill
+  file lives (2-6 ms warm, 14-31 ms for a JVM's first request); that used to fail its positive control (flaky, kanban 7d9b7b0b). The control
+  now holds the multipart request open (`HoldingUntilSpillSeenChannel`, bounded at 10 s) until the detector has seen the file, so it no
+  longer depends on the tree size or on luck; after a `clean` that directory does not
+  exist and Mockito's agent cannot start (`IOException ... path not found`) in the first Mockito test class. Fix that by
+  creating the directory, not by touching the test; deleting `target/surefire-java-io-tmpdir`'s contents is optional housekeeping.
   **Tabler ITs (plan-277 T4)**: `TablerThemeIT` (profile `theme-tabler`: served head, sheet loaded once, primary 6,111,209 from the served sheet's own
   `--bs-primary-rgb`, DiagramViewer band 40px/controls 31px, dropdown menu reachable, toast not clipped, badge readable, modal), the screenshot ITs
   `ShowcaseScreenshotTablerDarkIT` and `ShowcaseScreenshotTablerComparisonIT` (pins its own profile and starts a second in-process Tabler app, so one
@@ -145,6 +148,13 @@ accent `#4f46e5`, radius 8px) and **stock** Bootstrap.
   "-Dspring.profiles.active=theme-tabler" "-Dit.test=*IT,!ShowcaseScreenshotModernIT"` (the `*IT` include is required: an exclusion-only `it.test`
   makes failsafe run every `*Test` class too, without surefire's tmpdir argLine); `ModernThemeIT` is expected red there. Server-side showcase state
   (an open modal or offcanvas) is shared by every IT of one Spring context, so an IT that opens one must close it in a `finally`.
+  **Showcase screenshots (plan-277 section 8, kanban 8f49dd56)** are the whole page (no height cap: `ShowcaseScreenshotSupport` grows the viewport until
+  no element above the lowest card hides vertical overflow, refuses to write otherwise, captures in 8000 px sections because Chromium cannot render
+  more than 16384 px into one image, and stitches them) and byte-deterministic: every screenshot IT pins the marker profile
+  `ShowcaseScreenshotSupport.ISOLATED_CONTEXT_PROFILE` (own Spring context, so no other IT's clicks reach the image), motion is frozen (reduced motion,
+  no-animation style, no timer of 1 s or more is armed) and the server's "Server time" paragraph is masked. `ShowcaseScreenshotModernIT` pins its
+  context too (an `@ActiveProfiles` declaration takes precedence over `-Dspring.profiles.active`, as `ShowcaseScreenshotTablerComparisonIT` already relies on), so the
+  `!ShowcaseScreenshotModernIT` exclusion above should be redundant; that was not re-run under `theme-tabler`.
 
 ## File upload: two transports
 
@@ -256,3 +266,12 @@ periodic `@Scheduled` sweep (piggybacking on
 `ReactUIAutoConfiguration`'s existing `@EnableScheduling`) plus an opportunistic sweep on every `register`/
 `lookup` call bound staleness even if nothing else happens. `UploadChannelRegistry` the interface is
 unchanged - eviction is entirely internal to the impl.
+
+## Known defect classes
+
+Recorded by the orchestrator, keyed by the property that was violated, not the symptom. Look up a new defect here by its property before diagnosing it.
+
+| Class (property) | Occurrences | Guard | Status |
+|---|---|---|---|
+| A node renderer must be registered under its node's real type key. `NodeHierarchyStaticRenderer`'s `register` derives the key by instantiating the node class reflectively and reading `Node#getType()`; a node class without a no-arg constructor (a Lombok `@Builder`-only class) silently registers under `""` and then captures every OTHER node whose type is `""` | plan-277 F3: `TableNode` registered under `""` and was handed `TabsNode.ContentElement`, so any page holding a Table and Tabs failed with HTTP 500 (`ClassCastException` in `TableRendererImpl`); the earlier occurrence is recorded in the memory entry `react4j-noderenderer-registration-silent-noop-wrong-class-or-missing-noarg-ctor` | Guarded at source: `NodeHierarchyRenderingProcessorImpl#register` throws `IllegalArgumentException` (naming the node class, the render type and the reason) for a node class with no instantiable no-arg constructor or a null/empty `getType()`, instead of falling back to `""`; plus `NodeRendererRegistrationKeyGuardTest` (enumerates every argument-free component of the real `UIComponentFactory`, registers each renderer through the real `register`, asserts a non-empty key and no two node classes on one key; the refusal itself is pinned for an uninstantiable class and for an empty type, with a control that a well-formed class still registers). Census at the change: all 40 node classes registered in `react4j-core-components` have a no-arg constructor and a non-empty type; no project outside React4J implements `manageNodeRenderers` or registers on a `NodeRendererRegistry` | fixed (plan-277 section 8, kanban b26f473e) |
+| A server event response must echo the handler-modified state for the originating context; echoing the request's contexts overrides it | plan-277 F3: form validation feedback was lost - `EventHandlerServiceImpl.echoEveryContext` echoed the request's own contexts, and core-ui `Backend.ts` applies `dataWithContexts` over `dataWithContext`, so the echo overwrote the state the handler had just modified for the originating context | `EchoedInternalDataOfOriginatingContextTest` (the originating context's `dataWithContexts` entry carries the handler's internalData, whether the request listed that context or not, and a second context's entry keeps exactly the request's internalData; shown red against the old `echoEveryContext`); the browser checks `ShowcaseCoverageChecks#testInvalidField...` / `#testValidField...` (MODERN and TABLER, no longer `@Disabled`; shown red against the unfixed core jar, green with the fix). Fix: `echoEveryContext` takes the handler's internalData for the originating context; every other context keeps the request's, so one form's messages never reach another | fixed (plan-277 section 8, kanban 767dcd0e) |

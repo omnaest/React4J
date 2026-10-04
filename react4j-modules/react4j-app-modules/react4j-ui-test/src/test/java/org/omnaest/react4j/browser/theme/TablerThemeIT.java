@@ -18,7 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
-import com.microsoft.playwright.options.AriaRole;
 
 /**
  * plan-277 T4: the Tabler preset ({@link TablerThemeTestConfiguration}, no design tokens) as a real browser renders the showcase.
@@ -154,44 +153,34 @@ public class TablerThemeIT extends ThemeBrowserSupport
         Locator toast = this.page.locator(".toast", new Page.LocatorOptions().setHasText("A toast message."))
                                  .first();
         toast.waitFor(new Locator.WaitForOptions().setTimeout(15000));
-        this.scrollToCenter(toast);
+        OverlayProbes.scrollToCenter(this.page, toast);
 
-        assertReachable(toast.locator(".toast-body"), "toast body");
-        assertEveryEdgeMidpointReachable(toast, "toast");
+        OverlayProbes.assertReachable(toast.locator(".toast-body"), "toast body");
+        OverlayProbes.assertEveryEdgeMidpointReachable(toast, "toast");
     }
 
+    /**
+     * Open dropdown menus must not be clipped by their card: React4J's custom.css gives .card-body overflow-x:auto and clips an open menu to its card,
+     * which custom.css's ".card-body:has(.dropdown-menu.show)" rule undoes (plan-277 F1; it used to live in react4j-tabler.scss). The same check runs under the modern
+     * preset in ModernThemeIT.
+     */
     @Test
     public void testStandaloneDropdownOpensAndItsMenuIsVisibleInsideTheViewport()
     {
-        this.openShowcaseAndLocateOpenModalButton();
-        Locator toggle = this.page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Options")
-                                                                                         .setExact(true));
-        this.scrollToCenter(toggle);
-        toggle.click();
-
-        this.assertMenuVisibleInsideViewport(toggle.locator("xpath=..")
-                                                   .locator(".dropdown-menu.show"),
-                                             "Action 1", "Action 2");
+        this.assertShowcaseStandaloneDropdownMenuIsVisibleAndUnclipped();
     }
 
     @Test
     public void testSplitButtonDropdownOpensAndItsMenuIsVisibleInsideTheViewport()
     {
-        this.openShowcaseAndLocateOpenModalButton();
-        Locator card = this.page.locator(".card", new Page.LocatorOptions().setHasText("SplitButton"))
-                                .last();
-        Locator toggle = card.locator("button.dropdown-toggle-split");
-        this.scrollToCenter(toggle);
-        toggle.click();
-
-        this.assertMenuVisibleInsideViewport(card.locator(".dropdown-menu.show"), "Save as...", "Save a copy");
+        this.assertShowcaseSplitButtonMenuIsVisibleAndUnclipped();
     }
 
     @Test
     public void testModalOpensAndIsVisibleInsideTheViewport()
     {
         Locator openModalButton = this.openShowcaseAndLocateOpenModalButton();
-        this.scrollToCenter(openModalButton);
+        OverlayProbes.scrollToCenter(this.page, openModalButton);
         openModalButton.click();
 
         Locator modal = this.page.locator(".modal.show");
@@ -203,7 +192,7 @@ public class TablerThemeIT extends ThemeBrowserSupport
             assertTrue(modal.locator(".modal-title")
                             .textContent()
                             .contains("Demo Modal"));
-            assertInsideViewport(dialog, "modal dialog");
+            OverlayProbes.assertInsideViewport(dialog, "modal dialog");
             // the modal fades in (Tabler's own transition), so wait for the end of it instead of reading mid-flight
             this.page.waitForFunction("parseFloat(getComputedStyle(document.querySelector('.modal.show')).opacity) === 1");
             assertEquals("1", computedStyle(modal, "opacity"), "the modal must be fully faded in");
@@ -220,84 +209,6 @@ public class TablerThemeIT extends ThemeBrowserSupport
                 this.page.waitForFunction("document.querySelectorAll('.modal.show').length === 0");
             }
         }
-    }
-
-    /**
-     * Centres the element in the viewport (the showcase scrolls inside a container), so that a dropdown menu opening below it has room and the click
-     * does not depend on Playwright's own scrolling
-     */
-    private void scrollToCenter(Locator element)
-    {
-        element.evaluate("e => e.scrollIntoView({block: 'center'})");
-        this.page.waitForTimeout(300);
-    }
-
-    private void assertMenuVisibleInsideViewport(Locator menu, String firstItemText, String lastEnabledItemText)
-    {
-        menu.waitFor(new Locator.WaitForOptions().setTimeout(10000));
-        assertTrue(menu.isVisible(), "the dropdown menu must be visible");
-        assertTrue(menu.getByText(firstItemText)
-                       .first()
-                       .isVisible(),
-                   "the menu item '" + firstItemText + "' must be visible");
-        assertInsideViewport(menu, "dropdown menu");
-        assertEquals("1", computedStyle(menu, "opacity"));
-        // visible by box is not enough: React4J's custom.css gives .card-body overflow-x:auto, which clips an open menu to its card unless the Tabler
-        // sheet lets the card body overflow, so the last ENABLED item (a disabled item has pointer-events:none and passes the pointer through) must be what the pointer actually hits at its centre
-        assertReachable(menu.locator(".dropdown-item", new Locator.LocatorOptions().setHasText(lastEnabledItemText))
-                            .first(),
-                        "last enabled item '" + lastEnabledItemText + "' of the dropdown menu");
-    }
-
-    /**
-     * The element, or one of its descendants, is what the browser hits at the element's own centre: it is neither clipped away nor covered
-     */
-    private void assertReachable(Locator element, String what)
-    {
-        Object hit = element.evaluate("(e) => { const r = e.getBoundingClientRect(); const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);"
-                                      + " return t === e || e.contains(t) ? 'reachable' : (t ? t.tagName + '.' + t.className : 'nothing'); }");
-        assertEquals("reachable", hit, "the " + what + " must be reachable at its centre, but the browser hits " + hit);
-    }
-
-    /**
-     * The element, or one of its descendants, is what the browser hits just inside each of its four edge midpoints and at its centre: no edge is
-     * clipped away by an ancestor's overflow. Midpoints, not corners, so that rounded corners cannot fail it.
-     */
-    private void assertEveryEdgeMidpointReachable(Locator element, String what)
-    {
-        Object hit = element.evaluate("(e) => { const r = e.getBoundingClientRect(); const inset = 3; const points = {"
-                                      + " top: [r.left + r.width / 2, r.top + inset], bottom: [r.left + r.width / 2, r.bottom - inset],"
-                                      + " left: [r.left + inset, r.top + r.height / 2], right: [r.right - inset, r.top + r.height / 2] };"
-                                      + " const misses = []; for (const [name, [x, y]] of Object.entries(points)) { const t = document.elementFromPoint(x, y);"
-                                      + " if (!(t === e || e.contains(t))) { misses.push(name + ' -> ' + (t ? t.tagName + '.' + t.className : 'nothing')); } }"
-                                      + " return misses.length === 0 ? 'reachable' : misses.join(', '); }");
-        assertEquals("reachable", hit, "the " + what + " must be reachable at the middle of each of its edges (no edge clipped by an ancestor), but the browser hits " + hit);
-    }
-
-    private void assertInsideViewport(Locator element, String what)
-    {
-        @SuppressWarnings("unchecked")
-        List<Number> box = (List<Number>) element.evaluate("(e) => { const r = e.getBoundingClientRect();"
-                                                           + " return [r.left, r.top, r.right, r.bottom, r.width, r.height, window.innerWidth, window.innerHeight]; }");
-        String description = what + " box [left, top, right, bottom, width, height, viewportWidth, viewportHeight] = " + box;
-        assertTrue(box.get(4)
-                      .doubleValue() > 20
-                   && box.get(5)
-                         .doubleValue() > 20,
-                   "the " + description);
-        assertTrue(box.get(0)
-                      .doubleValue() >= -0.5
-                   && box.get(1)
-                         .doubleValue() >= -0.5
-                   && box.get(2)
-                         .doubleValue() <= box.get(6)
-                                              .doubleValue()
-                                           + 0.5
-                   && box.get(3)
-                         .doubleValue() <= box.get(7)
-                                              .doubleValue()
-                                           + 0.5,
-                   "the " + description + " must lie inside the viewport");
     }
 
     private String servedTablerSheet()

@@ -35,6 +35,7 @@ import org.omnaest.react4j.domain.DropTarget;
 import org.omnaest.react4j.domain.DropTarget.DropEvent;
 import org.omnaest.react4j.domain.DropTarget.DropRelation;
 import org.omnaest.react4j.domain.Dropdown;
+import org.omnaest.react4j.domain.Icon;
 import org.omnaest.react4j.domain.Modal;
 import org.omnaest.react4j.domain.Offcanvas;
 import org.omnaest.react4j.domain.Placeholder;
@@ -46,6 +47,7 @@ import org.omnaest.react4j.domain.Toaster;
 import org.omnaest.react4j.domain.ToggleButton;
 import org.omnaest.react4j.domain.Tooltip;
 import org.omnaest.react4j.domain.UIComponent;
+import org.omnaest.react4j.domain.UIComponent.UIContextAndDataConsumer;
 import org.omnaest.react4j.domain.UIComponent.UIContextConsumer;
 import org.omnaest.react4j.domain.UIComponentFactory;
 import org.omnaest.react4j.domain.context.data.Value;
@@ -84,8 +86,8 @@ import jakarta.annotation.PostConstruct;
 @Profile("!treeTableFullWindow")
 public class ComponentShowcaseUI
 {
-    private static final String                 NAV_TARGET_A_LOCATOR                         = "nav-target-a";
-    private static final String                 NAV_TARGET_B_LOCATOR                         = "nav-target-b";
+    public static final String                  NAV_TARGET_A_LOCATOR                         = "nav-target-a";
+    public static final String                  NAV_TARGET_B_LOCATOR                         = "nav-target-b";
 
     /**
      * plan-265 S0: three addressable {@link org.omnaest.react4j.domain.DiagramViewer} showcase fixtures -
@@ -145,6 +147,29 @@ public class ComponentShowcaseUI
     public static final String                  DIAGRAM_VIEWER_COVER_WIDE_FLAT_CARD_TITLE    = "DiagramViewer Cover Wide Flat, Fixed Height (interactive)";
     public static final String                  DIAGRAM_VIEWER_COVER_TALL_NARROW_CARD_TITLE  = "DiagramViewer Cover Tall Narrow, Fixed Height (interactive)";
 
+    /**
+     * plan-277 F3: showcase cards for three Bootstrap-styled components that no browser check could address before (a plain table, a NAV-presented
+     * dropdown and the inline form validation feedback). The card TITLE is the handle a test addresses a card by, so the titles and the labels below
+     * were chosen not to be, and not to contain, any text an existing browser test locates by (hasText and getByRole names match case-insensitive
+     * substrings): none of them contains "Badge", "Copy", "Submit", "Home", "Open modal", "SplitButton", "Options", "Drag and Drop", "Uploaded:" or "Navigation Target", and no locator of this card matches a card that existed before.
+     */
+    public static final String                  TABLE_CARD_TITLE                             = "Bootstrap Table";
+    public static final String                  NAV_DROPDOWN_CARD_TITLE                      = "Navbar Style Menu";
+    public static final String                  NAV_DROPDOWN_TOGGLE_LABEL                    = "Browse";
+    /**
+     * plan-277 section 8 (kanban bcfd7e44): the NavigationBar's own dropdown (its toggle and the two items linking to the "Navigation Target" cards), and
+     * the card that renders every {@link Icon.StandardIcon}. None of the texts contains "Navigation Target", "Options", "Home" or "Copy".
+     */
+    public static final String                  NAV_DROPDOWN_ENTRY_TOGGLE_TEXT               = "Quick links";
+    public static final String                  NAV_DROPDOWN_ENTRY_A_TEXT                    = "Go to A";
+    public static final String                  NAV_DROPDOWN_ENTRY_B_TEXT                    = "Go to B";
+    public static final String                  ICON_CARD_TITLE                              = "Icon Glyphs";
+    public static final String                  VALIDATION_CARD_TITLE                        = "Validation Feedback";
+    public static final String                  VALIDATION_INVALID_FIELD_LABEL               = "Login id";
+    public static final String                  VALIDATION_VALID_FIELD_LABEL                 = "Contact address";
+    public static final String                  VALIDATION_BUTTON_NAME                       = "Validate fields";
+    public static final String                  VALIDATION_INVALID_MESSAGE                   = "Login id is already taken";
+    public static final String                  VALIDATION_VALID_MESSAGE                     = "Contact address looks fine";
     /**
      * Hand-written literal SVGs (plan-265 S0 brief - preferred over pulling in a diagram renderer for a
      * measuring-instrument fixture). Each carries both a parseable {@code viewBox} AND its own
@@ -279,7 +304,12 @@ public class ComponentShowcaseUI
             reactUI.withNavigationBar(nav -> nav.addEntry(entry -> entry.withText("Navigation Target A")
                                                                         .withLinkedLocator(NAV_TARGET_A_LOCATOR))
                                                 .addEntry(entry -> entry.withText("Navigation Target B")
-                                                                        .withLinkedLocator(NAV_TARGET_B_LOCATOR)));
+                                                                        .withLinkedLocator(NAV_TARGET_B_LOCATOR))
+                                                .addDropdown(dropdown -> dropdown.withText(NAV_DROPDOWN_ENTRY_TOGGLE_TEXT)
+                                                                                 .addEntry(entry -> entry.withText(NAV_DROPDOWN_ENTRY_A_TEXT)
+                                                                                                         .withLinkedLocator(NAV_TARGET_A_LOCATOR))
+                                                                                 .addEntry(entry -> entry.withText(NAV_DROPDOWN_ENTRY_B_TEXT)
+                                                                                                         .withLinkedLocator(NAV_TARGET_B_LOCATOR))));
             reactUI.addNewComponent(this::buildShowcase);
         });
     }
@@ -548,9 +578,71 @@ public class ComponentShowcaseUI
                                            .withContent(factory.newDiagramViewer()
                                                                .withSvg(DIAGRAM_VIEWER_TALL_NARROW_SVG)
                                                                .withHeight("400px")
-                                                               .withInteractive(true)));
+                                                               .withInteractive(true)))
+                      // --- plan-277 F3: table, NAV dropdown and form validation feedback (appended last, no existing card moves) ---
+                      .addComponent(factory.newCard()
+                                           .withTitle(TABLE_CARD_TITLE)
+                                           .withContent(factory.newTable()
+                                                               .withColumnTitles("Item", "Count", "State")
+                                                               .addRowTextContent(List.of("Alpha", "12", "ready"))
+                                                               .addRowTextContent(List.of("Beta", "7", "pending"))
+                                                               .addRowTextContent(List.of("Gamma", "31", "done"))))
+                      .addComponent(factory.newCard()
+                                           .withTitle(NAV_DROPDOWN_CARD_TITLE)
+                                           .withContent(factory.newDropdown()
+                                                               .withTitle(NAV_DROPDOWN_TOGGLE_LABEL)
+                                                               .withPresentation(Dropdown.Presentation.NAV)
+                                                               .addItem(item -> item.withText("Reports"))
+                                                               .addItem(item -> item.withText("Settings"))))
+                      .addComponent(this.buildIconCard(factory))
+                      .addComponent(factory.newCard()
+                                           .withTitle(VALIDATION_CARD_TITLE)
+                                           .withContent(factory.newStack()
+                                                               .withContent(factory.newForm()
+                                                                                   .withUIContext(this.createValidationFormProvider()))));
+    }
+    /**
+     * plan-277 section 8: a card showing every {@link Icon.StandardIcon}, so that a browser test can assert that each one renders a real glyph
+     */
+    private UIComponent<?> buildIconCard(UIComponentFactory factory)
+    {
+        Composite icons = factory.newComposite();
+        for (Icon.StandardIcon standardIcon : Icon.StandardIcon.values())
+        {
+            icons.addComponent(factory.newIcon()
+                                      .from(standardIcon));
+        }
+        return factory.newCard()
+                      .withTitle(ICON_CARD_TITLE)
+                      .withContent(icons);
     }
 
+    /**
+     * plan-277 F3: a {@link Form} of two text fields and one button whose server side handler adds an INVALID message to the first field and a VALID
+     * one to the second, so that a browser test can click it and read the real validation feedback rendering (is-invalid / is-valid plus the
+     * feedback texts) through the genuine {@code /ui/event} round trip. The document is attached the way {@link #createFormProvider()} does it.
+     */
+    private UIContextAndDataConsumer<Form> createValidationFormProvider()
+    {
+        return (form, uiContext, initialData) ->
+        {
+            Document document = uiContext.getFirstDocument();
+            Field invalidField = document.getField("showcaseLoginIdField");
+            Field validField = document.getField("showcaseContactField");
+
+            form.addInputField(input -> input.attachToField(invalidField)
+                                             .withLabel(VALIDATION_INVALID_FIELD_LABEL));
+            form.addInputField(input -> input.attachToField(validField)
+                                             .withLabel(VALIDATION_VALID_FIELD_LABEL));
+            form.addButton(button -> button.withText(VALIDATION_BUTTON_NAME)
+                                           .onClick((data, messaging, context) ->
+                                           {
+                                               messaging.addValidationMessage(invalidField, Form.ValidationMessageType.INVALID, VALIDATION_INVALID_MESSAGE);
+                                               messaging.addValidationMessage(validField, Form.ValidationMessageType.VALID, VALIDATION_VALID_MESSAGE);
+                                               return data;
+                                           }));
+        };
+    }
     /**
      * Server-driven show/hide (plan-12/13/14 pattern): a trigger {@link org.omnaest.react4j.domain.Button} flips
      * {@link #modalVisible} and the {@link Modal} itself renders from that same server-side flag, closing it back via

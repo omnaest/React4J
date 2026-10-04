@@ -75,16 +75,42 @@ public class NodeHierarchyStaticRenderer
             this.locale = locale;
         }
 
+        /**
+         * Registers the renderer under the {@link Node#getType()} of an instance of {@code nodeType}, which is created reflectively through its no-arg
+         * constructor.
+         *
+         * @throws IllegalArgumentException
+         *             if {@code nodeType} has no instantiable no-arg constructor or its type is {@code null} or empty. Registering anyway used to fall
+         *             back to the key {@code ""}, which silently captured every other node whose type is empty (so a Table registered that way was
+         *             handed a {@code TabsNode.ContentElement} and failed with a {@code ClassCastException} at render time): the registration is the
+         *             one place the cause is still visible, so it fails here, naming the class.
+         */
         @SuppressWarnings("unchecked")
         @Override
         public <N extends Node> NodeHierarchyRenderingProcessorImpl register(Class<N> nodeType, NodeRenderType nodeRenderType, NodeRenderer<N> nodeRenderer)
         {
             this.rendererTypeToNodeTypeToNodeRenderer.computeIfAbsent(nodeRenderType, nrt -> new HashMap<>())
-                                                     .put(ClassUtils.newInstance((Class<Node>) nodeType)
-                                                                    .map(Node::getType)
-                                                                    .orElse(""),
-                                                          (NodeRenderer<Node>) nodeRenderer);
+                                                     .put(this.resolveNodeTypeKey(nodeType, nodeRenderType), (NodeRenderer<Node>) nodeRenderer);
             return this;
+        }
+
+        @SuppressWarnings("unchecked")
+        private String resolveNodeTypeKey(Class<? extends Node> nodeType, NodeRenderType nodeRenderType)
+        {
+            Optional<Node> instance = ClassUtils.newInstance((Class<Node>) nodeType);
+            if (instance.isEmpty())
+            {
+                throw new IllegalArgumentException("Cannot register a node renderer for node class " + nodeType.getName() + " (render type " + nodeRenderType
+                                                   + "): the class has no instantiable no-arg constructor, so its type key cannot be read. A node class needs @NoArgsConstructor + @AllArgsConstructor beside @Builder.");
+            }
+            String key = instance.get()
+                                 .getType();
+            if (key == null || key.isEmpty())
+            {
+                throw new IllegalArgumentException("Cannot register a node renderer for node class " + nodeType.getName() + " (render type " + nodeRenderType
+                                                   + "): getType() returned " + (key == null ? "null" : "an empty string") + ", and an empty key would capture every other node whose type is empty.");
+            }
+            return key;
         }
 
         @Override

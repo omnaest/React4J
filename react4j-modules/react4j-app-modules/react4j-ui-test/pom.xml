@@ -108,6 +108,26 @@
                      surefire above. Default `mvn test` never reaches this plugin's bound phases. -->
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>3.1.2</version>
+                <!-- plan-277 F4: DIAGNOSTIC CAPTURE ONLY - nothing here changes what runs, retries, skips or
+                     times out. The one recorded "forked VM terminated without properly saying goodbye / Process
+                     Exit Code: -1 / Crashed tests: ClipboardCopyButtonRoundTripIT" (2026-10-04 02:11) left no
+                     artefact, so it could not be classified from the build alone. It was later traced (see
+                     plan-277 section 7, F4 findings) to ANOTHER Claude session on this machine killing the fork
+                     by PID (`Stop-Process -Id <pid> -Force`) while cleaning up what it believed were its own
+                     surefire JVMs. That cause is outside this module and cannot be prevented from here, so this
+                     configuration instead makes the three possible causes of a dead fork distinguishable from
+                     the build output alone:
+                       - JVM fatal error: leaves target/hs_err_pid<pid>.log (-XX:ErrorFile). Failsafe's working
+                         directory is the module dir, so without this the file would land in the module root.
+                       - OutOfMemoryError: leaves target/java_pid<pid>.hprof (-XX:+HeapDumpOnOutOfMemoryError).
+                       - external kill: Exit Code -1 (Stop-Process / .NET Process.Kill) with NEITHER file present.
+                     The ErrorFile path uses %p (the JDK substitutes the pid) so repeated crashes do not overwrite
+                     each other. Deliberately NOT set: java.io.tmpdir (surefire's plan-154 redirect is specific to
+                     its own tests), forkedProcessTimeoutInSeconds, rerunFailingTestsCount, skipAfterFailureCount,
+                     or any exclusion - those would mask or reshape a failure rather than capture it. -->
+                <configuration>
+                    <argLine>-XX:ErrorFile=${project.build.directory}/hs_err_pid%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${project.build.directory}</argLine>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>

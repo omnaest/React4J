@@ -1,14 +1,7 @@
 @use "@tabler/core/scss/tabler";
 
 // React4J's own adjustments on top of Tabler (plan-277 T4). Keep this list short: each rule needs the defect it fixes named here.
-//
-// 1. A dropdown menu is position:absolute inside .card-body, and React4J's custom.css gives .card-body overflow-x:auto, which clips the open menu to
-//    the card. Let the card body overflow only while a menu is open (the same clipping exists under the modern theme, deliberately not touched there).
-.card-body:has(.dropdown-menu.show) {
-  overflow: visible;
-}
-//
-// 2. React4J renders badges as 'badge bg-<style>' (react-bootstrap). Tabler's .badge text colour is its muted secondary, which is unreadable on a
+// 1. React4J renders badges as 'badge bg-<style>' (react-bootstrap). Tabler's .badge text colour is its muted secondary, which is unreadable on a
 //    solid colour (Tabler itself pairs a solid background with its -fg text colour, which is var(--bs-light)). Light '-lt' badges are not matched.
 .badge:is(.bg-primary, .bg-secondary, .bg-success, .bg-danger, .bg-warning, .bg-info, .bg-dark) {
   color: var(--bs-light);

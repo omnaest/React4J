@@ -67,21 +67,16 @@ export class HomePage extends React.Component<Props, State>
             </div>
         );
 
-        const bottomTopPadding = (
-            <div className="body-bottom-top-padding" />
-        );
-
         if (this.props.node.navigation)
         {
             return (
-                <>
+                <div className={this.state.menuCollapsed ? "body-with-menu-icon" : "body-with-navbar"}>
                     {this.state.menuCollapsed && menuIconComponentAnker}
                     {!this.state.menuCollapsed && navbar}
                     <div className={this.state.menuCollapsed ? "body-full" : "body-bottom"}>
-                        {this.state.menuCollapsed && bottomTopPadding}
                         {Renderer.render(this.props.node.body)}
                     </div>
-                </>
+                </div>
             );
         }
         else

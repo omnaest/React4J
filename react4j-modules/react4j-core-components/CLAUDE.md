@@ -110,6 +110,16 @@ Failing any one makes it a cliff requiring an option evaluation (R15) before pro
   exactly the escape hatch this module's design has consistently avoided (see the typed-CSS-value reasoning
   on `DiagramViewer`'s own sizing methods).
 
+## NavigationBar dropdowns (plan-277 section 8, kanban bcfd7e44)
+
+`NavigationBar#addDropdown(Consumer<NavigationBarDropdown>)` adds a toggle with a menu of `NavigationBarEntry` items beside the plain
+`addEntry` entries; entries and dropdowns share one list in insertion order, and a dropdown's items are the same implementation as
+the bar's entries (text, link, linked locator, linked component, active, disabled behave identically). The node contract the client
+codes against: `NavigationBarNode.Entry#dropdownEntries` is `null` on a plain entry and a (possibly empty) list on a dropdown, whose
+`text`/`active`/`disabled` describe the toggle and whose `link`/`linkedId` are `null`; one level only (an item is a plain entry). The
+static HTML template renders a dropdown as `li.nav-item.dropdown > a.nav-link.dropdown-toggle + ul.dropdown-menu > li > a.dropdown-item`;
+plain entries render exactly as before. Tests: `NavigationBarImplTest` (API to node, JSON shape) and `NavigationBarStaticRenderTest`.
+
 ## Testing note
 
 `FileUploadFormElementImplTest` covers the node-rendering contract (algorithmic, zero Spring context, zero

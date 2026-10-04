@@ -21,7 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
  */
 @Tag("browser")
 @SpringBootTest(classes = MockApplication.class, webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles(DisabledThemeTestConfiguration.PROFILE)
+@ActiveProfiles({DisabledThemeTestConfiguration.PROFILE, ShowcaseScreenshotSupport.ISOLATED_CONTEXT_PROFILE})
 public class ShowcaseScreenshotDisabledIT extends ShowcaseScreenshotSupport
 {
     @Test

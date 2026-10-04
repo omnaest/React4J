@@ -39,9 +39,23 @@ p {
 	overflow-y: auto;
 }
 
-.body-bottom-top-padding {
-	height: 30px;
-	width: 100%;
+/* Wrapper of an app with a NavigationBar (HomePage.tsx). Expanded: it generates no box, so .body-top/.body-bottom lay out as before.
+   Collapsed: a column in which the hamburger container is IN FLOW above the scrolling body, so the space reserved for it is its own
+   box on every preset (plan-277 section 8 item 2, replaces the absolute container plus a fixed 30px spacer). */
+.body-with-navbar {
+	display: contents;
+}
+
+.body-with-menu-icon {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.body-with-menu-icon > .body-full {
+	flex: 1 1 auto;
+	min-height: 0;
+	height: auto;
 }
 
 .body-full {
@@ -82,6 +96,14 @@ li {
 	   Toaster's absolutely positioned container and let the overflow above clip the toast; with the default the containing block is the .card
 	   as under the modern theme, whose computed style this leaves unchanged. */
 	position: static;
+}
+
+/* plan-277 F1: an open dropdown menu is position:absolute inside .card-body, and the overflow-x:auto above clips it to the card (the menu is cut off at the
+   card's edges and the next card is drawn over its rest). Let the card body overflow only while a menu is open. One rule for every preset (it used to be
+   a Tabler-only copy in react4j-tabler.scss); a browser without :has() keeps the clipping. Guarded by the dropdown tests of ModernThemeIT and
+   TablerThemeIT. */
+.card-body:has(.dropdown-menu.show) {
+	overflow: visible;
 }
 
 .width-max-content {	
@@ -164,9 +186,9 @@ li {
 }
 
 .navbar-menu-icon-container {
-	position: absolute;
-	top: 10px;
-	left: 0px;
+	flex: none;
+	align-self: flex-start;
+	padding-top: 10px;
 	z-index: 1;
 }
 

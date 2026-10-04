@@ -147,14 +147,15 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
         {
             Map<String, Object> postHandlerData = responseData.getData()
                                                               .toMap();
+            Map<String, Object> postHandlerInternalData = responseData.getInternalData()
+                                                                      .toMap();
             String originatingContextId = responseData.getData()
                                                       .getContextId();
             return new ResponseBody().setTarget(eventBody.getTarget())
                                      .setDataWithContext(new DataWithContext(originatingContextId,
                                                                              this.keysBelongingTo(eventBody, originatingContextId, postHandlerData),
-                                                                             responseData.getInternalData()
-                                                                                         .toMap()))
-                                     .setDataWithContexts(this.echoEveryContext(eventBody, postHandlerData))
+                                                                             postHandlerInternalData))
+                                     .setDataWithContexts(this.echoEveryContext(eventBody, postHandlerData, postHandlerInternalData))
                                      .setTargetNode(rerenderedNode.orElse(null));
         });
     }
@@ -230,8 +231,17 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
      * A handler can create a field that arrived in no context - that is exactly what driving another component
      * through {@code UIComponents} does. It is routed to the context of the component whose {@code Location} the
      * key was derived from, and falls back to the originating context only when no component claims it.
+     *
+     * <h2>Internal data: the originating context gets the handler's, every other context the request's</h2>
+     * The client applies this list when it is non-empty and uses the singular {@code dataWithContext} only as a
+     * fallback, so the internal data echoed here is what the browser ends up holding. The originating context's
+     * entry therefore carries {@code postHandlerInternalData}, the internal data the handler returned - that is where a
+     * form's {@code validationFeedback} travels, and echoing the request's copy instead discarded it, so a click
+     * round trip never showed validation feedback. Every OTHER context keeps the internal data its own request
+     * entry carried: internal data is per-form, and handing the originating form's messages to another form would
+     * let them surface under it.
      */
-    private List<DataWithContext> echoEveryContext(EventBody eventBody, Map<String, Object> postHandlerData)
+    private List<DataWithContext> echoEveryContext(EventBody eventBody, Map<String, Object> postHandlerData, Map<String, Object> postHandlerInternalData)
     {
         DataWithContext originating = eventBody.getDataWithContext();
         String originatingContextId = originating != null ? originating.getContextId() : null;
@@ -240,17 +250,20 @@ public class EventHandlerServiceImpl implements EventHandlerService, EventHandle
         eventBody.getDataWithContexts()
                  .stream()
                  .filter(Objects::nonNull)
-                 .forEach(context -> echoed.add(new DataWithContext(context.getContextId(),
-                                                                    this.keysBelongingTo(eventBody, context.getContextId(), postHandlerData),
-                                                                    context.getInternalData() != null ? context.getInternalData()
-                                                                            : Collections.emptyMap())));
+                 .forEach(context ->
+                 {
+                     Map<String, Object> requestInternalData = context.getInternalData() != null ? context.getInternalData() : Collections.emptyMap();
+                     boolean isOriginating = originating != null && StringUtils.equals(context.getContextId(), originatingContextId);
+                     echoed.add(new DataWithContext(context.getContextId(), this.keysBelongingTo(eventBody, context.getContextId(), postHandlerData),
+                                                    isOriginating ? postHandlerInternalData : requestInternalData));
+                 });
 
         boolean originatingAlreadyEchoed = echoed.stream()
                                                  .anyMatch(context -> StringUtils.equals(context.getContextId(), originatingContextId));
         if (!originatingAlreadyEchoed && originating != null)
         {
             echoed.add(new DataWithContext(originatingContextId, this.keysBelongingTo(eventBody, originatingContextId, postHandlerData),
-                                           originating.getInternalData() != null ? originating.getInternalData() : Collections.emptyMap()));
+                                           postHandlerInternalData));
         }
 
         // A context that OWNS something the handler just wrote, but that the request never carried, still has to

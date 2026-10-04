@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
+import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 
 /**
@@ -24,6 +25,16 @@ final class BrowserColors
      */
     static int[] srgbBytes(Page page, String cssColor)
     {
+        int[] rgba = rgbaBytes(page, cssColor);
+        return new int[] {rgba[0], rgba[1], rgba[2]};
+    }
+
+    /**
+     * Like {@link #srgbBytes(Page, String)} with the alpha byte as fourth element (0 = fully transparent). Colours are read as the canvas premultiplies
+     * them, so the three colour bytes of a translucent colour are only meaningful together with the alpha.
+     */
+    static int[] rgbaBytes(Page page, String cssColor)
+    {
         Object result = page.evaluate("(css) => { const canvas = document.createElement('canvas'); canvas.width = 1; canvas.height = 1;"
                                       + " const context = canvas.getContext('2d'); context.fillStyle = '#010203'; context.fillStyle = css;"
                                       + " if (context.fillStyle === '#010203') { return null; }"
@@ -32,7 +43,23 @@ final class BrowserColors
                                       cssColor);
         assertTrue(result instanceof List, "the browser could not parse the colour '" + cssColor + "'");
         List<?> data = (List<?>) result;
-        return new int[] {((Number) data.get(0)).intValue(), ((Number) data.get(1)).intValue(), ((Number) data.get(2)).intValue()};
+        return new int[] {((Number) data.get(0)).intValue(), ((Number) data.get(1)).intValue(), ((Number) data.get(2)).intValue(),
+                ((Number) data.get(3)).intValue()};
+    }
+    /**
+     * The browser's own resolution of {@code var(customProperty)} as a colour, in the scope of {@code scope}: a probe element is appended to it, given
+     * {@code color: var(customProperty)}, its computed {@code color} is read and the probe removed. Unlike reading the property text, this resolves
+     * nested {@code var()}, {@code currentcolor} and {@code color-mix()} the way the browser itself does, and it never reads the element under test.
+     * Fails when the property is not defined in that scope (an undefined variable would silently make the probe inherit the text colour).
+     */
+    static String resolveColorVariable(Locator scope, String customProperty)
+    {
+        Object result = scope.evaluate("(scope, property) => { if (getComputedStyle(scope).getPropertyValue(property).trim() === '') { return null; }"
+                                       + " const probe = document.createElement('span'); probe.style.color = 'var(' + property + ')'; scope.appendChild(probe);"
+                                       + " const resolved = getComputedStyle(probe).color; probe.remove(); return resolved; }",
+                                       customProperty);
+        assertTrue(result instanceof String, "the custom property " + customProperty + " is not defined in the scope, the theme does not provide it");
+        return (String) result;
     }
 
     /**

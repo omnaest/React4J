@@ -55,6 +55,23 @@ public class ModernThemeIT extends ThemeBrowserSupport
         assertEquals("8px", computedStyle(openModalButton, "border-radius"));
     }
 
+    /**
+     * plan-277 F1: an open dropdown menu must not be clipped by its card under the modern preset either (React4J's custom.css gives .card-body
+     * overflow-x:auto). The same check runs under the Tabler preset in TablerThemeIT; both use OverlayProbes, including the edge-midpoint probe, which a
+     * centre probe cannot replace.
+     */
+    @Test
+    public void testStandaloneDropdownOpensAndItsMenuIsVisibleInsideTheViewport()
+    {
+        this.assertShowcaseStandaloneDropdownMenuIsVisibleAndUnclipped();
+    }
+
+    @Test
+    public void testSplitButtonDropdownOpensAndItsMenuIsVisibleInsideTheViewport()
+    {
+        this.assertShowcaseSplitButtonMenuIsVisibleAndUnclipped();
+    }
+
     private static String head(String html)
     {
         int end = html.indexOf("</head>");

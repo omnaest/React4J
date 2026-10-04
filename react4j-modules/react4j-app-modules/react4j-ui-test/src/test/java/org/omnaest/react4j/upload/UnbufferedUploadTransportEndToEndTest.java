@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -15,9 +16,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -26,6 +30,7 @@ import org.omnaest.react4j.EnableReactUI;
 import org.omnaest.react4j.component.form.upload.ByteArrayChannel;
 import org.omnaest.react4j.component.form.upload.FileChannel;
 import org.omnaest.react4j.component.form.upload.UploadChannel;
+import org.omnaest.react4j.component.form.upload.UploadContent;
 import org.omnaest.react4j.data.annotations.EnableReactUIInMemoryRepository;
 import org.omnaest.react4j.security.WebSecurityConfiguration;
 import org.omnaest.react4j.service.ReactUIService;
@@ -163,16 +168,84 @@ public class UnbufferedUploadTransportEndToEndTest
         Files.deleteIfExists(destination);
 
         // --- 3) positive control: the SAME detector class, unchanged, over the EXISTING multipart transport ---
-        ByteArrayChannel controlChannel = ByteArrayChannel.create();
+        // The channel holds the multipart request open until the detector has seen the spill file (bounded), so the control
+        // cannot depend on a sampler cycle landing inside the file's few-millisecond lifetime. See HoldingUntilSpillSeenChannel.
+        HoldingUntilSpillSeenChannel controlChannel = new HoldingUntilSpillSeenChannel();
         String controlUploadId = this.registerFormWithChannel(controlChannel);
 
-        TempTreeSpillDetector detector3 = new TempTreeSpillDetector(watchedTempRoot, payload);
+        TempTreeSpillDetector detector3 = new TempTreeSpillDetector(this.treeTheControlWatches(), payload);
+        controlChannel.holdUntilSeenBy(detector3);
         detector3.start();
         this.postMultipart(controlUploadId, "control.bin", payload);
         detector3.stop();
 
         assertTrue(detector3.wasFound(), "The positive control (existing multipart transport) must produce at least one matching temp file - "
-                                         + "otherwise the detector is not proven to be watching the right tree");
+                                         + "otherwise the detector is not proven to be watching the right tree. The request was held open for up to " + SPILL_HOLD_TIMEOUT.toSeconds()
+                                         + " s after its part was written (held until the detector saw the file: " + controlChannel.releasedBySighting() + ")");
+    }
+
+    /**
+     * The tree the positive control's detector watches: the one Tomcat spills into. A seam for the mutation that proves the control can fail (watch a tree
+     * the multipart spill never lands in and the assertion above must go red).
+     */
+    private Path treeTheControlWatches()
+    {
+        return watchedTempRoot;
+    }
+
+    /**
+     * How long the multipart request is held open at most, waiting for the detector to see the spill file. Only reached when the detector cannot see it
+     * (wrong tree, broken scan) - the normal release happens within a few scan cycles.
+     */
+    private static final Duration SPILL_HOLD_TIMEOUT = Duration.ofSeconds(10);
+
+    /**
+     * The positive control's sink: a {@link ByteArrayChannel} that, after it has consumed the upload and while the request is still open, waits until the
+     * detector has seen the multipart spill file (or {@link #SPILL_HOLD_TIMEOUT} elapses).
+     * <p>
+     * <b>Why this exists.</b> The multipart spill file lives only from the container's parse of the request until the request completes: measured at 2-6 ms
+     * (16 ms for the first request of a JVM) for this 20 KB payload, of which only part is a complete file. One detector scan is a full walk of the watched
+     * tree: about 1 ms over a fresh tree, 20-35 ms once earlier runs have left the {@code tomcat.*} trees behind (about 250 directories after a few dozen runs; nothing deletes
+     * them short of {@code mvn clean}). A sampler that polls a tree slower than the file lives sees it by luck, so the control passed on a fresh tree ~85% of
+     * the time and ~14% of the time on a dirty one (80 requests each, measured 2026-10-04). Holding the request makes the file exist for as long as the
+     * detector needs, whatever the scan cost.
+     * <p>
+     * The multipart spill is created before the controller runs and removed only after it returns, so it exists for the whole of {@code consume}.
+     */
+    private static final class HoldingUntilSpillSeenChannel extends ByteArrayChannel
+    {
+        private volatile TempTreeSpillDetector detector;
+        private volatile boolean               releasedBySighting;
+
+        void holdUntilSeenBy(TempTreeSpillDetector detector)
+        {
+            this.detector = detector;
+        }
+
+        boolean releasedBySighting()
+        {
+            return this.releasedBySighting;
+        }
+
+        @Override
+        protected long writeTo(InputStream boundedStream, UploadContent content) throws IOException
+        {
+            long written = super.writeTo(boundedStream, content);
+            TempTreeSpillDetector heldFor = this.detector;
+            if (heldFor != null)
+            {
+                try
+                {
+                    this.releasedBySighting = heldFor.awaitFound(SPILL_HOLD_TIMEOUT);
+                }
+                catch (InterruptedException e)
+                {
+                    Thread.currentThread()
+                          .interrupt();
+                }
+            }
+            return written;
+        }
     }
 
     private String registerFormWithChannel(UploadChannel channel)
@@ -314,17 +387,28 @@ public class UnbufferedUploadTransportEndToEndTest
      */
     private static final class TempTreeSpillDetector
     {
-        private final Path       root;
-        private final byte[]     needle;
-        private volatile boolean found;
-        private volatile String  matchedPath;
-        private volatile Thread  samplerThread;
-        private volatile boolean stopRequested;
+        private final Path           root;
+        private final byte[]         needle;
+        private volatile boolean     found;
+        private volatile String      matchedPath;
+        private volatile Thread      samplerThread;
+        private volatile boolean     stopRequested;
+        private final CountDownLatch foundLatch = new CountDownLatch(1);
 
         TempTreeSpillDetector(Path root, byte[] needle)
         {
             this.root = root;
             this.needle = needle;
+        }
+
+        /**
+         * Blocks until a file containing the needle has been seen, or the timeout elapses.
+         *
+         * @return whether the needle was seen
+         */
+        boolean awaitFound(Duration timeout) throws InterruptedException
+        {
+            return this.foundLatch.await(timeout.toMillis(), TimeUnit.MILLISECONDS);
         }
 
         void start()
@@ -393,9 +477,10 @@ public class UnbufferedUploadTransportEndToEndTest
                 byte[] content = Files.readAllBytes(file);
                 if (containsSubsequence(content, this.needle))
                 {
-                    this.found = true;
                     this.matchedPath = file.toAbsolutePath()
                                            .toString();
+                    this.found = true;
+                    this.foundLatch.countDown();
                 }
             }
             catch (IOException ignored)

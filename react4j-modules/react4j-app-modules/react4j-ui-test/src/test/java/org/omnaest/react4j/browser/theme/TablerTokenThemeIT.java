@@ -96,14 +96,14 @@ public class TablerTokenThemeIT extends ThemeBrowserSupport
 
         openModalButton.hover();
         String hoveredText = this.awaitSettledChange(openModalButton, "background-color", PRIMARY_RGB);
-        int[] hovered = this.colorBytes(hoveredText);
+        int[] hovered = BrowserColors.srgbBytes(this.page, hoveredText);
 
         System.out.println("TablerTokenThemeIT measured hover: configured primary -> " + hoveredText + " (sRGB " + List.of(hovered[0], hovered[1], hovered[2])
                            + "), Tabler's own primary -> sRGB " + List.of(tablerOwnHover[0], tablerOwnHover[1], tablerOwnHover[2]));
         assertNotEquals(PRIMARY_RGB, hoveredText, "hover must change the background");
-        assertTrue(luminance(hovered) < luminance(PRIMARY_BYTES), "the hover shade must be darker than the primary: " + hoveredText);
-        assertTrue(maxChannelDistance(hovered, tablerOwnHover) > 20, "the hover shade " + hoveredText + " must follow the configured primary, not Tabler's own hover "
-                                                                     + List.of(tablerOwnHover[0], tablerOwnHover[1], tablerOwnHover[2]));
+        assertTrue(BrowserColors.luminance(hovered) < BrowserColors.luminance(PRIMARY_BYTES), "the hover shade must be darker than the primary: " + hoveredText);
+        assertTrue(BrowserColors.maxChannelDistance(hovered, tablerOwnHover) > 20, "the hover shade " + hoveredText + " must follow the configured primary, not Tabler's own hover "
+                                                                                   + List.of(tablerOwnHover[0], tablerOwnHover[1], tablerOwnHover[2]));
     }
 
     /**
@@ -118,9 +118,9 @@ public class TablerTokenThemeIT extends ThemeBrowserSupport
                                                                                          .setExact(true));
         homeLink.waitFor(new Locator.WaitForOptions().setTimeout(15000));
 
-        int[] linkColor = this.colorBytes(computedStyle(homeLink, "color"));
+        int[] linkColor = BrowserColors.srgbBytes(this.page, computedStyle(homeLink, "color"));
 
-        assertTrue(maxChannelDistance(linkColor, PRIMARY_BYTES) <= 1, "the breadcrumb link must be drawn in the configured primary, got " + computedStyle(homeLink, "color"));
+        assertTrue(BrowserColors.maxChannelDistance(linkColor, PRIMARY_BYTES) <= 1, "the breadcrumb link must be drawn in the configured primary, got " + computedStyle(homeLink, "color"));
     }
 
     /**
@@ -132,15 +132,16 @@ public class TablerTokenThemeIT extends ThemeBrowserSupport
     {
         Locator openModalButton = this.openShowcaseAndLocateOpenModalButton();
         assertEquals(PRIMARY_RGB, computedStyle(openModalButton, "background-color"), "light mode first");
-        int[] lightPage = this.colorBytes(this.pageBackground());
+        int[] lightPage = BrowserColors.srgbBytes(this.page, this.pageBackground());
 
         this.page.evaluate("() => document.documentElement.setAttribute('data-bs-theme', 'dark')");
         String darkPageText = this.awaitSettledChange(this.page.locator("body"), "background-color", this.pageBackground());
-        int[] darkPage = this.colorBytes(darkPageText);
+        int[] darkPage = BrowserColors.srgbBytes(this.page, darkPageText);
 
         assertEquals("dark", this.page.evaluate("() => document.documentElement.getAttribute('data-bs-theme')"));
-        assertTrue(luminance(darkPage) < luminance(lightPage), "control: the dark scope must be in effect, the page went from " + List.of(lightPage[0], lightPage[1], lightPage[2])
-                                                               + " to " + darkPageText);
+        assertTrue(BrowserColors.luminance(darkPage) < BrowserColors.luminance(lightPage),
+                   "control: the dark scope must be in effect, the page went from " + List.of(lightPage[0], lightPage[1], lightPage[2])
+                                                                                           + " to " + darkPageText);
         assertEquals(PRIMARY_RGB, computedStyle(openModalButton, "background-color"), "dark mode must not reset the configured primary");
         assertEquals("12px", computedStyle(openModalButton, "border-top-left-radius"), "dark mode must not reset the configured radius");
     }
@@ -168,7 +169,7 @@ public class TablerTokenThemeIT extends ThemeBrowserSupport
         probe.hover();
         String hovered = this.awaitSettledChange(probe, "background-color", unhovered);
         assertNotEquals(unhovered, hovered, "Tabler's own primary button must change its background on hover");
-        int[] bytes = this.colorBytes(hovered);
+        int[] bytes = BrowserColors.srgbBytes(this.page, hovered);
 
         this.page.evaluate("() => document.getElementById('" + PROBE_FRAME_ID + "').remove()");
         this.page.mouse()
@@ -202,45 +203,5 @@ public class TablerTokenThemeIT extends ThemeBrowserSupport
             previous = current;
         }
         return previous;
-    }
-
-    /**
-     * The sRGB bytes the browser's own canvas makes of any CSS colour text, including {@code oklch()}, {@code color-mix()} and {@code color()}
-     * results, which {@code getComputedStyle} serialises in their own space instead of as {@code rgb()}
-     */
-    private int[] colorBytes(String cssColor)
-    {
-        Object result = this.page.evaluate("(css) => { const canvas = document.createElement('canvas'); canvas.width = 1; canvas.height = 1;"
-                                           + " const context = canvas.getContext('2d'); context.fillStyle = '#010203'; context.fillStyle = css;"
-                                           + " if (context.fillStyle === '#010203') { return null; }"
-                                           + " context.clearRect(0, 0, 1, 1); context.fillRect(0, 0, 1, 1);"
-                                           + " return Array.from(context.getImageData(0, 0, 1, 1).data); }",
-                                           cssColor);
-        assertTrue(result instanceof List, "the browser could not parse the colour '" + cssColor + "'");
-        List<?> data = (List<?>) result;
-        return new int[] {((Number) data.get(0)).intValue(), ((Number) data.get(1)).intValue(), ((Number) data.get(2)).intValue()};
-    }
-
-    // ---- colour arithmetic (WCAG relative luminance) ----------------------------------------------------------------------
-
-    private static double luminance(int[] rgb)
-    {
-        return 0.2126 * linear(rgb[0]) + 0.7152 * linear(rgb[1]) + 0.0722 * linear(rgb[2]);
-    }
-
-    private static double linear(int channel)
-    {
-        double value = channel / 255.0;
-        return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
-    }
-
-    private static int maxChannelDistance(int[] first, int[] second)
-    {
-        int distance = 0;
-        for (int index = 0; index < 3; index++)
-        {
-            distance = Math.max(distance, Math.abs(first[index] - second[index]));
-        }
-        return distance;
     }
 }

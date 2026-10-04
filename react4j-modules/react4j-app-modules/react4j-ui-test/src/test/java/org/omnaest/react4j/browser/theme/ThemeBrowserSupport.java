@@ -96,6 +96,38 @@ abstract class ThemeBrowserSupport
         return button;
     }
 
+    /**
+     * plan-277 F1, the one check logic both presets run: opens the showcase's standalone "Options" dropdown (located by its exact accessible name) and
+     * asserts that its open menu is visible, inside the viewport and not clipped at any edge ({@link OverlayProbes})
+     */
+    protected void assertShowcaseStandaloneDropdownMenuIsVisibleAndUnclipped()
+    {
+        this.openShowcaseAndLocateOpenModalButton();
+        Locator toggle = this.page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Options")
+                                                                                         .setExact(true));
+        OverlayProbes.scrollToCenter(this.page, toggle);
+        toggle.click();
+
+        OverlayProbes.assertMenuVisibleInsideViewportAndUnclipped(toggle.locator("xpath=..")
+                                                                        .locator(".dropdown-menu.show"),
+                                                                  "Action 1", "Action 2");
+    }
+
+    /**
+     * plan-277 F1, as {@link #assertShowcaseStandaloneDropdownMenuIsVisibleAndUnclipped()} for the showcase's SplitButton card (located by its card title)
+     */
+    protected void assertShowcaseSplitButtonMenuIsVisibleAndUnclipped()
+    {
+        this.openShowcaseAndLocateOpenModalButton();
+        Locator card = this.page.locator(".card", new Page.LocatorOptions().setHasText("SplitButton"))
+                                .last();
+        Locator toggle = card.locator("button.dropdown-toggle-split");
+        OverlayProbes.scrollToCenter(this.page, toggle);
+        toggle.click();
+
+        OverlayProbes.assertMenuVisibleInsideViewportAndUnclipped(card.locator(".dropdown-menu.show"), "Save as...", "Save a copy");
+    }
+
     protected static String computedStyle(Locator element, String cssProperty)
     {
         @SuppressWarnings("unchecked")

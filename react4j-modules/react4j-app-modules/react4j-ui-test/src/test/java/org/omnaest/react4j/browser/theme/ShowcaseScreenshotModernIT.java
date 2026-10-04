@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.omnaest.react4j.MockApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.test.context.ActiveProfiles;
 
 /**
  * plan-274 S5: full-page screenshot of the showcase under the DEFAULT theme (modern, light), plus its load-bearing computed values: the light colour
@@ -20,6 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
  */
 @Tag("browser")
 @SpringBootTest(classes = MockApplication.class, webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles(ShowcaseScreenshotSupport.ISOLATED_CONTEXT_PROFILE)
 public class ShowcaseScreenshotModernIT extends ShowcaseScreenshotSupport
 {
     @Test

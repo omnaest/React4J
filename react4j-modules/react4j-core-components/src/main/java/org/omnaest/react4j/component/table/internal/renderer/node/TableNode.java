@@ -23,13 +23,19 @@ import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
+// The no-arg constructor is what the static node renderer registry instantiates to read this node's type key (NodeHierarchyStaticRenderer): without it the
+// Table renderer is registered under the empty key and captures every node of an empty type, e.g. the Tabs content elements (NodeRendererRegistrationKeyGuardTest).
+@NoArgsConstructor
+@AllArgsConstructor
 public class TableNode extends AbstractNode
 {
     @JsonProperty

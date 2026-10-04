@@ -22,6 +22,18 @@ public interface NavigationBar extends UIComponent<NavigationBar>
 {
     public NavigationBar addEntry(Consumer<NavigationBarEntry> navigationEntryConsumer);
 
+    /**
+     * Adds a dropdown to the bar: a toggle that opens a menu of entries. Entries and dropdowns appear in the order they were added.
+     * <p>
+     * The items of the menu are {@link NavigationBarEntry}s and behave exactly like the entries added through {@link #addEntry(Consumer)}: text, link,
+     * linked locator, linked component, active and disabled state. A dropdown is one level deep: an item cannot hold items of its own.
+     *
+     * @param dropdownConsumer
+     *            configures the {@link NavigationBarDropdown}
+     * @return this
+     */
+    public NavigationBar addDropdown(Consumer<NavigationBarDropdown> dropdownConsumer);
+
     public static interface NavigationBarEntry
     {
         public NavigationBarEntry withText(String text);
@@ -35,6 +47,30 @@ public interface NavigationBar extends UIComponent<NavigationBar>
         public NavigationBarEntry withActiveState(boolean active);
 
         public NavigationBarEntry withDisabledState(boolean disabled);
+    }
+
+    /**
+     * A toggle with a menu of {@link NavigationBarEntry}s, see {@link NavigationBar#addDropdown(Consumer)}. The toggle itself links nowhere: it only opens the
+     * menu.
+     */
+    public static interface NavigationBarDropdown
+    {
+        /**
+         * The text of the toggle
+         */
+        public NavigationBarDropdown withText(String text);
+
+        /**
+         * Marks the toggle as the active one, for example when one of its items is the current page
+         */
+        public NavigationBarDropdown withActiveState(boolean active);
+
+        public NavigationBarDropdown withDisabledState(boolean disabled);
+
+        /**
+         * Adds an item to the menu, below the items added before
+         */
+        public NavigationBarDropdown addEntry(Consumer<NavigationBarEntry> navigationEntryConsumer);
     }
 
     public static interface NavigationBarProvider extends Supplier<NavigationBar>

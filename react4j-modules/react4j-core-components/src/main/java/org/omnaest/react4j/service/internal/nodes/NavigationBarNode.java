@@ -64,6 +64,14 @@ public class NavigationBarNode extends AbstractNode implements Node
         @JsonProperty
         private boolean       disabled;
 
+        /**
+         * {@code null} for a plain entry. For a dropdown the (possibly empty) list of its items: {@link #getText()}, {@link #isActive()} and
+         * {@link #isDisabled()} then describe the toggle, and {@link #getLink()} and {@link #getLinkedId()} are {@code null}. The items are plain entries,
+         * a dropdown is one level deep.
+         */
+        @JsonProperty
+        private List<Entry>   dropdownEntries;
+
         public I18nTextValue getText()
         {
             return this.text;
@@ -116,6 +124,17 @@ public class NavigationBarNode extends AbstractNode implements Node
         public Entry setDisabled(boolean disabled)
         {
             this.disabled = disabled;
+            return this;
+        }
+
+        public List<Entry> getDropdownEntries()
+        {
+            return this.dropdownEntries;
+        }
+
+        public Entry setDropdownEntries(List<Entry> dropdownEntries)
+        {
+            this.dropdownEntries = dropdownEntries;
             return this;
         }
     }

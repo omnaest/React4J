@@ -21,7 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
  */
 @Tag("browser")
 @SpringBootTest(classes = MockApplication.class, webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles(TablerDarkThemeTestConfiguration.PROFILE)
+@ActiveProfiles({TablerDarkThemeTestConfiguration.PROFILE, ShowcaseScreenshotSupport.ISOLATED_CONTEXT_PROFILE})
 public class ShowcaseScreenshotTablerDarkIT extends ShowcaseScreenshotSupport
 {
     @Test
