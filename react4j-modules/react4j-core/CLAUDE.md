@@ -137,8 +137,10 @@ accent `#4f46e5`, radius 8px) and **stock** Bootstrap.
   many runs without `mvn clean` the accumulated `tomcat.*` directories make one scan of the spill sampler of
   `UnbufferedUploadTransportEndToEndTest` take 20-35 ms instead of 1 ms (measured, plan-277 section 8), longer than the multipart spill
   file lives (2-6 ms warm, 14-31 ms for a JVM's first request); that used to fail its positive control (flaky, kanban 7d9b7b0b). The control
-  now holds the multipart request open (`HoldingUntilSpillSeenChannel`, bounded at 10 s) until the detector has seen the file, so it no
-  longer depends on the tree size or on luck; after a `clean` that directory does not
+  and both negative checks now decide by a synchronous scan of the watched tree on the request thread (`SpillScanningChannel`, three scan
+  points per request: before the body is read, at end of body, after the channel returns), so they depend neither on the tree size nor
+  on a sampler or timing; the leftover `tomcat.*` dirs now only make each scan slower (about 0.1-0.2 s per request on a ~500-entry tree);
+  after a `clean` that directory does not
   exist and Mockito's agent cannot start (`IOException ... path not found`) in the first Mockito test class. Fix that by
   creating the directory, not by touching the test; deleting `target/surefire-java-io-tmpdir`'s contents is optional housekeeping.
   **Tabler ITs (plan-277 T4)**: `TablerThemeIT` (profile `theme-tabler`: served head, sheet loaded once, primary 6,111,209 from the served sheet's own

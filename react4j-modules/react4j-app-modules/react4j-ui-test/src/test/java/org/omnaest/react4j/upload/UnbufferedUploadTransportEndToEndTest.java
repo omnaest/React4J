@@ -4,33 +4,43 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.omnaest.react4j.EnableReactUI;
 import org.omnaest.react4j.component.form.upload.ByteArrayChannel;
 import org.omnaest.react4j.component.form.upload.FileChannel;
 import org.omnaest.react4j.component.form.upload.UploadChannel;
 import org.omnaest.react4j.component.form.upload.UploadContent;
+import org.omnaest.react4j.component.form.upload.UploadReceipt;
 import org.omnaest.react4j.data.annotations.EnableReactUIInMemoryRepository;
 import org.omnaest.react4j.security.WebSecurityConfiguration;
 import org.omnaest.react4j.service.ReactUIService;
@@ -63,15 +73,44 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * module already carries an embedded servlet container transitively (via {@code CommonsSpringBootParent}), so no
  * new dependency is needed anywhere - {@code react4j-core} itself is a plain library module with none.
  * <p>
- * The test JVM's {@code java.io.tmpdir} is redirected to a fresh, empty directory before the Spring context (and
- * therefore embedded Tomcat) starts, so a 1 ms in-process sampler can watch the whole candidate tree cheaply
- * (measured: ~1 ms per walk over a fresh tree versus 3.3-3.6 s over the real system temp). The redirection is
+ * The test JVM's {@code java.io.tmpdir} is redirected to a fresh directory before the Spring context (and therefore
+ * embedded Tomcat) starts, so the watched tree is the one Tomcat spills into and nothing else. The redirection is
  * self-verifying: the positive control below can only pass if Tomcat's own spill file actually lands inside the
  * watched tree, which happens only if the redirection took effect before the embedded container booted.
+ * <p>
+ * <b>How the check decides - deterministic by construction.</b> There is no sampler thread, no sleep, no retry and no
+ * waiting for a file to show up. The check is a complete, synchronous scan of the watched tree that runs <em>on the
+ * request thread, inside the request</em>, from {@link SpillScanningChannel}: a test channel that wraps (composes) the
+ * real {@link ByteArrayChannel} / {@link FileChannel}, so those channels' real behaviour is what is observed. The scan
+ * runs at three points of every request ({@link ScanPoint}): before the channel reads the body, at the moment the
+ * channel has read the body to its end, and after the channel has returned - all before the response exists. A spill
+ * that exists at any of those instants is found with certainty, whatever its lifetime and whatever the scan costs
+ * (the tree grows with the leftover {@code tomcat.*} directories that only {@code mvn clean} removes; the scan simply
+ * takes longer, it never gives up). The scan either finds a spill or names every candidate it could not examine, and
+ * an unexaminable candidate is never a clean verdict (see {@link #assertNoSpillSeen(String, SpillScanner)}).
+ * <p>
+ * The same mechanism is the positive control: over the existing multipart transport Tomcat's spill exists from the
+ * container's parse until the request completes, so it exists at all three scan points - the control asserts exactly
+ * that, which both proves the scanner can see a spill and proves the three points lie inside the window in which a
+ * container spill lives.
+ * <p>
+ * <b>What this cannot see (the residual window).</b> A spill that is created and removed entirely between two scan
+ * points - in particular one removed before the channel receives the request (before the first scan), or created
+ * after the last scan but before the request completes - is invisible to it. So is a spill outside the watched tree
+ * ({@code java.io.tmpdir} of this JVM), a spill that does not contain the first {@value #PROBE_LENGTH} bytes of the
+ * payload verbatim (compressed, encrypted, offset), a file smaller than that (it cannot hold the probe), and anything
+ * behind a symbolic link (links are not followed). The tree is also shared with any other test run that uses the same
+ * {@code target} directory at the same time: such a run's own multipart spill carries the same payload bytes.
  */
 @SpringBootTest(classes = UnbufferedUploadTransportEndToEndTest.TestApplication.class, webEnvironment = WebEnvironment.RANDOM_PORT)
 public class UnbufferedUploadTransportEndToEndTest
 {
+    /**
+     * How many leading payload bytes a file must contain to count as a spill. A prefix instead of the whole payload, so that a spill still being written
+     * (or written in pieces) is found as soon as its first bytes are on disk.
+     */
+    private static final int          PROBE_LENGTH  = 256;
+
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static Path               watchedTempRoot;
 
@@ -112,7 +151,7 @@ public class UnbufferedUploadTransportEndToEndTest
     @Test
     public void testUnbufferedTransportDeliversExactBytesWithNoTempFileSpillAndTheDetectorHasAWorkingPositiveControl() throws Exception
     {
-        byte[] payload = randomPayload(20 * 1024);
+        byte[] payload = randomPayload(20 * 1024, 42);
         String expectedDigest = sha256Hex(payload);
         // Non-ASCII filename (accented Latin + CJK), built from explicit code points rather than a literal glyph to
         // keep this source file pure ASCII (AC-R5).
@@ -120,7 +159,8 @@ public class UnbufferedUploadTransportEndToEndTest
 
         // --- 1) raw transport -> ByteArrayChannel -------------------------------------------------------------
         ByteArrayChannel byteArrayChannel = ByteArrayChannel.create();
-        String byteArrayUploadId = this.registerFormWithChannel(byteArrayChannel);
+        SpillScanner byteArrayScanner = new SpillScanner(watchedTempRoot, payload);
+        String byteArrayUploadId = this.registerFormWithChannel(new SpillScanningChannel(byteArrayChannel, byteArrayScanner));
         JsonNode fileUploadNode = this.findFileUploadNode(this.renderUiJson());
         assertEquals("ui/upload/raw", fileUploadNode.get("uploadUrl")
                                                     .asText(),
@@ -129,10 +169,7 @@ public class UnbufferedUploadTransportEndToEndTest
                                  .asBoolean(),
                    "An opted-in element must render unbufferedTransport=true");
 
-        TempTreeSpillDetector detector1 = new TempTreeSpillDetector(watchedTempRoot, payload);
-        detector1.start();
         ResponseEntity<String> byteArrayResponse = this.postRaw(byteArrayUploadId, nonAsciiFilename, "application/octet-stream", payload);
-        detector1.stop();
 
         assertEquals(HttpStatus.OK, byteArrayResponse.getStatusCode());
         JsonNode byteArrayReceipt = OBJECT_MAPPER.readTree(byteArrayResponse.getBody());
@@ -141,7 +178,7 @@ public class UnbufferedUploadTransportEndToEndTest
         assertEquals(nonAsciiFilename, byteArrayReceipt.get("filename")
                                                        .asText(),
                      "A non-ASCII filename must round-trip byte-exactly to UploadContent.filename() (AC-R5)");
-        assertFalse(detector1.wasFound(), "No file anywhere in the watched temp tree may contain the uploaded bytes: " + detector1.matchedPath());
+        assertNoSpillSeen("leg 1 (raw transport -> ByteArrayChannel)", byteArrayScanner);
         assertArrayEquals(payload, byteArrayChannel.getContent()
                                                    .get()
                                                    .asBytes());
@@ -153,39 +190,37 @@ public class UnbufferedUploadTransportEndToEndTest
         Path fileChannelDestinationDir = Paths.get("target", "unbuffered-upload-test-output");
         Files.createDirectories(fileChannelDestinationDir);
         Path destination = fileChannelDestinationDir.resolve("upload-" + UUID.randomUUID() + ".bin");
+        assertFalse(destination.toAbsolutePath()
+                               .startsWith(watchedTempRoot.toAbsolutePath()),
+                    "The FileChannel's destination holds the payload by design, so it must lie outside the watched tree");
         FileChannel fileChannel = FileChannel.toPath(destination);
-        String fileChannelUploadId = this.registerFormWithChannel(fileChannel);
+        SpillScanner fileChannelScanner = new SpillScanner(watchedTempRoot, payload);
+        String fileChannelUploadId = this.registerFormWithChannel(new SpillScanningChannel(fileChannel, fileChannelScanner));
 
-        TempTreeSpillDetector detector2 = new TempTreeSpillDetector(watchedTempRoot, payload);
-        detector2.start();
         ResponseEntity<String> fileChannelResponse = this.postRaw(fileChannelUploadId, "payload.bin", "application/octet-stream", payload);
-        detector2.stop();
 
         assertEquals(HttpStatus.OK, fileChannelResponse.getStatusCode());
-        assertFalse(detector2.wasFound(), "No file anywhere in the watched temp tree may contain the uploaded bytes: " + detector2.matchedPath());
+        assertNoSpillSeen("leg 2 (raw transport -> FileChannel)", fileChannelScanner);
         assertTrue(Files.exists(destination));
         assertEquals(expectedDigest, sha256Hex(Files.readAllBytes(destination)));
         Files.deleteIfExists(destination);
 
-        // --- 3) positive control: the SAME detector class, unchanged, over the EXISTING multipart transport ---
-        // The channel holds the multipart request open until the detector has seen the spill file (bounded), so the control
-        // cannot depend on a sampler cycle landing inside the file's few-millisecond lifetime. See HoldingUntilSpillSeenChannel.
-        HoldingUntilSpillSeenChannel controlChannel = new HoldingUntilSpillSeenChannel();
-        String controlUploadId = this.registerFormWithChannel(controlChannel);
+        // --- 3) positive control: the SAME scanner and the SAME in-request scan points, over the EXISTING multipart transport ---
+        // Tomcat's multipart spill exists from the container's parse of the request until the request completes, so it must be seen at every scan point.
+        SpillScanner controlScanner = new SpillScanner(this.treeTheControlWatches(), payload);
+        String controlUploadId = this.registerFormWithChannel(new SpillScanningChannel(ByteArrayChannel.create(), controlScanner));
 
-        TempTreeSpillDetector detector3 = new TempTreeSpillDetector(this.treeTheControlWatches(), payload);
-        controlChannel.holdUntilSeenBy(detector3);
-        detector3.start();
         this.postMultipart(controlUploadId, "control.bin", payload);
-        detector3.stop();
 
-        assertTrue(detector3.wasFound(), "The positive control (existing multipart transport) must produce at least one matching temp file - "
-                                         + "otherwise the detector is not proven to be watching the right tree. The request was held open for up to " + SPILL_HOLD_TIMEOUT.toSeconds()
-                                         + " s after its part was written (held until the detector saw the file: " + controlChannel.releasedBySighting() + ")");
+        assertEquals(ScanPoint.all(), controlScanner.pointsScanned(), "leg 3: the in-request scans did not all run");
+        assertEquals(ScanPoint.all(), controlScanner.pointsWhereASpillWasSeen(),
+                     "The positive control (existing multipart transport) must show its spill file at every scan point - otherwise the scanner is not proven to be "
+                                                                                 + "watching the right tree, or the scan points are not inside the window in which a container spill lives. Spills seen: "
+                                                                                 + controlScanner.spillsSeen());
     }
 
     /**
-     * The tree the positive control's detector watches: the one Tomcat spills into. A seam for the mutation that proves the control can fail (watch a tree
+     * The tree the positive control's scanner watches: the one Tomcat spills into. A seam for the mutation that proves the control can fail (watch a tree
      * the multipart spill never lands in and the assertion above must go red).
      */
     private Path treeTheControlWatches()
@@ -194,57 +229,341 @@ public class UnbufferedUploadTransportEndToEndTest
     }
 
     /**
-     * How long the multipart request is held open at most, waiting for the detector to see the spill file. Only reached when the detector cannot see it
-     * (wrong tree, broken scan) - the normal release happens within a few scan cycles.
+     * The scanner's own proof that it can see a spill: a file that exists at scan time is found even though it is gone right afterwards, a spill still being
+     * written (only its first bytes on disk) is found, a file that merely has the same size is not a spill, and the finding of an earlier scan is not erased
+     * by a later scan that finds nothing. This is what gives a clean verdict on the raw legs its meaning.
      */
-    private static final Duration SPILL_HOLD_TIMEOUT = Duration.ofSeconds(10);
+    @Test
+    public void testSpillScannerFindsAFileThatExistsAtScanTimeEvenWhenItIsGoneRightAfterwardsAndStaysSilentOtherwise(@TempDir Path tree) throws IOException
+    {
+        byte[] payload = randomPayload(4 * 1024, 7);
+        Files.write(tree.resolve("same-size-other-bytes.bin"), randomPayload(payload.length, 8));
+        Files.write(tree.resolve("tiny.bin"), Arrays.copyOf(payload, PROBE_LENGTH - 1));
+
+        SpillScanner scanner = new SpillScanner(tree, payload);
+        scanner.scanAllPoints();
+        assertNoSpillSeen("a tree with no spill", scanner);
+
+        SpillScanner shortLived = new SpillScanner(tree, payload);
+        Path spill = Files.write(tree.resolve("short-lived-spill.tmp"), payload);
+        shortLived.scan(ScanPoint.BEFORE_BODY_IS_READ);
+        Files.delete(spill);
+        shortLived.scan(ScanPoint.BODY_FULLY_READ);
+        shortLived.scan(ScanPoint.AFTER_CHANNEL_RETURNED);
+        assertEquals(List.of(ScanPoint.BEFORE_BODY_IS_READ), shortLived.pointsWhereASpillWasSeen());
+        assertThrows(AssertionError.class, () -> assertNoSpillSeen("a spill that was gone again at the later scan points", shortLived));
+
+        SpillScanner partial = new SpillScanner(tree, payload);
+        Files.write(tree.resolve("half-written-spill.tmp"), Arrays.copyOf(payload, PROBE_LENGTH + 44));
+        partial.scanAllPoints();
+        assertEquals(ScanPoint.all(), partial.pointsWhereASpillWasSeen());
+    }
 
     /**
-     * The positive control's sink: a {@link ByteArrayChannel} that, after it has consumed the upload and while the request is still open, waits until the
-     * detector has seen the multipart spill file (or {@link #SPILL_HOLD_TIMEOUT} elapses).
-     * <p>
-     * <b>Why this exists.</b> The multipart spill file lives only from the container's parse of the request until the request completes: measured at 2-6 ms
-     * (16 ms for the first request of a JVM) for this 20 KB payload, of which only part is a complete file. One detector scan is a full walk of the watched
-     * tree: about 1 ms over a fresh tree, 20-35 ms once earlier runs have left the {@code tomcat.*} trees behind (about 250 directories after a few dozen runs; nothing deletes
-     * them short of {@code mvn clean}). A sampler that polls a tree slower than the file lives sees it by luck, so the control passed on a fresh tree ~85% of
-     * the time and ~14% of the time on a dirty one (80 requests each, measured 2026-10-04). Holding the request makes the file exist for as long as the
-     * detector needs, whatever the scan cost.
-     * <p>
-     * The multipart spill is created before the controller runs and removed only after it returns, so it exists for the whole of {@code consume}.
+     * A candidate that exists but cannot be read, and a tree that cannot be walked, must never read as "no spill". The reader is injected so the failure is
+     * the one an operating system produces for a file another process holds open or a directory it will not list, on every platform.
      */
-    private static final class HoldingUntilSpillSeenChannel extends ByteArrayChannel
+    @Test
+    public void testSpillScannerNeverGivesACleanVerdictWhenACandidateCannotBeRead(@TempDir Path tree) throws IOException
     {
-        private volatile TempTreeSpillDetector detector;
-        private volatile boolean               releasedBySighting;
+        byte[] payload = randomPayload(4 * 1024, 7);
+        Path locked = Files.write(tree.resolve("locked.bin"), randomPayload(payload.length, 9));
+        Files.write(tree.resolve("readable.bin"), randomPayload(payload.length, 10));
 
-        void holdUntilSeenBy(TempTreeSpillDetector detector)
+        SpillScanner readable = new SpillScanner(tree, payload);
+        readable.scanAllPoints();
+        assertNoSpillSeen("control: every candidate readable", readable);
+
+        SpillScanner withLockedFile = new SpillScanner(tree, payload, file ->
         {
-            this.detector = detector;
+            if (file.equals(locked))
+            {
+                throw new AccessDeniedException(file.toString(), null, "simulated: held open by another process");
+            }
+            return Files.readAllBytes(file);
+        });
+        withLockedFile.scanAllPoints();
+        assertEquals(ScanPoint.all(), withLockedFile.pointsScanned());
+        assertEquals(3, withLockedFile.unexaminableCandidates()
+                                      .size(),
+                     "The locked file must be reported at each of the three scan points: " + withLockedFile.unexaminableCandidates());
+        assertThrows(AssertionError.class, () -> assertNoSpillSeen("a locked candidate", withLockedFile));
+
+        SpillScanner missingRoot = new SpillScanner(tree.resolve("does-not-exist"), payload);
+        missingRoot.scanAllPoints();
+        assertThrows(AssertionError.class, () -> assertNoSpillSeen("a watched tree that does not exist", missingRoot));
+    }
+
+    /**
+     * The verdict of the negative checks. The scans must all have run, no file may hold the payload's start, and no candidate may have been left
+     * unexamined: "I could not look" is not "there is nothing there".
+     */
+    private static void assertNoSpillSeen(String check, SpillScanner scanner)
+    {
+        assertEquals(ScanPoint.all(), scanner.pointsScanned(), check + ": the in-request scans did not all run, so the check did not look where it claims to");
+        assertEquals(List.of(), scanner.spillsSeen(), check + ": a file in the watched temp tree contains the uploaded bytes");
+        assertEquals(List.of(), scanner.unexaminableCandidates(), check + ": a candidate could not be examined, so the absence of a spill is not established");
+    }
+
+    /**
+     * The instants, inside one request, at which the watched tree is scanned.
+     */
+    private enum ScanPoint
+    {
+        /** The channel has been handed the request, and has not read a byte of the body yet. */
+        BEFORE_BODY_IS_READ,
+        /** The channel has read the body to its end and is still inside its own write. */
+        BODY_FULLY_READ,
+        /** The channel has returned; the request (and with it any container spill) is still open. */
+        AFTER_CHANNEL_RETURNED;
+
+        static List<ScanPoint> all()
+        {
+            return List.of(values());
+        }
+    }
+
+    /**
+     * Reads a file's bytes; a seam so that the scanner's behaviour for a candidate that cannot be read can be exercised on every platform.
+     */
+    @FunctionalInterface
+    private interface FileContents
+    {
+        byte[] read(Path file) throws IOException;
+    }
+
+    /**
+     * Scans a whole directory tree, synchronously and to the end, for files containing the first {@value UnbufferedUploadTransportEndToEndTest#PROBE_LENGTH}
+     * bytes of a payload, and records what it found, where, and every candidate it could not examine. It has no thread, no timer and no stop condition other
+     * than having visited everything.
+     */
+    private static final class SpillScanner
+    {
+        private final Path            root;
+        private final byte[]          probe;
+        private final FileContents    contents;
+        private final List<ScanPoint> pointsScanned = Collections.synchronizedList(new ArrayList<>());
+        private final List<String>    spillsSeen    = Collections.synchronizedList(new ArrayList<>());
+        private final List<ScanPoint> spillPoints   = Collections.synchronizedList(new ArrayList<>());
+        private final List<String>    unexaminable  = Collections.synchronizedList(new ArrayList<>());
+
+        SpillScanner(Path root, byte[] payload)
+        {
+            this(root, payload, Files::readAllBytes);
         }
 
-        boolean releasedBySighting()
+        SpillScanner(Path root, byte[] payload, FileContents contents)
         {
-            return this.releasedBySighting;
+            this.root = root;
+            this.probe = Arrays.copyOf(payload, Math.min(PROBE_LENGTH, payload.length));
+            this.contents = contents;
+        }
+
+        void scanAllPoints()
+        {
+            for (ScanPoint point : ScanPoint.values())
+            {
+                this.scan(point);
+            }
+        }
+
+        void scan(ScanPoint point)
+        {
+            try
+            {
+                Files.walkFileTree(this.root, new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attributes)
+                    {
+                        // A file shorter than the probe cannot contain it, so it is not a candidate and need not be read.
+                        if (attributes.isRegularFile() && attributes.size() >= SpillScanner.this.probe.length)
+                        {
+                            SpillScanner.this.examine(file, point);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult visitFileFailed(Path file, IOException e)
+                    {
+                        SpillScanner.this.unexaminable.add(file.toAbsolutePath() + " at " + point + " (could not be visited): " + e);
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            }
+            catch (IOException | RuntimeException e)
+            {
+                this.unexaminable.add(this.root.toAbsolutePath() + " at " + point + " (walk aborted): " + e);
+            }
+            this.pointsScanned.add(point);
+        }
+
+        private void examine(Path file, ScanPoint point)
+        {
+            try
+            {
+                if (containsSubsequence(this.contents.read(file), this.probe))
+                {
+                    this.spillsSeen.add(file.toAbsolutePath() + " at " + point);
+                    this.spillPoints.add(point);
+                }
+            }
+            catch (IOException | RuntimeException e)
+            {
+                this.unexaminable.add(file.toAbsolutePath() + " at " + point + " (could not be read): " + e);
+            }
+        }
+
+        List<ScanPoint> pointsScanned()
+        {
+            return new ArrayList<>(this.pointsScanned);
+        }
+
+        List<ScanPoint> pointsWhereASpillWasSeen()
+        {
+            Set<ScanPoint> distinct = new LinkedHashSet<>(this.spillPoints);
+            return new ArrayList<>(distinct);
+        }
+
+        List<String> spillsSeen()
+        {
+            return new ArrayList<>(this.spillsSeen);
+        }
+
+        List<String> unexaminableCandidates()
+        {
+            return new ArrayList<>(this.unexaminable);
+        }
+
+        private static boolean containsSubsequence(byte[] haystack, byte[] needle)
+        {
+            if (needle.length == 0 || haystack.length < needle.length)
+            {
+                return false;
+            }
+            outer : for (int i = 0; i <= haystack.length - needle.length; i++)
+            {
+                for (int j = 0; j < needle.length; j++)
+                {
+                    if (haystack[i + j] != needle[j])
+                    {
+                        continue outer;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+    }
+
+    /**
+     * A channel that composes the real channel under test and scans the watched tree on the request thread around the real channel's work: before it reads
+     * the body, when it has read the body to the end, and after it has returned. Everything else - size limit, accepted types, the receipt, the bytes - is
+     * the wrapped channel's own.
+     */
+    private static final class SpillScanningChannel implements UploadChannel
+    {
+        private final UploadChannel delegate;
+        private final SpillScanner  scanner;
+
+        SpillScanningChannel(UploadChannel delegate, SpillScanner scanner)
+        {
+            this.delegate = delegate;
+            this.scanner = scanner;
         }
 
         @Override
-        protected long writeTo(InputStream boundedStream, UploadContent content) throws IOException
+        public UploadReceipt consume(UploadContent content)
         {
-            long written = super.writeTo(boundedStream, content);
-            TempTreeSpillDetector heldFor = this.detector;
-            if (heldFor != null)
-            {
-                try
+            this.scanner.scan(ScanPoint.BEFORE_BODY_IS_READ);
+            UploadReceipt receipt = this.delegate.consume(new EndOfBodyScanningContent(content, this.scanner));
+            this.scanner.scan(ScanPoint.AFTER_CHANNEL_RETURNED);
+            return receipt;
+        }
+
+        @Override
+        public long maxSizeBytes()
+        {
+            return this.delegate.maxSizeBytes();
+        }
+
+        @Override
+        public Set<String> acceptedContentTypes()
+        {
+            return this.delegate.acceptedContentTypes();
+        }
+    }
+
+    /**
+     * The upload content as the wrapped channel sees it: identical to the real one, except that the stream it hands out scans the watched tree once, at the
+     * moment a read first reports the end of the body.
+     */
+    private static final class EndOfBodyScanningContent implements UploadContent
+    {
+        private final UploadContent content;
+        private final SpillScanner  scanner;
+
+        EndOfBodyScanningContent(UploadContent content, SpillScanner scanner)
+        {
+            this.content = content;
+            this.scanner = scanner;
+        }
+
+        @Override
+        public String filename()
+        {
+            return this.content.filename();
+        }
+
+        @Override
+        public String contentType()
+        {
+            return this.content.contentType();
+        }
+
+        @Override
+        public long size()
+        {
+            return this.content.size();
+        }
+
+        @Override
+        public InputStream inputStream() throws IOException
+        {
+            return new FilterInputStream(this.content.inputStream()) {
+                private boolean scannedAtEnd;
+
+                @Override
+                public int read() throws IOException
                 {
-                    this.releasedBySighting = heldFor.awaitFound(SPILL_HOLD_TIMEOUT);
+                    int next = super.read();
+                    if (next < 0)
+                    {
+                        this.scanOnceAtEnd();
+                    }
+                    return next;
                 }
-                catch (InterruptedException e)
+
+                @Override
+                public int read(byte[] buffer, int offset, int length) throws IOException
                 {
-                    Thread.currentThread()
-                          .interrupt();
+                    int count = super.read(buffer, offset, length);
+                    if (count < 0)
+                    {
+                        this.scanOnceAtEnd();
+                    }
+                    return count;
                 }
-            }
-            return written;
+
+                private void scanOnceAtEnd()
+                {
+                    if (!this.scannedAtEnd)
+                    {
+                        this.scannedAtEnd = true;
+                        EndOfBodyScanningContent.this.scanner.scan(ScanPoint.BODY_FULLY_READ);
+                    }
+                }
+            };
         }
     }
 
@@ -359,10 +678,10 @@ public class UnbufferedUploadTransportEndToEndTest
         return null;
     }
 
-    private static byte[] randomPayload(int size)
+    private static byte[] randomPayload(int size, long seed)
     {
         byte[] payload = new byte[size];
-        new Random(42).nextBytes(payload);
+        new Random(seed).nextBytes(payload);
         return payload;
     }
 
@@ -376,138 +695,5 @@ public class UnbufferedUploadTransportEndToEndTest
             hex.append(String.format("%02x", b));
         }
         return hex.toString();
-    }
-
-    /**
-     * A daemon-thread sampler that walks {@code root} recursively every 1 ms and reports whether any file's
-     * CONTENTS contain the exact bytes it is watching for. Deliberately reused unchanged (same class, same
-     * mechanism) for both the negative assertions (the unbuffered transport) and the positive control (the
-     * existing multipart transport), so a green negative result is evidence rather than an assumption about the
-     * scanner (plan-154 W5's discipline, applied here to React4J's own suite).
-     */
-    private static final class TempTreeSpillDetector
-    {
-        private final Path           root;
-        private final byte[]         needle;
-        private volatile boolean     found;
-        private volatile String      matchedPath;
-        private volatile Thread      samplerThread;
-        private volatile boolean     stopRequested;
-        private final CountDownLatch foundLatch = new CountDownLatch(1);
-
-        TempTreeSpillDetector(Path root, byte[] needle)
-        {
-            this.root = root;
-            this.needle = needle;
-        }
-
-        /**
-         * Blocks until a file containing the needle has been seen, or the timeout elapses.
-         *
-         * @return whether the needle was seen
-         */
-        boolean awaitFound(Duration timeout) throws InterruptedException
-        {
-            return this.foundLatch.await(timeout.toMillis(), TimeUnit.MILLISECONDS);
-        }
-
-        void start()
-        {
-            this.samplerThread = new Thread(this::sampleLoop, "unbuffered-upload-temp-tree-spill-detector");
-            this.samplerThread.setDaemon(true);
-            this.samplerThread.start();
-        }
-
-        void stop() throws InterruptedException
-        {
-            this.stopRequested = true;
-            this.samplerThread.join(5000);
-        }
-
-        boolean wasFound()
-        {
-            return this.found;
-        }
-
-        String matchedPath()
-        {
-            return this.matchedPath;
-        }
-
-        private void sampleLoop()
-        {
-            while (!this.stopRequested)
-            {
-                this.scanOnce();
-                try
-                {
-                    Thread.sleep(1);
-                }
-                catch (InterruptedException e)
-                {
-                    Thread.currentThread()
-                          .interrupt();
-                    return;
-                }
-            }
-            this.scanOnce();
-        }
-
-        private void scanOnce()
-        {
-            if (this.found || !Files.exists(this.root))
-            {
-                return;
-            }
-            try (Stream<Path> walk = Files.walk(this.root))
-            {
-                walk.filter(Files::isRegularFile)
-                    .forEach(this::checkFile);
-            }
-            catch (IOException ignored)
-            {
-                // a transient failure (file created/deleted mid-walk) is expected and not a negative result
-            }
-        }
-
-        private void checkFile(Path file)
-        {
-            try
-            {
-                byte[] content = Files.readAllBytes(file);
-                if (containsSubsequence(content, this.needle))
-                {
-                    this.matchedPath = file.toAbsolutePath()
-                                           .toString();
-                    this.found = true;
-                    this.foundLatch.countDown();
-                }
-            }
-            catch (IOException ignored)
-            {
-                // the file may be mid-write or mid-delete at the moment we read it; a transient read failure is
-                // not itself a negative result - the next 1 ms iteration will see it if it is still there
-            }
-        }
-
-        private static boolean containsSubsequence(byte[] haystack, byte[] needle)
-        {
-            if (needle.length == 0 || haystack.length < needle.length)
-            {
-                return false;
-            }
-            outer : for (int i = 0; i <= haystack.length - needle.length; i++)
-            {
-                for (int j = 0; j < needle.length; j++)
-                {
-                    if (haystack[i + j] != needle[j])
-                    {
-                        continue outer;
-                    }
-                }
-                return true;
-            }
-            return false;
-        }
     }
 }
