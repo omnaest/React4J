@@ -1,6 +1,8 @@
 package org.omnaest.react4j.service.internal.component;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -16,6 +18,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.omnaest.react4j.domain.Location;
+import org.omnaest.react4j.domain.Text;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -24,6 +27,13 @@ import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.service.internal.nodes.TextNode;
 import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 /**
  * Goal-1 contract-fidelity test: asserts the {@link TextImpl} builder API ({@code addText}/{@code addNonTranslatedText})
@@ -137,5 +147,112 @@ public class TextImplTest
 
         assertEquals(2, ((TextNode) node).getTexts()
                                          .size());
+    }
+
+    /**
+     * Pins the default of the style (plan-283 S1, policy criterion 2b): a text nobody styled serialises with no style value at all, so no renderer can see one.
+     */
+    @Test
+    public void testTextWithoutAStyleSerialisesWithoutAStyleValue()
+    {
+        TextImpl text = new TextImpl(this.newContext());
+        text.addText("Hi");
+
+        TextNode node = this.render(text);
+        JsonNode json = this.toJson(node);
+
+        assertNull(node.getStyle());
+        assertTrue(json.path("style")
+                       .isMissingNode()
+                   || json.path("style")
+                          .isNull(),
+                   json.toString());
+    }
+
+    @Test
+    public void testWithStyleCarriesTheStyleToTheNodeAsItsName()
+    {
+        TextImpl text = new TextImpl(this.newContext());
+        text.addText("Hi")
+            .withStyle(Text.Style.MUTED);
+
+        TextNode node = this.render(text);
+        JsonNode json = this.toJson(node);
+
+        assertEquals(Text.Style.MUTED, node.getStyle());
+        assertEquals("MUTED", json.path("style")
+                                  .asText(),
+                     json.toString());
+        assertEquals(1, node.getTexts()
+                            .size());
+    }
+
+    @Test
+    public void testWithStyleOfNullRemovesTheStyle()
+    {
+        TextImpl text = new TextImpl(this.newContext());
+        text.withStyle(Text.Style.MUTED)
+            .withStyle(null);
+
+        assertNull(this.render(text)
+                       .getStyle());
+    }
+
+    @Test
+    public void testStyleSurvivesTemplating()
+    {
+        TextImpl text = new TextImpl(this.newContext());
+        text.addText("Hi")
+            .withStyle(Text.Style.MUTED);
+
+        TextImpl templated = (TextImpl) text.asTemplateProvider()
+                                            .get();
+
+        assertEquals(Text.Style.MUTED, this.render(templated)
+                                           .getStyle());
+    }
+
+    @Test
+    public void testEveryStyleMapsToANonBlankThemeClassAndMutedToTheBootstrapSecondaryColourUtility()
+    {
+        for (Text.Style style : Text.Style.values())
+        {
+            assertFalse(style.toCssClass()
+                             .isBlank(),
+                        style.name());
+        }
+        assertEquals("text-body-secondary", Text.Style.MUTED.toCssClass());
+    }
+
+    private TextNode render(TextImpl text)
+    {
+        return (TextNode) text.asRenderer()
+                              .render(mock(RenderingProcessor.class), mock(Location.class), Optional.empty());
+    }
+
+    /**
+     * The JSON a node is serialised to, field by field as Spring's mapper does. The base node holds an {@code Optional}, which a plain mapper cannot write
+     * and the JDK 8 module (not on this module's test classpath) normally handles, so a minimal serializer writes it as its content.
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private JsonNode toJson(Object node)
+    {
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(Optional.class, new JsonSerializer<Optional>() {
+            @Override
+            public void serialize(Optional value, JsonGenerator generator, SerializerProvider provider) throws java.io.IOException
+            {
+                if (value.isPresent())
+                {
+                    provider.defaultSerializeValue(value.get(), generator);
+                }
+                else
+                {
+                    generator.writeNull();
+                }
+            }
+        });
+        return new ObjectMapper().registerModule(module)
+                                 .valueToTree(node);
     }
 }

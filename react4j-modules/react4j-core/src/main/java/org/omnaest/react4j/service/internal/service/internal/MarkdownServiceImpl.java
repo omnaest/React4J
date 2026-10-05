@@ -1,5 +1,6 @@
 package org.omnaest.react4j.service.internal.service.internal;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +17,7 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.omnaest.react4j.domain.Button.Style;
 import org.omnaest.react4j.domain.Card;
 import org.omnaest.react4j.domain.Icon.StandardIcon;
+import org.omnaest.react4j.domain.OrderedList;
 import org.omnaest.react4j.domain.Paragraph;
 import org.omnaest.react4j.domain.RatioContainer.Ratio;
 import org.omnaest.react4j.domain.Text;
@@ -298,6 +300,13 @@ public class MarkdownServiceImpl implements MarkdownService
                                                                                                                    .filter(PredicateUtils.notNull())
                                                                                                                    .map(MapperUtils.identity()),
                                                                                                   element -> Stream.of(element)
+                                                                                                                   .map(Element::asOrderedList)
+                                                                                                                   .filter(Optional::isPresent)
+                                                                                                                   .map(Optional::get)
+                                                                                                                   .map(this.createMarkdownOrderedListMapper(referenceLinkCounter))
+                                                                                                                   .filter(PredicateUtils.notNull())
+                                                                                                                   .map(MapperUtils.identity()),
+                                                                                                  element -> Stream.of(element)
                                                                                                                    .map(Element::asTable)
                                                                                                                    .filter(Optional::isPresent)
                                                                                                                    .map(Optional::get)
@@ -329,17 +338,92 @@ public class MarkdownServiceImpl implements MarkdownService
                                                              .flatMap(Element::asText)
                                                              .map(text -> !StringUtils.startsWith(text.getValue(), "|"))
                                                              .orElse(true);
+                    boolean removeLeadingPipe = true;
                     return uiComponentFactory.newUnsortedList()
                                              .enableBulletPoints(enableBulletPoints)
-                                             .addEntries(markdownList.getElements()
-                                                                     .stream()
-                                                                     .map(Element::asParagraph)
-                                                                     .filter(Optional::isPresent)
-                                                                     .map(Optional::get)
-                                                                     .map(this.createMarkdownParagraphMapper(referenceLinkCounter, true))
-                                                                     .filter(PredicateUtils.notNull())
-                                                                     .collect(Collectors.toList()));
+                                             .addEntries(this.mapListEntries(markdownList.getElements(), referenceLinkCounter, removeLeadingPipe));
                 };
+            }
+
+            private Function<MarkdownUtils.OrderedList, OrderedList> createMarkdownOrderedListMapper(AtomicInteger referenceLinkCounter)
+            {
+                return markdownList ->
+                {
+                    boolean removeLeadingPipe = false;
+                    return uiComponentFactory.newOrderedList()
+                                             .withStartNumber(markdownList.getStartNumber())
+                                             .addEntries(this.mapListEntries(markdownList.getElements(), referenceLinkCounter, removeLeadingPipe));
+                };
+            }
+
+            /**
+             * Maps the elements CommonsMarkdown hands over for a list into the entries of the list component.<br>
+             * <br>
+             * CommonsMarkdown has no list item element: the items are flattened into one sequence, a paragraph per item, and a list nested into an item arrives
+             * as a sibling element right after the paragraph of that item. A nested list is therefore nested into the entry of the paragraph it follows, by
+             * grouping the two (as a {@link org.omnaest.react4j.domain.Composite}, which adds no element of its own on the client), so that it renders inside
+             * the <code>li</code> of its parent item. A nested list that follows no item becomes an entry of its own.<br>
+             * <br>
+             * Known limitation: a second paragraph of an item of a loose list is indistinguishable from the paragraph of a further item once flattened, and
+             * becomes an entry of its own. Elements of any other kind than paragraph and list are not mapped, as before.
+             */
+            private List<UIComponent<?>> mapListEntries(List<Element> listElements, AtomicInteger referenceLinkCounter, boolean removeLeadingPipe)
+            {
+                Function<MarkdownUtils.Paragraph, Paragraph> paragraphMapper = this.createMarkdownParagraphMapper(referenceLinkCounter, removeLeadingPipe);
+
+                List<List<UIComponent<?>>> entries = new ArrayList<>();
+                boolean lastEntryIsAnItem = false;
+                for (Element listElement : listElements)
+                {
+                    Optional<UIComponent<?>> nestedList = this.mapNestedList(listElement, referenceLinkCounter);
+                    if (nestedList.isPresent())
+                    {
+                        if (lastEntryIsAnItem)
+                        {
+                            entries.get(entries.size() - 1)
+                                   .add(nestedList.get());
+                        }
+                        else
+                        {
+                            entries.add(new ArrayList<>(Collections.singletonList(nestedList.get())));
+                        }
+                        lastEntryIsAnItem = false;
+                    }
+                    else
+                    {
+                        Optional<Paragraph> item = listElement.asParagraph()
+                                                              .map(paragraphMapper);
+                        if (item.isPresent())
+                        {
+                            entries.add(new ArrayList<>(Collections.singletonList(item.get())));
+                            lastEntryIsAnItem = true;
+                        }
+                    }
+                }
+
+                List<UIComponent<?>> components = new ArrayList<>();
+                for (List<UIComponent<?>> entry : entries)
+                {
+                    if (entry.size() == 1)
+                    {
+                        components.add(entry.get(0));
+                    }
+                    else
+                    {
+                        components.add(uiComponentFactory.newComposite()
+                                                         .addComponents(entry));
+                    }
+                }
+                return components;
+            }
+
+            private Optional<UIComponent<?>> mapNestedList(Element listElement, AtomicInteger referenceLinkCounter)
+            {
+                Optional<UIComponent<?>> unorderedList = listElement.asUnorderedList()
+                                                                    .<UIComponent<?>>map(this.createMarkdownUnorderedListMapper(referenceLinkCounter));
+                return unorderedList.isPresent() ? unorderedList
+                        : listElement.asOrderedList()
+                                     .<UIComponent<?>>map(this.createMarkdownOrderedListMapper(referenceLinkCounter));
             }
 
             private Function<MarkdownUtils.Paragraph, Paragraph> createMarkdownParagraphMapper(AtomicInteger referenceLinkCounter)

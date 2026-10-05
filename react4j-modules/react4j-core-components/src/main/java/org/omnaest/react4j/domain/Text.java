@@ -24,4 +24,43 @@ public interface Text extends UIComponent<Text>
     public Text addNonTranslatedText(String text);
 
     public Text addText(I18nText text);
+
+    /**
+     * Declares a style for the texts. Without a style (the default, also after {@code withStyle(null)}) the text renders no element of its own, exactly as
+     * before this method existed. With a style the client and the static HTML renderer wrap the texts in one {@code span} that carries the theme class of the
+     * {@link Style}.
+     *
+     * @param style
+     * @return this
+     */
+    public Text withStyle(Style style);
+
+    /**
+     * The styles a {@link Text} can be given. Every member maps to a theme utility class that is defined in each stylesheet React4J serves (modern, stock
+     * Bootstrap and Tabler), see {@link #toCssClass()}.
+     */
+    public static enum Style
+    {
+        /**
+         * De-emphasised text, e.g. a line of metadata beside the main content
+         */
+        MUTED;
+
+        /**
+         * The theme utility class a styled text is wrapped with. The one place the {@link Style} to class mapping lives, and total: every member answers.
+         * The client renderer uses the same classes for the same node values.
+         *
+         * @return the CSS class name, never {@code null}
+         */
+        public String toCssClass()
+        {
+            switch (this)
+            {
+                case MUTED :
+                    return "text-body-secondary";
+                default :
+                    throw new IllegalStateException("No theme class mapped for the text style " + this);
+            }
+        }
+    }
 }

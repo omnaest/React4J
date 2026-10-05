@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { JumboTron, JumbotronNode } from "./components/JumboTron";
 import { UnorderedListNode, UnorderedList } from "./components/UnorderedList";
+import { OrderedListNode, OrderedList } from "./components/OrderedList";
 import { ImageNode, Image } from "./components/Image";
 import { Button, ButtonNode } from "./components/Button";
 import { ClipboardCopyButton, ClipboardCopyButtonNode } from "./components/ClipboardCopyButton";
@@ -179,6 +180,9 @@ export class Renderer {
             }
             else if (node.type === UnorderedList.TYPE) {
                 return <UnorderedList node={node as UnorderedListNode} />
+            }
+            else if (node.type === OrderedList.TYPE) {
+                return <OrderedList node={node as OrderedListNode} />
             }
             else if (node.type === Image.TYPE) {
                 return <Image node={node as ImageNode} />;

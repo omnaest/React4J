@@ -67,6 +67,7 @@ import org.omnaest.react4j.service.internal.component.ModalImpl;
 import org.omnaest.react4j.service.internal.component.NativeHtmlImpl;
 import org.omnaest.react4j.service.internal.component.NavigationBarImpl;
 import org.omnaest.react4j.service.internal.component.OffcanvasImpl;
+import org.omnaest.react4j.service.internal.component.OrderedListImpl;
 import org.omnaest.react4j.service.internal.component.PaddingContainerImpl;
 import org.omnaest.react4j.service.internal.component.PaginationImpl;
 import org.omnaest.react4j.service.internal.component.ParagraphImpl;
@@ -174,7 +175,7 @@ public class NodeRendererCompletenessMetaTest
      * (non-interactive) burn-down.
      */
     private static final Set<String>               KNOWN_COVERED_COMPONENTS    = Set.of("Paragraph", "BlockQuote", "Card", "GridContainer", "NavigationBar", "Image",
-                                                                                        "Heading", "Jumbotron", "UnsortedList", "Text", "Composite",
+                                                                                        "Heading", "Jumbotron", "UnsortedList", "OrderedList", "Text", "Composite",
                                                                                         "PaddingContainer", "RatioContainer", "SizedContainer",
                                                                                         "ScrollbarContainer", "Stack", "LineBreak", "Icon", "Badge", "Spinner",
                                                                                         "Placeholder", "Alert", "Breadcrumb", "Pagination", "ListView", "IFrame",
@@ -209,6 +210,7 @@ public class NodeRendererCompletenessMetaTest
                          Arguments.of("Heading", (Supplier<RenderableUIComponent<?>>) () -> new HeadingImpl(newContext())),
                          Arguments.of("Jumbotron", (Supplier<RenderableUIComponent<?>>) () -> new JumbotronImpl(newContext())),
                          Arguments.of("UnsortedList", (Supplier<RenderableUIComponent<?>>) () -> new UnsortedListImpl(newContext())),
+                         Arguments.of("OrderedList", (Supplier<RenderableUIComponent<?>>) () -> new OrderedListImpl(newContext())),
                          Arguments.of("ImageIndex", (Supplier<RenderableUIComponent<?>>) () -> new ImageIndexImpl(newContext())),
                          Arguments.of("VerticalContentSwitcher",
                                       (Supplier<RenderableUIComponent<?>>) () -> new VerticalContentSwitcherImpl(newContext())),

@@ -39,6 +39,7 @@ import org.omnaest.react4j.service.internal.nodes.TextNode;
 public class TextImpl extends AbstractUIComponent<Text> implements Text
 {
     private List<I18nText> texts = new ArrayList<>();
+    private Style          style = null;
 
     public TextImpl(ComponentContext context)
     {
@@ -49,6 +50,12 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
     {
         super(context);
         this.texts = texts;
+    }
+
+    public TextImpl(ComponentContext context, List<I18nText> texts, Style style)
+    {
+        this(context, texts);
+        this.style = style;
     }
 
     @Override
@@ -68,7 +75,8 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
                 return new TextNode().setTexts(TextImpl.this.texts.stream()
                                                                   .map(text -> TextImpl.this.getTextResolver()
                                                                                             .apply(text, location))
-                                                                  .collect(Collectors.toList()));
+                                                                  .collect(Collectors.toList()))
+                                     .setStyle(TextImpl.this.style);
             }
 
             @Override
@@ -78,10 +86,14 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
                     @Override
                     public String render(TextNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
-                        return node.getTexts()
-                                   .stream()
-                                   .map(text -> nodeRenderingProcessor.render(text))
-                                   .collect(Collectors.joining(" "));
+                        String texts = node.getTexts()
+                                           .stream()
+                                           .map(text -> nodeRenderingProcessor.render(text))
+                                           .collect(Collectors.joining(" "));
+                        return node.getStyle() == null ? texts
+                                : "<span class=\"" + node.getStyle()
+                                                         .toCssClass()
+                                  + "\">" + texts + "</span>";
                     }
 
                 };
@@ -124,9 +136,16 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
     }
 
     @Override
+    public Text withStyle(Style style)
+    {
+        this.style = style;
+        return this;
+    }
+
+    @Override
     public UIComponentProvider<Text> asTemplateProvider()
     {
-        return () -> new TextImpl(this.context, this.texts);
+        return () -> new TextImpl(this.context, this.texts, this.style);
     }
 
 }

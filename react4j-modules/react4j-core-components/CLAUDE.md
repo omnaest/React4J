@@ -99,6 +99,23 @@ Failing any one makes it a cliff requiring an option evaluation (R15) before pro
   (verified: temporarily emitting the `id` attribute unconditionally turned the test RED naming the attribute,
   reverting restored GREEN), which is the criterion-2a evidence for this application.
 
+- `Text.withStyle(Text.Style)` with `enum Style { MUTED }` (card `4eee2913`, plan-283 S1) - shipped (Java side; the client `Text.tsx`
+  is plan-283 S2). Additive. Criterion 2b: `TextNode` gains a nullable `style` field, `null` when unset and the enum name (`"MUTED"`)
+  when set - the enum name verbatim because the client compares it exactly. Criterion 2a: `TextImpl` registers ONE render surface here, the
+  `NodeRenderType.HTML` renderer, and it is byte-identical for an unstyled text (pinned BEFORE the change by
+  `TextStaticRenderTest.testUnstyledText...`, which compares the complete output); a styled text wraps the same escaped texts in exactly one
+  `<span class="...">`. Criterion 3: the one enum member maps totally through the single method `Style.toCssClass()` (`MUTED` -> Bootstrap
+  5.3's `text-body-secondary`, a colour utility defined in all three served sheets: modern, stock and Tabler), and
+  `TextStyleThemeClassSheetGuardTest` in `react4j-core` fails if a member's class sets no colour in any of them, so a new member cannot be
+  a silent no-op on one preset. Criterion 4: no consumer-chosen class; the vocabulary is React4J's own and the mapping is the enum's.
+  `withStyle(null)` stores `null` like every sibling `withStyle` and means "unset". Before this method `Text` rendered no element on the
+  client and so offered no hook for a muted look (the plan-282 K4 accepted deviation).
+- `OrderedList` / `UIComponentFactory#newOrderedList()` (card `d4269b7a`, plan-283 S1) - a new component beside `UnsortedList`, so
+  criterion 1 holds trivially (a new type and one new factory method, no existing method or output touched) and criterion 2 has no prior
+  output to preserve. Node `ORDEREDLIST` (`{"type":"ORDEREDLIST","elements":[...],"startNumber":N}`, `OrderedListNode` has the no-arg
+  constructor and non-empty type `NodeRendererRegistrationKeyGuardTest` demands); HTML renderer `<ol>` with `start="N"` only for N != 1
+  (default 1, `withStartNumber(int)` validates nothing: HTML accepts any integer). It exists because `react4j-core`'s
+  `MarkdownServiceImpl` dropped a markdown ordered list silently; see that module's "Known defect classes".
 **Worked rejections** (fail at least one criterion, so each needed - and got - its own option evaluation):
 
 - `Modal.Size.FULLSCREEN` (a new enum member) - fails criterion 3: `toBootstrapToken()` would become

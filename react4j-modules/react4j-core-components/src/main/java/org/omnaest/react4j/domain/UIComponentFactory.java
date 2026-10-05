@@ -66,6 +66,8 @@ public interface UIComponentFactory
 
     public UnsortedList newUnsortedList();
 
+    public OrderedList newOrderedList();
+
     public ImageIndex newImageIndex();
 
     public VerticalContentSwitcher newVerticalContentSwitcher();

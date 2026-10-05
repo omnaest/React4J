@@ -40,6 +40,7 @@ import org.omnaest.react4j.domain.Modal;
 import org.omnaest.react4j.domain.NativeHtml;
 import org.omnaest.react4j.domain.NavigationBar;
 import org.omnaest.react4j.domain.Offcanvas;
+import org.omnaest.react4j.domain.OrderedList;
 import org.omnaest.react4j.domain.PaddingContainer;
 import org.omnaest.react4j.domain.Pagination;
 import org.omnaest.react4j.domain.Paragraph;
@@ -99,6 +100,7 @@ import org.omnaest.react4j.service.internal.component.NamedComponentRegistry;
 import org.omnaest.react4j.service.internal.component.NativeHtmlImpl;
 import org.omnaest.react4j.service.internal.component.NavigationBarImpl;
 import org.omnaest.react4j.service.internal.component.OffcanvasImpl;
+import org.omnaest.react4j.service.internal.component.OrderedListImpl;
 import org.omnaest.react4j.service.internal.component.PaddingContainerImpl;
 import org.omnaest.react4j.service.internal.component.PaginationImpl;
 import org.omnaest.react4j.service.internal.component.ParagraphImpl;
@@ -290,6 +292,12 @@ public class UIComponentFactoryServiceImpl implements UIComponentFactoryService
         public UnsortedList newUnsortedList()
         {
             return new UnsortedListImpl(this.context);
+        }
+
+        @Override
+        public OrderedList newOrderedList()
+        {
+            return new OrderedListImpl(this.context);
         }
 
         @Override

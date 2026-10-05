@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2021 Danny Kunz
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -17,25 +17,24 @@ package org.omnaest.react4j.service.internal.nodes;
 
 import java.util.List;
 
-import org.omnaest.react4j.domain.Text;
 import org.omnaest.react4j.domain.raw.Node;
-import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class TextNode extends AbstractNode implements Node
+/**
+ * Serialized as {@code {"type":"ORDEREDLIST","elements":[...],"startNumber":N}}. Has the implicit no-arg constructor the static renderer registry needs to
+ * read the {@link #getType() type} it registers under.
+ */
+public class OrderedListNode extends AbstractNode implements Node
 {
     @JsonProperty
-    private String              type = "TEXT";
+    private String     type        = "ORDEREDLIST";
 
     @JsonProperty
-    private List<I18nTextValue> texts;
+    private List<Node> elements;
 
-    /**
-     * Absent (null) when the text has no style, the {@link Text.Style} name (e.g. {@code MUTED}) otherwise
-     */
     @JsonProperty
-    private Text.Style          style;
+    private int        startNumber = 1;
 
     @Override
     public String getType()
@@ -43,25 +42,25 @@ public class TextNode extends AbstractNode implements Node
         return this.type;
     }
 
-    public Text.Style getStyle()
+    public List<Node> getElements()
     {
-        return this.style;
+        return this.elements;
     }
 
-    public TextNode setStyle(Text.Style style)
+    public OrderedListNode setElements(List<Node> elements)
     {
-        this.style = style;
+        this.elements = elements;
         return this;
     }
 
-    public List<I18nTextValue> getTexts()
+    public int getStartNumber()
     {
-        return this.texts;
+        return this.startNumber;
     }
 
-    public TextNode setTexts(List<I18nTextValue> texts)
+    public OrderedListNode setStartNumber(int startNumber)
     {
-        this.texts = texts;
+        this.startNumber = startNumber;
         return this;
     }
 
