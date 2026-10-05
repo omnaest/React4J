@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.omnaest.react4j.component.anker.internal.renderer.node;
 
+import java.util.List;
+
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.service.internal.nodes.AbstractNode;
 import org.omnaest.react4j.service.internal.nodes.i18n.I18nTextValue;
@@ -38,9 +40,27 @@ public class AnkerNode extends AbstractNode implements Node
     @JsonProperty
     private Page          page;
 
+    /**
+     * Absent (null) when no component was added to the anker, otherwise the rendered nodes of the added components in order. They form the label of the
+     * anchor after the text.
+     */
+    @JsonProperty
+    private List<Node>    elements;
+
     public static enum Page
     {
         SELF, BLANK
+    }
+
+    public List<Node> getElements()
+    {
+        return this.elements;
+    }
+
+    public AnkerNode setElements(List<Node> elements)
+    {
+        this.elements = elements;
+        return this;
     }
 
     public Page getPage()

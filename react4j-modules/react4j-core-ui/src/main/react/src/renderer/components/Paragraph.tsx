@@ -20,7 +20,7 @@ export class Paragraph extends React.Component<Props, {}>
     {
         return (
             <>
-                <p className={this.props.node.bold ? "font-weight-bold" : ""}>
+                <p className={this.props.node.bold ? "fw-bold" : ""}>
                     {this.props.node.elements.map((element, index) => (
                         <span key={index}>{Renderer.render(element)}</span>
                     ))}

@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.omnaest.react4j.component.anker;
 
+import java.util.List;
+
 import org.omnaest.react4j.domain.UIComponent;
 
 public interface Anker extends UIComponent<Anker>
@@ -65,4 +67,26 @@ public interface Anker extends UIComponent<Anker>
      * @return
      */
     public Anker withNonTranslatedTitle(String title);
+
+    /**
+     * Adds a component to the label of the anchor, rendered after the text (if one was set) and after the components added before. It carries what a plain
+     * text label cannot, like emphasis, inline code or an image. An anker without any component renders exactly as before this method existed.
+     * <p>
+     * Only phrasing content belongs here (text, emphasis, inline code, an image, a line break). Do not nest interactive components, like another link or a
+     * button, inside an anchor: that is invalid HTML and browsers handle it inconsistently. React4J does not check this.
+     *
+     * @param component
+     *            the component to add, {@code null} is ignored
+     * @return this
+     */
+    public Anker addComponent(UIComponent<?> component);
+
+    /**
+     * Adds every given component in order, see {@link #addComponent(UIComponent)} (which also tells what may be added). A {@code null} list and a
+     * {@code null} member are ignored.
+     *
+     * @param components
+     * @return this
+     */
+    public Anker addComponents(List<? extends UIComponent<?>> components);
 }

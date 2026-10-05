@@ -19,14 +19,28 @@ export class TextAlignmentContainer extends React.Component<Props, {}>
 {
     public static TYPE: string = "TEXTALIGNMENTCONTAINER";
 
+    // The wire carries left|center|right; Bootstrap 5 names the same alignments text-start|text-center|text-end.
+    private static horizontalAlignClass(alignment: TextAlignmentContainerNode["horizontalAlignment"]): string
+    {
+        switch (alignment)
+        {
+            case "left": return "text-start";
+            case "right": return "text-end";
+            case "center": return "text-center";
+            default: return "";
+        }
+    }
+
     public render(): JSX.Element
     {
-        const ellipsisClass = this.props.node.ellipsis ? " text-truncate" : "";
-        const nowrapClass = this.props.node.nowrap ? " text-nowrap" : "";
-        const verticalAlignClass = this.props.node.verticalAlignment ? "align-" + this.props.node.verticalAlignment : "";
-        const horizontalAlignClass = this.props.node.horizontalAlignment ? "text-" + this.props.node.horizontalAlignment : "";
+        const classes = [
+            this.props.node.ellipsis ? "text-truncate" : "",
+            this.props.node.nowrap ? "text-nowrap" : "",
+            this.props.node.verticalAlignment ? "align-" + this.props.node.verticalAlignment : "",
+            TextAlignmentContainer.horizontalAlignClass(this.props.node.horizontalAlignment)
+        ].filter(token => token).join(" ");
         return (
-            <span className={ellipsisClass + nowrapClass + verticalAlignClass + horizontalAlignClass}>
+            <span className={classes}>
                 {Renderer.render(this.props.node.content)}
             </span>
         );

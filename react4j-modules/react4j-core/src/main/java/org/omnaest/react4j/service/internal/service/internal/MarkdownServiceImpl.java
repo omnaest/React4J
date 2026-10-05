@@ -14,8 +14,10 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.omnaest.react4j.component.anker.Anker;
 import org.omnaest.react4j.domain.Button.Style;
 import org.omnaest.react4j.domain.Card;
+import org.omnaest.react4j.domain.Composite;
 import org.omnaest.react4j.domain.Icon.StandardIcon;
 import org.omnaest.react4j.domain.OrderedList;
 import org.omnaest.react4j.domain.Paragraph;
@@ -310,10 +312,10 @@ public class MarkdownServiceImpl implements MarkdownService
                                                                                                                    .map(Element::asLink)
                                                                                                                    .filter(Optional::isPresent)
                                                                                                                    .map(Optional::get)
-                                                                                                                   .map(link -> uiComponentFactory.newAnker()
-                                                                                                                                                  .withLink(link.getLink())
-                                                                                                                                                  .withText(link.getLabel())
-                                                                                                                                                  .withTitle(link.getTooltip()))
+                                                                                                                   .map(link -> this.withLabelOf(link, uiComponentFactory.newAnker()
+                                                                                                                                                                         .withLink(link.getLink()),
+                                                                                                                                                 referenceLinkCounter)
+                                                                                                                                    .withTitle(link.getTooltip()))
                                                                                                                    .filter(PredicateUtils.notNull())
                                                                                                                    .map(MapperUtils.identity()),
                                                                                                   element -> Stream.of(element)
@@ -509,12 +511,30 @@ public class MarkdownServiceImpl implements MarkdownService
                                                         String rawIcon = iconMatch.get()
                                                                                   .getSubGroup(1)
                                                                                   .orElse(null);
-                                                        paragraph.addText(this.newDirectiveResolver(text.getSourceLine())
-                                                                              .resolveIcon(rawIcon, "[ICON:" + rawIcon + "]")
-                                                                              .orElse(null),
-                                                                          iconMatch.get()
+                                                        StandardIcon icon = this.newDirectiveResolver(text.getSourceLine())
+                                                                                .resolveIcon(rawIcon, "[ICON:" + rawIcon + "]")
+                                                                                .orElse(null);
+                                                        String iconText = iconMatch.get()
                                                                                    .getSubGroup(2)
-                                                                                   .orElse(""));
+                                                                                   .orElse("");
+                                                        Text.Emphasis[] iconEmphasis = this.emphasisOf(text);
+                                                        if (iconEmphasis.length == 0)
+                                                        {
+                                                            paragraph.addText(icon, iconText);
+                                                        }
+                                                        else
+                                                        {
+                                                            // the same composite of the icon and the text that addText(icon, text) builds, but the text carries the flags of the run
+                                                            Composite composite = uiComponentFactory.newComposite();
+                                                            if (icon != null)
+                                                            {
+                                                                composite.addComponent(uiComponentFactory.newIcon()
+                                                                                                         .from(icon));
+                                                            }
+                                                            paragraph.addComponent(composite.addComponent(uiComponentFactory.newText()
+                                                                                                                            .addText(iconText)
+                                                                                                                            .withEmphasis(iconEmphasis)));
+                                                        }
                                                     }
                                                     else
                                                     {
@@ -614,8 +634,7 @@ public class MarkdownServiceImpl implements MarkdownService
                                                                 })
                                                                 .orElse(() ->
                                                                 {
-                                                                    paragraph.addLink(anker -> anker.withText(link.getLabel())
-                                                                                                    .withLink(link.getLink()));
+                                                                    paragraph.addLink(anker -> this.withLabelOf(link, anker.withLink(link.getLink()), referenceLinkCounter));
                                                                 })
                                                                 .accept(link.getLabel());
                                                 });
@@ -634,6 +653,43 @@ public class MarkdownServiceImpl implements MarkdownService
                                                 .orElse("");
                 return uiComponentFactory.newNativeHtml()
                                          .withSource("<pre><code" + languageClass + ">" + StringEscapeUtils.escapeHtml4(codeBlock.getValue()) + "</code></pre>");
+            }
+
+            /**
+             * Gives the anker the label of the link. A label that is nothing but unflagged text stays the flattened label string, exactly as it always was, so
+             * every plain link keeps its node and its html. Anything the flattened string cannot carry (emphasis, inline code, an image, a line break) becomes
+             * the children of the anker, mapped by the one block dispatch ({@link #parseMarkdownElements(Stream, AtomicInteger, boolean)}) like everything else,
+             * so no kind of label is mapped by a second, link specific copy of that dispatch.
+             * <p>
+             * Not asked here: the directives ({@code BUTTON}, {@code IFRAME}, the reference marker) are recognised on the flattened label before this is reached
+             * and stay as they are.
+             */
+            private Anker withLabelOf(MarkdownUtils.Link link, Anker anker, AtomicInteger referenceLinkCounter)
+            {
+                if (this.labelNeedsComponents(link))
+                {
+                    return anker.addComponents(this.parseMarkdownElements(link.getElements()
+                                                                              .stream(),
+                                                                          referenceLinkCounter, false));
+                }
+                return anker.withText(link.getLabel());
+            }
+
+            /**
+             * Whether the label holds something other than unflagged text runs. A custom identifier token and inline html are no content here: the flattened
+             * label drops them and the dispatch renders neither, so a label made of text and those alone keeps being a plain text label.
+             */
+            private boolean labelNeedsComponents(MarkdownUtils.Link link)
+            {
+                return link.getElements()
+                           .stream()
+                           .filter(element -> !element.asCustomIdentifier()
+                                                      .isPresent()
+                                              && !element.asHtml()
+                                                         .isPresent())
+                           .anyMatch(element -> !element.asText()
+                                                        .filter(text -> this.emphasisOf(text).length == 0)
+                                                        .isPresent());
             }
 
             private Function<MarkdownUtils.Table, UIComponent<?>> createMarkdownTableMapper(AtomicInteger referenceLinkCounter)

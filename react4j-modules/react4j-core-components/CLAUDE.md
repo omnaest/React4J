@@ -137,6 +137,23 @@ Failing any one makes it a cliff requiring an option evaluation (R15) before pro
   `I18nTextValue`, because `LocalizedTextResolverService` turns a null text into an empty one) and the template emits the element only when the
   `footer` key is present. Both known callers (IMBSApplication's `SubHeaderComponent`, MockUI) set a footer, so neither changes; an unknown
   caller without a footer loses the stray dash. A client that dereferences `footer` unconditionally must be updated first (plan-284 S3).
+- `Anker.addComponent(UIComponent)` / `addComponents(List)` (card `698a6daa`, plan-286 S1; the client `Anker.tsx` is plan-286 S2) - a formatted
+  label, built exactly like `BlockQuote`'s children (cliff C1 = A1, option-evaluated in plan-286 section 2.2: it is the only option that is purely
+  additive, follows the precedent, and lets the markdown mapper route a link label through its ONE dispatch). Criterion 2b: `AnkerNode` gains a
+  nullable `elements`, `null` when no component was added. Criterion 2a: `AnkerRenderer` registers ONE render surface (the HTML renderer plus the
+  client `.tsx`), and the HTML of an anker without children is byte-identical (pinned BEFORE the change by `AnkerStaticRenderTest` in
+  `react4j-core`, `AnkerHtmlRenderTest` and `AnkerImplTest` here); the label is the text followed by each rendered child, no added whitespace.
+  Children are located with `ChildLocationSupport.indexedChildLocation` in `render` and `getSubComponents` alike (that helper became `public` for
+  it: `Anker` lives in another package than the other containers), a `null` list or member is ignored, and `asTemplateProvider` copies the list (the
+  anker's text builder is shared with the template, the children must not be). Criterion 3: no enum. Criterion 4: no CSS vocabulary. **Caller
+  obligation, written on the method: phrasing content only; never nest a link or button in an anchor** (React4J does not check it; CommonMark cannot
+  produce one).
+- **Accepted deviation from criterion 2a, user decision 2026-10-06 (card `ee0e2d09`): `Paragraph.withBoldStyle()` now renders bold in the static
+  HTML.** `paragraph.html` honours the flag as `<p class="fw-bold">`, where it used to ignore it (and the client emitted the Bootstrap 4 class
+  `font-weight-bold`, defined in none of the three served sheets, so the flag was visible nowhere). A paragraph that is not bold is byte-identical
+  (pinned BEFORE the change by `ParagraphStaticRenderTest` in `react4j-core`); a caller of `withBoldStyle()` gets what it asked for for the first
+  time. The workspace's one app caller is MarkdownServer (`MarkdownDocumentRenderer`, which bolds a whole paragraph for any bold run - finding
+  card `3fe56d1c`).
 **Worked rejections** (fail at least one criterion, so each needed - and got - its own option evaluation):
 
 - `Modal.Size.FULLSCREEN` (a new enum member) - fails criterion 3: `toBootstrapToken()` would become

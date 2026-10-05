@@ -15,10 +15,15 @@
  ******************************************************************************/
 package org.omnaest.react4j.component.anker.internal;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.omnaest.react4j.component.anker.Anker;
 import org.omnaest.react4j.component.anker.internal.data.AnkerData;
 import org.omnaest.react4j.component.anker.internal.data.AnkerData.AnkerDataBuilder;
 import org.omnaest.react4j.component.anker.internal.renderer.AnkerRenderer;
+import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
@@ -27,7 +32,8 @@ import org.omnaest.react4j.service.internal.component.ComponentContext;
 
 public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
 {
-    private AnkerDataBuilder data;
+    private AnkerDataBuilder     data;
+    private List<UIComponent<?>> components = new ArrayList<>();
 
     public AnkerImpl(ComponentContext context)
     {
@@ -40,10 +46,16 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
         this.data = ankerData;
     }
 
+    public AnkerImpl(ComponentContext context, AnkerDataBuilder ankerData, List<UIComponent<?>> components)
+    {
+        this(context, ankerData);
+        this.components = components;
+    }
+
     @Override
     public UIComponentRenderer asRenderer()
     {
-        return new AnkerRenderer(this.getTextResolver(), this.data.build(), this::getId);
+        return new AnkerRenderer(this.getTextResolver(), this.data.build(), this::getId, this.components);
     }
 
     @Override
@@ -98,8 +110,31 @@ public class AnkerImpl extends AbstractUIComponent<Anker> implements Anker
     }
 
     @Override
+    public Anker addComponent(UIComponent<?> component)
+    {
+        if (component != null)
+        {
+            this.components.add(component);
+        }
+        return this;
+    }
+
+    @Override
+    public Anker addComponents(List<? extends UIComponent<?>> components)
+    {
+        if (components != null)
+        {
+            components.forEach(this::addComponent);
+        }
+        return this;
+    }
+
+    @Override
     public UIComponentProvider<Anker> asTemplateProvider()
     {
-        return () -> new AnkerImpl(this.context, this.data);
+        // the builder of the text is shared with the template, the list of children must not be: a component added to a templated instance is not added to
+        // the template
+        return () -> new AnkerImpl(this.context, this.data, this.components.stream()
+                                                                           .collect(Collectors.toList()));
     }
 }

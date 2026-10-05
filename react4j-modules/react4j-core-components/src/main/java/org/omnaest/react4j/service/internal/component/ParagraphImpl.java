@@ -261,6 +261,7 @@ public class ParagraphImpl extends AbstractUIComponent<Paragraph> implements Par
                     {
                         return TemplateUtils.builder()
                                             .useTemplateClassResource(this.getClass(), "/render/templates/html/paragraph.html")
+                                            .add("bold", node.isBold())
                                             .add("elements", node.getElements()
                                                                  .stream()
                                                                  .map(nodeRenderingProcessor::render)

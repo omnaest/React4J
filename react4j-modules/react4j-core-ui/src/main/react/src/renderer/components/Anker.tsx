@@ -1,5 +1,5 @@
 import React from "react";
-import { Node } from "../Renderer";
+import { Node, Renderer } from "../Renderer";
 import { I18nRenderer, I18nTextValue } from "./I18nText";
 
 export interface AnkerNode extends Node
@@ -8,6 +8,7 @@ export interface AnkerNode extends Node
     title: I18nTextValue;
     link: string;
     page: "SELF" | "BLANK";
+    elements?: Node[] | null;
 }
 
 export interface Props
@@ -28,7 +29,14 @@ export class Anker extends React.Component<Props, {}>
                 target={isSelfPage ? "_self" : "_blank"}
                 rel="noopener noreferrer"
                 title={I18nRenderer.render(this.props.node.title)}
-            >{I18nRenderer.render(this.props.node.text)}</a>
+            >
+                {I18nRenderer.render(this.props.node.text)}
+                {
+                    (this.props.node.elements || []).map((element, index) => (
+                        <React.Fragment key={index}>{Renderer.render(element)}</React.Fragment>
+                    ))
+                }
+            </a>
         );
     }
 }

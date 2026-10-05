@@ -31,10 +31,12 @@ import org.omnaest.react4j.domain.Location;
  * This mirrors the precedent already established by {@code GridContainerImpl}/{@code TableRendererImpl}'s {@code createCellLocation} helper, which is
  * called identically from both {@code render()} and {@code getSubComponents()} so the render walk and the registration walk always agree on the
  * Location of a given child. Every container using this helper MUST call it identically from both methods, enumerating the SAME list in the SAME order.
+ * <p>
+ * Public since plan-286, because {@code Anker} (package {@code component.anker.internal}) holds child components too and must derive the same segment.
  *
  * @author omnaest
  */
-final class ChildLocationSupport
+public final class ChildLocationSupport
 {
     private ChildLocationSupport()
     {

@@ -1,12 +1,16 @@
 package org.omnaest.react4j.component.anker.internal.renderer;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.omnaest.react4j.component.anker.internal.data.AnkerData;
 import org.omnaest.react4j.component.anker.internal.renderer.node.AnkerNode;
 import org.omnaest.react4j.component.anker.internal.renderer.node.AnkerNode.Page;
 import org.omnaest.react4j.domain.Location;
+import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
@@ -16,7 +20,9 @@ import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderer;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
+import org.omnaest.react4j.service.internal.component.ChildLocationSupport;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
+import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.functional.Provider;
 import org.omnaest.utils.template.TemplateUtils;
 
@@ -28,6 +34,7 @@ public class AnkerRenderer implements UIComponentRenderer
     private final LocalizedTextResolverService textResolver;
     private final AnkerData                    ankerData;
     private final Provider<String>             idProvider;
+    private final List<UIComponent<?>>         components;
 
     @Override
     public Location getLocation(LocationSupport locationSupport)
@@ -41,7 +48,15 @@ public class AnkerRenderer implements UIComponentRenderer
         return new AnkerNode().setText(this.textResolver.apply(this.ankerData.getText(), location))
                               .setTitle(this.textResolver.apply(this.ankerData.getTitle(), location))
                               .setLink(this.ankerData.getLink())
-                              .setPage(this.ankerData.isSamePage() ? Page.SELF : Page.BLANK);
+                              .setPage(this.ankerData.isSamePage() ? Page.SELF : Page.BLANK)
+                              // absent without children, which keeps the node of an anker with a plain text label as it always was
+                              .setElements(this.components.isEmpty() ? null
+                                      : this.components.stream()
+                                                       .map(MapperUtils.withIntCounter())
+                                                       .map(componentAndIndex -> renderingProcessor.process(componentAndIndex.getFirst(),
+                                                                                                            ChildLocationSupport.indexedChildLocation(location,
+                                                                                                                                                      componentAndIndex.getSecond())))
+                                                       .collect(Collectors.toList()));
     }
 
     @Override
@@ -55,6 +70,11 @@ public class AnkerRenderer implements UIComponentRenderer
                                     .useTemplateClassResource(this.getClass(), "/render/templates/html/anker.html")
                                     .add("link", node.getLink())
                                     .add("text", nodeRenderingProcessor.render(node.getText()))
+                                    .add("elements", Optional.ofNullable(node.getElements())
+                                                             .orElse(Collections.emptyList())
+                                                             .stream()
+                                                             .map(nodeRenderingProcessor::render)
+                                                             .collect(Collectors.toList()))
                                     .add("target", AnkerNode.Page.SELF.equals(node.getPage()) ? "_self" : "_blank")
                                     .build()
                                     .get();
@@ -65,7 +85,10 @@ public class AnkerRenderer implements UIComponentRenderer
     @Override
     public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
     {
-        return Stream.empty();
+        return this.components.stream()
+                              .map(MapperUtils.withIntCounter())
+                              .map(componentAndIndex -> ParentLocationAndComponent.of(ChildLocationSupport.indexedChildLocation(parentLocation, componentAndIndex.getSecond()),
+                                                                                      componentAndIndex.getFirst()));
     }
 
     @Override
