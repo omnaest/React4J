@@ -58,14 +58,34 @@ import org.springframework.stereotype.Service;
 @Service
 public class MarkdownServiceImpl implements MarkdownService
 {
+    /**
+     * The options every markdown is parsed with, kept in this one place so that the completeness guard
+     * ({@code MarkdownCompletenessGuardTest}) parses its fixtures with exactly the options the interpreter uses.
+     */
+    static final Consumer<MarkdownUtils.MarkdownParseOptions> PARSE_OPTIONS        = options -> options.enableWrapIntoParagraphs()
+                                                                                                       .enableParseCustomIdTokens()
+                                                                                                       .enableBlockQuotes()
+                                                                                                       .enableListItems();
+
+    /**
+     * The markup of a thematic break. A constant on purpose: no user supplied text may reach a raw html source, so the rule is built from nothing but this.
+     */
+    private static final String                               THEMATIC_BREAK_HTML  = "<hr>";
+
+    /**
+     * The glyphs of the unchecked and the checked marker of a task list item (ballot box, ballot box with check), written as escapes so that the source stays ASCII.
+     */
+    private static final String                               UNCHECKED_TASK_GLYPH = "\u2610";
+    private static final String                               CHECKED_TASK_GLYPH   = "\u2611";
+
     @Autowired
-    private ContentService       contentService;
+    private ContentService                                    contentService;
 
     /**
      * Optional application provided {@link MarkdownIssueHandler}. Without such a bean the issues are written to the log.
      */
     @Autowired(required = false)
-    private MarkdownIssueHandler issueHandler;
+    private MarkdownIssueHandler                              issueHandler;
 
     @Override
     public FactoryLoadedMarkdownInterpreter interpreterWith(UIComponentFactory uiComponentFactory)
@@ -204,8 +224,7 @@ public class MarkdownServiceImpl implements MarkdownService
 
             private Stream<Element> parseRawMarkdown(String markdown)
             {
-                return MarkdownUtils.parse(markdown, options -> options.enableWrapIntoParagraphs()
-                                                                       .enableParseCustomIdTokens())
+                return MarkdownUtils.parse(markdown, PARSE_OPTIONS)
                                     .get();
             }
 
@@ -235,13 +254,40 @@ public class MarkdownServiceImpl implements MarkdownService
 
             private List<UIComponent<?>> parseMarkdownElements(Stream<Element> elements)
             {
-                AtomicInteger referenceLinkCounter = new AtomicInteger(1);
+                return this.parseMarkdownElements(elements, new AtomicInteger(1), false);
+            }
+
+            /**
+             * The one dispatch over the block level element kinds, used for the document, for table cells and for the children of block quotes and list
+             * items alike. A kind that is missing here is silently dropped, which is why {@code MarkdownCompletenessGuardTest} enumerates the vocabulary of
+             * CommonsMarkdown and fails for a kind without a fixture. The leading pipe is only stripped from paragraphs that are direct elements of the stream,
+             * not from anything below a block quote or a nested list (the unordered list mapper decides that for its own items).
+             */
+            private List<UIComponent<?>> parseMarkdownElements(Stream<Element> elements, AtomicInteger referenceLinkCounter, boolean removeLeadingPipe)
+            {
                 Function<Element, Stream<UIComponent<?>>> mapper = StreamUtils.redundantFlattener(element -> Stream.of(element)
                                                                                                                    .map(Element::asParagraph)
                                                                                                                    .filter(Optional::isPresent)
                                                                                                                    .map(Optional::get)
-                                                                                                                   .map(this.createMarkdownParagraphMapper(referenceLinkCounter))
+                                                                                                                   .map(this.createMarkdownParagraphMapper(referenceLinkCounter,
+                                                                                                                                                           removeLeadingPipe))
                                                                                                                    .filter(PredicateUtils.notNull())
+                                                                                                                   .map(MapperUtils.identity()),
+                                                                                                  element -> Stream.of(element)
+                                                                                                                   .map(Element::asBlockQuote)
+                                                                                                                   .filter(Optional::isPresent)
+                                                                                                                   .map(Optional::get)
+                                                                                                                   .map(blockQuote -> uiComponentFactory.newBlockQuote()
+                                                                                                                                                        .addComponents(this.parseMarkdownElements(blockQuote.getElements()
+                                                                                                                                                                                                            .stream(),
+                                                                                                                                                                                                  referenceLinkCounter,
+                                                                                                                                                                                                  false)))
+                                                                                                                   .map(MapperUtils.identity()),
+                                                                                                  element -> Stream.of(element)
+                                                                                                                   .map(Element::asThematicBreak)
+                                                                                                                   .filter(Optional::isPresent)
+                                                                                                                   .map(thematicBreak -> uiComponentFactory.newNativeHtml()
+                                                                                                                                                           .withSource(THEMATIC_BREAK_HTML))
                                                                                                                    .map(MapperUtils.identity()),
                                                                                                   element -> Stream.of(element)
                                                                                                                    .map(Element::asHeading)
@@ -331,6 +377,10 @@ public class MarkdownServiceImpl implements MarkdownService
                     boolean enableBulletPoints = markdownList.getElements()
                                                              .stream()
                                                              .findFirst()
+                                                             .flatMap(Element::asListItem)
+                                                             .map(MarkdownUtils.ListItem::getElements)
+                                                             .map(List::stream)
+                                                             .flatMap(Stream::findFirst)
                                                              .flatMap(Element::asParagraph)
                                                              .map(MarkdownUtils.Paragraph::getElements)
                                                              .map(List::stream)
@@ -357,75 +407,67 @@ public class MarkdownServiceImpl implements MarkdownService
             }
 
             /**
-             * Maps the elements CommonsMarkdown hands over for a list into the entries of the list component.<br>
-             * <br>
-             * CommonsMarkdown has no list item element: the items are flattened into one sequence, a paragraph per item, and a list nested into an item arrives
-             * as a sibling element right after the paragraph of that item. A nested list is therefore nested into the entry of the paragraph it follows, by
-             * grouping the two (as a {@link org.omnaest.react4j.domain.Composite}, which adds no element of its own on the client), so that it renders inside
-             * the <code>li</code> of its parent item. A nested list that follows no item becomes an entry of its own.<br>
-             * <br>
-             * Known limitation: a second paragraph of an item of a loose list is indistinguishable from the paragraph of a further item once flattened, and
-             * becomes an entry of its own. Elements of any other kind than paragraph and list are not mapped, as before.
+             * Maps the items of a list into the entries of the list component: one entry per {@link MarkdownUtils.ListItem}, built by running the children of
+             * the item through the same dispatch as every other block ({@link #parseMarkdownElements(Stream, AtomicInteger, boolean)}), so a code block, a
+             * heading, an image, a table or a nested list inside an item is rendered inside its entry. An item without children adds no entry.
              */
             private List<UIComponent<?>> mapListEntries(List<Element> listElements, AtomicInteger referenceLinkCounter, boolean removeLeadingPipe)
             {
-                Function<MarkdownUtils.Paragraph, Paragraph> paragraphMapper = this.createMarkdownParagraphMapper(referenceLinkCounter, removeLeadingPipe);
+                return listElements.stream()
+                                   .map(Element::asListItem)
+                                   .filter(Optional::isPresent)
+                                   .map(Optional::get)
+                                   .map(item -> this.mapListItem(item, referenceLinkCounter, removeLeadingPipe))
+                                   .filter(Optional::isPresent)
+                                   .map(Optional::get)
+                                   .collect(Collectors.toList());
+            }
 
-                List<List<UIComponent<?>>> entries = new ArrayList<>();
-                boolean lastEntryIsAnItem = false;
-                for (Element listElement : listElements)
+            /**
+             * One list item as one entry: a single resulting component is used as it is (so a plain item stays one paragraph), several are grouped into a
+             * {@link org.omnaest.react4j.domain.Composite}, which adds no element of its own on the client. The marker of a task item is the first child of the
+             * item, before its paragraph; it is rendered as a glyph at the start of that paragraph, or as a text of its own where no paragraph follows.
+             */
+            private Optional<UIComponent<?>> mapListItem(MarkdownUtils.ListItem item, AtomicInteger referenceLinkCounter, boolean removeLeadingPipe)
+            {
+                List<Element> children = new ArrayList<>(item.getElements());
+                Optional<String> taskGlyph = children.stream()
+                                                     .findFirst()
+                                                     .flatMap(Element::asTaskListMarker)
+                                                     .map(marker -> marker.isChecked() ? CHECKED_TASK_GLYPH : UNCHECKED_TASK_GLYPH);
+                if (taskGlyph.isPresent())
                 {
-                    Optional<UIComponent<?>> nestedList = this.mapNestedList(listElement, referenceLinkCounter);
-                    if (nestedList.isPresent())
-                    {
-                        if (lastEntryIsAnItem)
-                        {
-                            entries.get(entries.size() - 1)
-                                   .add(nestedList.get());
-                        }
-                        else
-                        {
-                            entries.add(new ArrayList<>(Collections.singletonList(nestedList.get())));
-                        }
-                        lastEntryIsAnItem = false;
-                    }
-                    else
-                    {
-                        Optional<Paragraph> item = listElement.asParagraph()
-                                                              .map(paragraphMapper);
-                        if (item.isPresent())
-                        {
-                            entries.add(new ArrayList<>(Collections.singletonList(item.get())));
-                            lastEntryIsAnItem = true;
-                        }
-                    }
+                    children.remove(0);
                 }
 
                 List<UIComponent<?>> components = new ArrayList<>();
-                for (List<UIComponent<?>> entry : entries)
+                if (taskGlyph.isPresent())
                 {
-                    if (entry.size() == 1)
+                    Optional<MarkdownUtils.Paragraph> firstParagraph = children.stream()
+                                                                               .findFirst()
+                                                                               .flatMap(Element::asParagraph);
+                    if (firstParagraph.isPresent())
                     {
-                        components.add(entry.get(0));
+                        components.add(this.createMarkdownParagraphMapper(referenceLinkCounter, removeLeadingPipe, taskGlyph.get() + " ")
+                                           .apply(firstParagraph.get()));
+                        children.remove(0);
                     }
                     else
                     {
-                        components.add(uiComponentFactory.newComposite()
-                                                         .addComponents(entry));
+                        components.add(uiComponentFactory.newText()
+                                                         .addNonTranslatedText(taskGlyph.get()));
                     }
                 }
-                return components;
-            }
+                components.addAll(this.parseMarkdownElements(children.stream(), referenceLinkCounter, removeLeadingPipe));
 
-            private Optional<UIComponent<?>> mapNestedList(Element listElement, AtomicInteger referenceLinkCounter)
-            {
-                Optional<UIComponent<?>> unorderedList = listElement.asUnorderedList()
-                                                                    .<UIComponent<?>>map(this.createMarkdownUnorderedListMapper(referenceLinkCounter));
-                return unorderedList.isPresent() ? unorderedList
-                        : listElement.asOrderedList()
-                                     .<UIComponent<?>>map(this.createMarkdownOrderedListMapper(referenceLinkCounter));
+                if (components.isEmpty())
+                {
+                    return Optional.empty();
+                }
+                return Optional.of(components.size() == 1 ? components.get(0)
+                        : uiComponentFactory.newComposite()
+                                            .addComponents(components));
             }
-
             private Function<MarkdownUtils.Paragraph, Paragraph> createMarkdownParagraphMapper(AtomicInteger referenceLinkCounter)
             {
                 boolean removeLeadingPipe = false;
@@ -434,23 +476,28 @@ public class MarkdownServiceImpl implements MarkdownService
 
             private Function<MarkdownUtils.Paragraph, Paragraph> createMarkdownParagraphMapper(AtomicInteger referenceLinkCounter, boolean removeLeadingPipe)
             {
+                return this.createMarkdownParagraphMapper(referenceLinkCounter, removeLeadingPipe, null);
+            }
+
+            /**
+             * @param leadingText
+             *            a text added in front of everything else of the paragraph (the glyph of a task list item), or {@code null}
+             */
+            private Function<MarkdownUtils.Paragraph, Paragraph> createMarkdownParagraphMapper(AtomicInteger referenceLinkCounter, boolean removeLeadingPipe, String leadingText)
+            {
                 return markdownParagraph ->
                 {
                     Paragraph paragraph = uiComponentFactory.newParagraph();
+                    if (leadingText != null)
+                    {
+                        paragraph.addNonTranslatedText(leadingText);
+                    }
                     markdownParagraph.getElements()
                                      .forEach(element ->
                                      {
                                          element.asText()
                                                 .ifPresent(text ->
                                                 {
-                                                    //
-                                                    boolean bold = text.isBold();
-                                                    if (bold)
-                                                    {
-                                                        paragraph.withBoldStyle();
-                                                    }
-
-                                                    //
                                                     String value = removeLeadingPipe ? StringUtils.removeStart(text.getValue(), "|") : text.getValue();
                                                     Optional<Match> iconMatch = MatcherUtils.matcher()
                                                                                             .ofRegEx("^\\[ICON\\:([a-zA-Z\\_]+)\\](.*)")
@@ -471,7 +518,17 @@ public class MarkdownServiceImpl implements MarkdownService
                                                     }
                                                     else
                                                     {
-                                                        paragraph.addText(value);
+                                                        Text.Emphasis[] emphasis = this.emphasisOf(text);
+                                                        if (emphasis.length == 0)
+                                                        {
+                                                            paragraph.addText(value);
+                                                        }
+                                                        else
+                                                        {
+                                                            paragraph.addComponent(uiComponentFactory.newText()
+                                                                                                     .addText(value)
+                                                                                                     .withEmphasis(emphasis));
+                                                        }
                                                     }
                                                 });
                                          element.asHeading()
@@ -643,7 +700,30 @@ public class MarkdownServiceImpl implements MarkdownService
             private Function<MarkdownUtils.Text, Text> createMarkdownTextMapper(AtomicInteger referenceLinkCounter)
             {
                 return markdownText -> uiComponentFactory.newText()
-                                                         .addText(markdownText.getValue());
+                                                         .addText(markdownText.getValue())
+                                                         .withEmphasis(this.emphasisOf(markdownText));
+            }
+
+            /**
+             * The emphasis of a markdown text run, in enum order. Every flag CommonsMarkdown reports has its member here; the guard test reads the flags
+             * reflectively and fails for one that renders no evidence.
+             */
+            private Text.Emphasis[] emphasisOf(MarkdownUtils.Text markdownText)
+            {
+                List<Text.Emphasis> emphasis = new ArrayList<>();
+                if (markdownText.isBold())
+                {
+                    emphasis.add(Text.Emphasis.BOLD);
+                }
+                if (markdownText.isItalic())
+                {
+                    emphasis.add(Text.Emphasis.ITALIC);
+                }
+                if (markdownText.isStrikethrough())
+                {
+                    emphasis.add(Text.Emphasis.STRIKETHROUGH);
+                }
+                return emphasis.toArray(new Text.Emphasis[0]);
             }
         };
     }

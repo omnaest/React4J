@@ -16,8 +16,13 @@
 package org.omnaest.react4j.service.internal.component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,8 +43,9 @@ import org.omnaest.react4j.service.internal.nodes.TextNode;
 
 public class TextImpl extends AbstractUIComponent<Text> implements Text
 {
-    private List<I18nText> texts = new ArrayList<>();
-    private Style          style = null;
+    private List<I18nText> texts    = new ArrayList<>();
+    private Style          style    = null;
+    private Set<Emphasis>  emphasis = EnumSet.noneOf(Emphasis.class);
 
     public TextImpl(ComponentContext context)
     {
@@ -56,6 +62,12 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
     {
         this(context, texts);
         this.style = style;
+    }
+
+    public TextImpl(ComponentContext context, List<I18nText> texts, Style style, Set<Emphasis> emphasis)
+    {
+        this(context, texts, style);
+        this.emphasis = emphasis.isEmpty() ? EnumSet.noneOf(Emphasis.class) : EnumSet.copyOf(emphasis);
     }
 
     @Override
@@ -76,7 +88,8 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
                                                                   .map(text -> TextImpl.this.getTextResolver()
                                                                                             .apply(text, location))
                                                                   .collect(Collectors.toList()))
-                                     .setStyle(TextImpl.this.style);
+                                     .setStyle(TextImpl.this.style)
+                                     .setEmphasis(TextImpl.this.emphasis.isEmpty() ? null : new ArrayList<>(TextImpl.this.emphasis));
             }
 
             @Override
@@ -90,6 +103,7 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
                                            .stream()
                                            .map(text -> nodeRenderingProcessor.render(text))
                                            .collect(Collectors.joining(" "));
+                        texts = TextImpl.this.wrapIntoEmphasis(texts, node.getEmphasis());
                         return node.getStyle() == null ? texts
                                 : "<span class=\"" + node.getStyle()
                                                          .toCssClass()
@@ -143,9 +157,42 @@ public class TextImpl extends AbstractUIComponent<Text> implements Text
     }
 
     @Override
+    public Text withEmphasis(Emphasis... emphasis)
+    {
+        if (emphasis != null)
+        {
+            Arrays.stream(emphasis)
+                  .filter(Objects::nonNull)
+                  .forEach(this.emphasis::add);
+        }
+        return this;
+    }
+
+    /**
+     * Wraps the given already escaped texts into the element of each emphasis, nested in enum order with the first member outermost. No emphasis (null or
+     * empty) returns the texts untouched.
+     */
+    private String wrapIntoEmphasis(String texts, List<Emphasis> emphasis)
+    {
+        String wrapped = texts;
+        if (emphasis != null)
+        {
+            List<Emphasis> innermostFirst = emphasis.stream()
+                                                    .distinct()
+                                                    .sorted(Comparator.reverseOrder())
+                                                    .collect(Collectors.toList());
+            for (Emphasis member : innermostFirst)
+            {
+                wrapped = "<" + member.toElementName() + ">" + wrapped + "</" + member.toElementName() + ">";
+            }
+        }
+        return wrapped;
+    }
+
+    @Override
     public UIComponentProvider<Text> asTemplateProvider()
     {
-        return () -> new TextImpl(this.context, this.texts, this.style);
+        return () -> new TextImpl(this.context, this.texts, this.style, this.emphasis);
     }
 
 }

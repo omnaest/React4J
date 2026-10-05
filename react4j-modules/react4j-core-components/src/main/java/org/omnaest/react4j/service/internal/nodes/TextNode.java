@@ -37,10 +37,27 @@ public class TextNode extends AbstractNode implements Node
     @JsonProperty
     private Text.Style          style;
 
+    /**
+     * Absent (null) when the text has no emphasis, otherwise the {@link Text.Emphasis} names in enum order (e.g. {@code ["BOLD","ITALIC"]})
+     */
+    @JsonProperty
+    private List<Text.Emphasis> emphasis;
+
     @Override
     public String getType()
     {
         return this.type;
+    }
+
+    public List<Text.Emphasis> getEmphasis()
+    {
+        return this.emphasis;
+    }
+
+    public TextNode setEmphasis(List<Text.Emphasis> emphasis)
+    {
+        this.emphasis = emphasis;
+        return this;
     }
 
     public Text.Style getStyle()

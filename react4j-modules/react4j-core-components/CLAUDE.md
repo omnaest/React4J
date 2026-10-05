@@ -116,6 +116,27 @@ Failing any one makes it a cliff requiring an option evaluation (R15) before pro
   constructor and non-empty type `NodeRendererRegistrationKeyGuardTest` demands); HTML renderer `<ol>` with `start="N"` only for N != 1
   (default 1, `withStartNumber(int)` validates nothing: HTML accepts any integer). It exists because `react4j-core`'s
   `MarkdownServiceImpl` dropped a markdown ordered list silently; see that module's "Known defect classes".
+- `Text.withEmphasis(Text.Emphasis...)` with `enum Emphasis { BOLD, ITALIC, STRIKETHROUGH }` (card `79ce393f`, plan-284 S2; the client
+  `Text.tsx` is plan-284 S3) - additive and cumulative (idempotent per member, `null` ignored). Criterion 2b: `TextNode` gains a nullable
+  `emphasis` list, `null` when unset (exactly like `style`) and otherwise the member names in enum order whatever the order of the calls.
+  Criterion 2a: `TextImpl` registers ONE render surface, the `NodeRenderType.HTML` renderer, and it is byte-identical for a text without
+  emphasis (pinned BEFORE the change by `TextStaticRenderTest.testUnstyledText...`); with emphasis it wraps the same escaped texts in
+  `<strong>` / `<em>` / `<del>`, the first enum member outermost, inside the `Style` span when both are set. Criterion 3: the three members map
+  totally through `Emphasis.toElementName()`. The mapping is to SEMANTIC ELEMENTS, not to classes, so unlike `Style.toCssClass()` it needs no
+  per-stylesheet guard: every sheet's reboot styles `strong`/`em`/`del`. Criterion 4: no consumer-chosen markup. It exists because
+  `react4j-core`'s `MarkdownServiceImpl` parsed bold/italic/strikethrough and then dropped them (bold was mapped to a paragraph-wide class that no
+  served sheet defines).
+- `BlockQuote.addComponent(UIComponent)` / `addComponents(List)` and **the footer element only when a footer was set** (card `79ce393f`,
+  plan-284 S2). The children are what lets a quote hold paragraphs with links and emphasis, lists and nested quotes; `BlockQuoteImpl` returns
+  them from `getSubComponents` like `ParagraphImpl`/`CompositeImpl`, so traversals (event registration) reach them. Criterion 2b: `BlockQuoteNode`
+  gains a nullable `elements`, `null` when no component was added. Criterion 2a: with texts and a footer and no children the HTML render is
+  byte-identical (pinned BEFORE the change by `BlockQuoteStaticRenderTest.testQuoteWithTextsAndAFooterRendersAsItAlwaysDid`, compared with the
+  line endings normalised because the template is checked in with LF); children render after the texts and before the footer.
+  **A deliberate defect fix, recorded as such: the footer is omitted when none was set.** Before, the footer element was always emitted and
+  Bootstrap's `.blockquote-footer::before` printed a lone em dash for an empty one. `BlockQuoteNode.footer` is now `null` (it used to be an empty
+  `I18nTextValue`, because `LocalizedTextResolverService` turns a null text into an empty one) and the template emits the element only when the
+  `footer` key is present. Both known callers (IMBSApplication's `SubHeaderComponent`, MockUI) set a footer, so neither changes; an unknown
+  caller without a footer loses the stray dash. A client that dereferences `footer` unconditionally must be updated first (plan-284 S3).
 **Worked rejections** (fail at least one criterion, so each needed - and got - its own option evaluation):
 
 - `Modal.Size.FULLSCREEN` (a new enum member) - fails criterion 3: `toBootstrapToken()` would become

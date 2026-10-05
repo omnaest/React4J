@@ -16,6 +16,7 @@
 package org.omnaest.react4j.service.internal.component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,6 +24,7 @@ import java.util.stream.Stream;
 
 import org.omnaest.react4j.domain.BlockQuote;
 import org.omnaest.react4j.domain.Location;
+import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.i18n.I18nText;
 import org.omnaest.react4j.domain.raw.Node;
@@ -35,12 +37,15 @@ import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderingProcessor;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
 import org.omnaest.react4j.service.internal.nodes.BlockQuoteNode;
+import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.template.TemplateUtils;
+import org.omnaest.utils.template.TemplateUtils.PreparableTemplateProcessor;
 
 public class BlockQuoteImpl extends AbstractUIComponent<BlockQuote> implements BlockQuote
 {
-    private List<I18nText> texts = new ArrayList<>();
-    private I18nText       footer;
+    private List<I18nText>       texts      = new ArrayList<>();
+    private I18nText             footer;
+    private List<UIComponent<?>> components = new ArrayList<>();
 
     public BlockQuoteImpl(ComponentContext context)
     {
@@ -52,6 +57,12 @@ public class BlockQuoteImpl extends AbstractUIComponent<BlockQuote> implements B
         super(context);
         this.texts = texts;
         this.footer = footer;
+    }
+
+    public BlockQuoteImpl(ComponentContext context, List<I18nText> texts, I18nText footer, List<UIComponent<?>> components)
+    {
+        this(context, texts, footer);
+        this.components = components;
     }
 
     @Override
@@ -69,8 +80,18 @@ public class BlockQuoteImpl extends AbstractUIComponent<BlockQuote> implements B
             {
                 return new BlockQuoteNode().setTexts(BlockQuoteImpl.this.getTextResolver()
                                                                         .apply(BlockQuoteImpl.this.texts, location))
-                                           .setFooter(BlockQuoteImpl.this.getTextResolver()
-                                                                         .apply(BlockQuoteImpl.this.footer, location));
+                                           // the resolver turns an unset (null) text into an empty one, so an unset footer is left null on purpose: that is what
+                                           // lets the renderers tell "no footer" from "an empty footer"
+                                           .setFooter(BlockQuoteImpl.this.footer == null ? null
+                                                   : BlockQuoteImpl.this.getTextResolver()
+                                                                        .apply(BlockQuoteImpl.this.footer, location))
+                                           .setElements(BlockQuoteImpl.this.components.isEmpty() ? null
+                                                   : BlockQuoteImpl.this.components.stream()
+                                                                                   .map(MapperUtils.withIntCounter())
+                                                                                   .map(componentAndIndex -> renderingProcessor.process(componentAndIndex.getFirst(),
+                                                                                                                                        ChildLocationSupport.indexedChildLocation(location,
+                                                                                                                                                                                  componentAndIndex.getSecond())))
+                                                                                   .collect(Collectors.toList()));
             }
 
             @Override
@@ -80,15 +101,24 @@ public class BlockQuoteImpl extends AbstractUIComponent<BlockQuote> implements B
                     @Override
                     public String render(BlockQuoteNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
-                        return TemplateUtils.builder()
-                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/blockquote.html")
-                                            .add("footer", nodeRenderingProcessor.render(node.getFooter()))
-                                            .add("texts", node.getTexts()
-                                                              .stream()
-                                                              .map(nodeRenderingProcessor::render)
-                                                              .collect(Collectors.toList()))
-                                            .build()
-                                            .get();
+                        PreparableTemplateProcessor template = TemplateUtils.builder()
+                                                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/blockquote.html")
+                                                                            .add("texts", node.getTexts()
+                                                                                              .stream()
+                                                                                              .map(nodeRenderingProcessor::render)
+                                                                                              .collect(Collectors.toList()))
+                                                                            .add("elements", Optional.ofNullable(node.getElements())
+                                                                                                     .orElse(Collections.emptyList())
+                                                                                                     .stream()
+                                                                                                     .map(nodeRenderingProcessor::render)
+                                                                                                     .collect(Collectors.toList()));
+                        // the key stays absent without a footer, so that the template does not emit an empty footer element
+                        if (node.getFooter() != null)
+                        {
+                            template.add("footer", nodeRenderingProcessor.render(node.getFooter()));
+                        }
+                        return template.build()
+                                       .get();
                     }
                 });
             }
@@ -101,7 +131,11 @@ public class BlockQuoteImpl extends AbstractUIComponent<BlockQuote> implements B
             @Override
             public Stream<ParentLocationAndComponent> getSubComponents(Location parentLocation)
             {
-                return Stream.empty();
+                return BlockQuoteImpl.this.components.stream()
+                                                     .map(MapperUtils.withIntCounter())
+                                                     .map(componentAndIndex -> ParentLocationAndComponent.of(ChildLocationSupport.indexedChildLocation(parentLocation,
+                                                                                                                                                       componentAndIndex.getSecond()),
+                                                                                                             componentAndIndex.getFirst()));
             }
 
         };
@@ -122,9 +156,25 @@ public class BlockQuoteImpl extends AbstractUIComponent<BlockQuote> implements B
     }
 
     @Override
+    public BlockQuote addComponent(UIComponent<?> component)
+    {
+        this.components.add(component);
+        return this;
+    }
+
+    @Override
+    public BlockQuote addComponents(List<? extends UIComponent<?>> components)
+    {
+        Optional.ofNullable(components)
+                .ifPresent(consumer -> consumer.forEach(this::addComponent));
+        return this;
+    }
+
+    @Override
     public UIComponentProvider<BlockQuote> asTemplateProvider()
     {
-        return () -> new BlockQuoteImpl(this.context, this.texts, this.footer);
+        return () -> new BlockQuoteImpl(this.context, this.texts, this.footer, this.components.stream()
+                                                                                              .collect(Collectors.toList()));
     }
 
 }

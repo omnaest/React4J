@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.omnaest.react4j.domain.Text.Emphasis;
 import org.omnaest.react4j.domain.Text.Style;
 import org.omnaest.react4j.domain.rendering.node.NodeRenderType;
 import org.omnaest.react4j.service.internal.ReactUIServiceImpl;
@@ -70,6 +71,53 @@ public class TextStaticRenderTest
                                                                                               .withStyle(null)));
 
         assertEquals("Hello A &amp; B &lt;x&gt;", uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML));
+    }
+
+    /**
+     * plan-284: every emphasis wraps ALL the texts in its semantic element, nested in enum order with the first member outermost whatever the order of the
+     * calls, and the texts are escaped exactly as without emphasis.
+     */
+    @Test
+    public void testEmphasisNestsItsElementsInEnumOrderAroundTheEscapedTexts() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newText()
+                                                                                              .addText("Hello")
+                                                                                              .addText("A & B <x>")
+                                                                                              .withEmphasis(Emphasis.STRIKETHROUGH, Emphasis.BOLD)
+                                                                                              .withEmphasis(Emphasis.ITALIC)));
+
+        assertEquals("<strong><em><del>Hello A &amp; B &lt;x&gt;</del></em></strong>", uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML));
+    }
+
+    @Test
+    public void testASingleEmphasisWrapsOnlyItsOwnElement() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newText()
+                                                                                              .addText("Hello")
+                                                                                              .withEmphasis(Emphasis.ITALIC)));
+
+        assertEquals("<em>Hello</em>", uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML));
+    }
+
+    /**
+     * With a style too, the style span is the outer element and the emphasis sits inside it.
+     */
+    @Test
+    public void testEmphasisSitsInsideTheStyleSpan() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newText()
+                                                                                              .addText("Hello")
+                                                                                              .withStyle(Style.MUTED)
+                                                                                              .withEmphasis(Emphasis.BOLD, Emphasis.STRIKETHROUGH)));
+
+        assertEquals("<span class=\"" + Style.MUTED.toCssClass() + "\"><strong><del>Hello</del></strong></span>",
+                     uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML));
     }
 
     /**

@@ -36,6 +36,48 @@ public interface Text extends UIComponent<Text>
     public Text withStyle(Style style);
 
     /**
+     * Declares inline emphasis for the texts, e.g. {@code withEmphasis(Emphasis.BOLD, Emphasis.ITALIC)}. The call is cumulative (a second call adds to the
+     * first, none removes) and idempotent per member. Without a call (the default) the text carries no emphasis and renders exactly as before this method
+     * existed. With emphasis the client and the static HTML renderer wrap the texts in the semantic elements of the {@link Emphasis} members, see
+     * {@link Emphasis#toElementName()}, nested in the declaration order of the enum with the first member outermost, and inside the span of a {@link Style}
+     * if one is set. A {@code null} array or member is ignored.
+     *
+     * @param emphasis
+     * @return this
+     */
+    public Text withEmphasis(Emphasis... emphasis);
+
+    /**
+     * The inline emphasis a {@link Text} can be given. Every member maps to a semantic HTML element every stylesheet React4J serves styles by itself, so
+     * unlike a theme class it cannot be missing from one of them, see {@link #toElementName()}.
+     */
+    public static enum Emphasis
+    {
+        BOLD, ITALIC, STRIKETHROUGH;
+
+        /**
+         * The HTML element the emphasised texts are wrapped with. The one place the {@link Emphasis} to element mapping lives, and total: every member answers.
+         * The client renderer uses the same elements for the same node values.
+         *
+         * @return the element name without brackets, never {@code null}
+         */
+        public String toElementName()
+        {
+            switch (this)
+            {
+                case BOLD :
+                    return "strong";
+                case ITALIC :
+                    return "em";
+                case STRIKETHROUGH :
+                    return "del";
+                default :
+                    throw new IllegalStateException("No element mapped for the text emphasis " + this);
+            }
+        }
+    }
+
+    /**
      * The styles a {@link Text} can be given. Every member maps to a theme utility class that is defined in each stylesheet React4J serves (modern, stock
      * Bootstrap and Tabler), see {@link #toCssClass()}.
      */

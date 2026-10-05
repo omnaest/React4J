@@ -169,6 +169,99 @@ public class TextImplTest
                    json.toString());
     }
 
+    /**
+     * Pins the default of the emphasis (plan-284 S2, policy criterion 2b) BEFORE the field exists: a text nobody emphasised serialises with no emphasis value at
+     * all, so no renderer can see one.
+     */
+    @Test
+    public void testTextWithoutEmphasisSerialisesWithoutAnEmphasisValue()
+    {
+        TextImpl text = new TextImpl(this.newContext());
+        text.addText("Hi");
+
+        JsonNode json = this.toJson(this.render(text));
+
+        assertTrue(json.path("emphasis")
+                       .isMissingNode()
+                   || json.path("emphasis")
+                          .isNull(),
+                   json.toString());
+    }
+
+    /**
+     * The emphasis reaches the node in enum order whatever the order of the calls, as the names the client compares exactly.
+     */
+    @Test
+    public void testWithEmphasisCarriesTheEmphasisToTheNodeInEnumOrder()
+    {
+        TextImpl text = new TextImpl(this.newContext());
+        text.addText("Hi")
+            .withEmphasis(Text.Emphasis.STRIKETHROUGH, Text.Emphasis.BOLD);
+
+        TextNode node = this.render(text);
+        JsonNode json = this.toJson(node);
+
+        assertEquals(List.of(Text.Emphasis.BOLD, Text.Emphasis.STRIKETHROUGH), node.getEmphasis());
+        assertEquals("[\"BOLD\",\"STRIKETHROUGH\"]", json.path("emphasis")
+                                                         .toString());
+    }
+
+    @Test
+    public void testWithEmphasisIsCumulativeAndIdempotentPerMemberAndIgnoresNull()
+    {
+        TextImpl text = new TextImpl(this.newContext());
+        text.withEmphasis(Text.Emphasis.ITALIC)
+            .withEmphasis(Text.Emphasis.ITALIC, Text.Emphasis.BOLD)
+            .withEmphasis((Text.Emphasis[]) null)
+            .withEmphasis(Text.Emphasis.BOLD, null)
+            .withEmphasis();
+
+        assertEquals(List.of(Text.Emphasis.BOLD, Text.Emphasis.ITALIC), this.render(text)
+                                                                            .getEmphasis());
+    }
+
+    @Test
+    public void testNoWithEmphasisCallLeavesTheNodeWithoutEmphasis()
+    {
+        TextImpl text = new TextImpl(this.newContext());
+        text.addText("Hi")
+            .withEmphasis();
+
+        assertNull(this.render(text)
+                       .getEmphasis());
+    }
+
+    @Test
+    public void testEmphasisSurvivesTemplatingWithoutSharingStateWithTheTemplate()
+    {
+        TextImpl text = new TextImpl(this.newContext());
+        text.addText("Hi")
+            .withEmphasis(Text.Emphasis.ITALIC);
+
+        TextImpl templated = (TextImpl) text.asTemplateProvider()
+                                            .get();
+        templated.withEmphasis(Text.Emphasis.BOLD);
+
+        assertEquals(List.of(Text.Emphasis.BOLD, Text.Emphasis.ITALIC), this.render(templated)
+                                                                            .getEmphasis());
+        assertEquals(List.of(Text.Emphasis.ITALIC), this.render(text)
+                                                        .getEmphasis());
+    }
+
+    @Test
+    public void testEveryEmphasisMapsToItsSemanticElement()
+    {
+        for (Text.Emphasis emphasis : Text.Emphasis.values())
+        {
+            assertFalse(emphasis.toElementName()
+                                .isBlank(),
+                        emphasis.name());
+        }
+        assertEquals("strong", Text.Emphasis.BOLD.toElementName());
+        assertEquals("em", Text.Emphasis.ITALIC.toElementName());
+        assertEquals("del", Text.Emphasis.STRIKETHROUGH.toElementName());
+    }
+
     @Test
     public void testWithStyleCarriesTheStyleToTheNodeAsItsName()
     {

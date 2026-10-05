@@ -2,11 +2,7 @@ package org.omnaest.react4j.service.internal.service.internal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,7 +17,6 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * plan-283 S1: a markdown list element kind that {@link MarkdownServiceImpl} does not map is dropped without a trace. CommonsMarkdown parses
@@ -43,13 +38,11 @@ public class MarkdownListRenderingTest
     {
     }
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    @Autowired
+    private MockMvc        mockMvc;
 
     @Autowired
-    private MockMvc                   mockMvc;
-
-    @Autowired
-    private ReactUIService            reactUIService;
+    private ReactUIService reactUIService;
 
     @Test
     public void testOrderedListIsRenderedAsOneOrderedListNodeWithItsEntriesInOrder() throws Exception
@@ -179,21 +172,47 @@ public class MarkdownListRenderingTest
     }
 
     /**
-     * Pins today's blockquote behaviour (AC-S1-6): CommonsMarkdown has no block quote element, so {@code > q} arrives as a plain paragraph and renders as one.
-     * The quote styling is lost, which is a separate finding (kanban, filed by the orchestrator) that needs a CommonsMarkdown change. When that lands this
-     * test has to change deliberately.
+     * Kanban card 79ce393f (plan-284 AC-S2-1), replacing the plan-283 pin that kept a quote a plain paragraph "until CommonsMarkdown exposes it": a block quote
+     * renders as one BLOCKQUOTE node whose elements are the quoted blocks, so the emphasis and the link inside the quote survive, and it carries no footer.
      */
     @Test
-    public void testBlockQuoteRendersAsAPlainParagraphUntilCommonsMarkdownExposesIt() throws Exception
+    public void testBlockQuoteRendersAsABlockQuoteNodeHoldingItsFormattedBlocks_card79ce393f() throws Exception
     {
-        JsonNode ui = this.render("> q");
+        JsonNode ui = this.render("> q **b** [l](https://x)");
 
-        assertTrue(this.findAll(ui, "BLOCKQUOTE")
-                       .isEmpty(),
-                   ui.toString());
-        List<JsonNode> paragraphs = this.findAll(ui, "PARAGRAPH");
-        assertEquals(1, paragraphs.size(), ui.toString());
-        assertEquals("PARAGRAPH[COMPOSITE[TEXT(q)]]", this.shape(paragraphs.get(0)), ui.toString());
+        List<JsonNode> blockQuotes = this.findAll(ui, "BLOCKQUOTE");
+        assertEquals(1, blockQuotes.size(), ui.toString());
+        JsonNode blockQuote = blockQuotes.get(0);
+        assertTrue(blockQuote.path("footer")
+                             .isMissingNode()
+                   || blockQuote.path("footer")
+                                .isNull(),
+                   "no footer value: " + ui);
+
+        List<JsonNode> quotedBlocks = this.elementsOf(blockQuote);
+        assertEquals(1, quotedBlocks.size(), ui.toString());
+        assertEquals("PARAGRAPH", quotedBlocks.get(0)
+                                              .path("type")
+                                              .asText(),
+                     ui.toString());
+        List<JsonNode> texts = this.findAll(quotedBlocks.get(0), "TEXT")
+                                   .stream()
+                                   .filter(text -> !String.join("", this.textsOf(text))
+                                                          .isBlank())
+                                   .collect(Collectors.toList());
+        assertEquals(2, texts.size(), "the plain run and the bold run (the blank between bold run and link aside): " + ui);
+        assertEquals(List.of("q"), this.textsOf(texts.get(0))
+                                       .stream()
+                                       .map(String::trim)
+                                       .collect(Collectors.toList()));
+        assertEquals(List.of(), MarkdownPipelineTestSupport.emphasisOf(texts.get(0)));
+        assertEquals(List.of("b"), this.textsOf(texts.get(1)));
+        assertEquals(List.of("BOLD"), MarkdownPipelineTestSupport.emphasisOf(texts.get(1)));
+        List<JsonNode> ankers = this.findAll(quotedBlocks.get(0), "ANKER");
+        assertEquals(1, ankers.size(), ui.toString());
+        assertEquals("https://x", ankers.get(0)
+                                        .path("link")
+                                        .asText());
     }
 
     /**
@@ -201,115 +220,32 @@ public class MarkdownListRenderingTest
      */
     private JsonNode render(String markdown) throws Exception
     {
-        this.reactUIService.createDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newComposite()
-                                                                                                   .addComponents(factory.newMarkdown()
-                                                                                                                         .texts()
-                                                                                                                         .from(markdown))));
-        String json = this.mockMvc.perform(get("/ui"))
-                                  .andExpect(status().isOk())
-                                  .andReturn()
-                                  .getResponse()
-                                  .getContentAsString();
-        return OBJECT_MAPPER.readTree(json);
+        return MarkdownPipelineTestSupport.render(this.mockMvc, this.reactUIService, markdown);
     }
 
-    /**
-     * All nodes of the given type within the subtree, the subtree root included, parents before their descendants. The walk is field name agnostic.
-     */
     private List<JsonNode> findAll(JsonNode subtree, String type)
     {
-        List<JsonNode> found = new ArrayList<>();
-        if (subtree.isObject() && subtree.hasNonNull("type") && type.equals(subtree.get("type")
-                                                                                   .asText()))
-        {
-            found.add(subtree);
-        }
-        subtree.elements()
-               .forEachRemaining(child -> found.addAll(this.findAll(child, type)));
-        return found;
+        return MarkdownPipelineTestSupport.findAll(subtree, type);
     }
 
     private List<JsonNode> elementsOf(JsonNode node)
     {
-        List<JsonNode> elements = new ArrayList<>();
-        node.get("elements")
-            .elements()
-            .forEachRemaining(elements::add);
-        return elements;
+        return MarkdownPipelineTestSupport.elementsOf(node);
     }
 
-    /**
-     * The texts of every entry of a list node, one string per entry (the texts of the entry joined by a blank).
-     */
     private List<String> entryTexts(JsonNode listNode)
     {
-        return this.elementsOf(listNode)
-                   .stream()
-                   .map(entry -> String.join(" ", this.textsOf(entry)))
-                   .collect(Collectors.toList());
+        return MarkdownPipelineTestSupport.entryTexts(listNode);
     }
 
-    /**
-     * Every text value within the subtree, in document order.
-     */
     private List<String> textsOf(JsonNode subtree)
     {
-        List<String> texts = new ArrayList<>();
-        if (subtree.isObject() && "TEXT".equals(subtree.path("type")
-                                                       .asText()))
-        {
-            subtree.get("texts")
-                   .elements()
-                   .forEachRemaining(text -> texts.add(text.elements()
-                                                           .next()
-                                                           .asText()));
-        }
-        else
-        {
-            subtree.elements()
-                   .forEachRemaining(child -> texts.addAll(this.textsOf(child)));
-        }
-        return texts;
+        return MarkdownPipelineTestSupport.textsOf(subtree);
     }
 
-    /**
-     * A compact structural projection of a node that ignores the generated ids and targets: {@code TYPE{flag}[child,child]} and {@code TEXT(value)}.
-     */
     private String shape(JsonNode node)
     {
-        String type = node.path("type")
-                          .asText();
-        if ("TEXT".equals(type))
-        {
-            return "TEXT(" + String.join("|", this.textsOf(node)) + ")";
-        }
-        StringBuilder shape = new StringBuilder(type);
-        if ("UNORDEREDLIST".equals(type))
-        {
-            shape.append("{bullets=")
-                 .append(node.path("enableBulletPoints")
-                             .asBoolean())
-                 .append("}");
-        }
-        if ("ORDEREDLIST".equals(type))
-        {
-            shape.append("{start=")
-                 .append(node.path("startNumber")
-                             .asInt())
-                 .append("}");
-        }
-        if (node.path("elements")
-                .isArray())
-        {
-            Iterator<JsonNode> children = node.get("elements")
-                                              .elements();
-            List<String> childShapes = new ArrayList<>();
-            children.forEachRemaining(child -> childShapes.add(this.shape(child)));
-            shape.append("[")
-                 .append(String.join(",", childShapes))
-                 .append("]");
-        }
-        return shape.toString();
+        return MarkdownPipelineTestSupport.shape(node);
     }
 
 }

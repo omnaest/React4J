@@ -1,11 +1,12 @@
 import React from "react";
-import { Node } from "../Renderer";
+import { Node, Renderer } from "../Renderer";
 import { I18nRenderer, I18nTextValue } from "./I18nText";
 
 export interface BlockQuoteNode extends Node
 {
     texts: I18nTextValue[];
-    footer: I18nTextValue;
+    elements?: Node[] | null;
+    footer?: I18nTextValue | null;
 }
 
 export interface Props
@@ -19,16 +20,27 @@ export class BlockQuote extends React.Component<Props, {}>
 
     public render(): JSX.Element
     {
+        const footer = I18nRenderer.render(this.props.node.footer as I18nTextValue);
         return (
             <blockquote className="blockquote">
                 {
                     this.props.node.texts.map((text, index) => (
-                        <p className={"mb-0" + index}>{I18nRenderer.render(text)}</p>
+                        <p key={index} className={"mb-0" + index}>{I18nRenderer.render(text)}</p>
                     ))
                 }
-                <footer className="blockquote-footer">
-                    <cite>{I18nRenderer.render(this.props.node.footer)}</cite>
-                </footer>
+                {
+                    (this.props.node.elements || []).map((element, index) => (
+                        <React.Fragment key={index}>{Renderer.render(element)}</React.Fragment>
+                    ))
+                }
+                {
+                    // Present only when it renders to text: Bootstrap's .blockquote-footer::before prints an em dash even for an empty footer.
+                    footer ? (
+                        <footer className="blockquote-footer">
+                            <cite>{footer}</cite>
+                        </footer>
+                    ) : null
+                }
             </blockquote>
         );
     }

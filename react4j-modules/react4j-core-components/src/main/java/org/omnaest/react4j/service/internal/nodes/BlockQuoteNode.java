@@ -33,10 +33,27 @@ public class BlockQuoteNode extends AbstractNode implements Node
     @JsonProperty
     private I18nTextValue       footer;
 
+    /**
+     * Absent (null) when no component was added to the quote, otherwise the rendered nodes of the added components in order
+     */
+    @JsonProperty
+    private List<Node>          elements;
+
     @Override
     public String getType()
     {
         return this.type;
+    }
+
+    public List<Node> getElements()
+    {
+        return this.elements;
+    }
+
+    public BlockQuoteNode setElements(List<Node> elements)
+    {
+        this.elements = elements;
+        return this;
     }
 
     public List<I18nTextValue> getTexts()

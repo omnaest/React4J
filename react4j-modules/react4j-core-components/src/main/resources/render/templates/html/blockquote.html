@@ -2,7 +2,12 @@
 	<#list texts as text>
 	<p class="mb-01">${text}</p>
 	</#list>
+	<#list elements as element>
+	${element}
+	</#list>
+	<#if footer??>
 	<footer class="blockquote-footer">
 		<cite>${footer}</cite>
 	</footer>
+	</#if>
 </blockquote>
