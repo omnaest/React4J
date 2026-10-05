@@ -26,8 +26,11 @@ import org.omnaest.react4j.data.provider.memory.config.InMemoryRepositoryProvide
 import org.springframework.context.annotation.Import;
 
 /**
- * This enables the {@link ReactUI} support for a default {@link RepositoryProvider} based on the linked react4j-data-* dependency like e.g.
- * react4j-data-datagrid.
+ * Enables the in-memory {@link RepositoryProvider} of react4j-data-inmemory, which is part of the react4j-app-starter-parent. It is registered
+ * unless another {@link RepositoryProvider} is already registered. The data lives in the memory of the application process only.
+ * <br>
+ * <br>
+ * For a data grid backed provider see <code>EnableReactUIDataGridRepository</code> in the opt-in react4j-data-datagrid module.
  * <br>
  * 
  * @author omnaest

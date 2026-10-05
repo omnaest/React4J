@@ -29,5 +29,77 @@
 			<artifactId>CommonsDataGrid</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<!-- test-only (plan-281): the opt-in test composes a real context with the in-memory provider's configuration, to prove
+			     that the datagrid provider is the one a single-RepositoryProvider injection receives when both are present. -->
+			<groupId>org.omnaest.react</groupId>
+			<artifactId>react4j-data-inmemory</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<!-- test-only (plan-281): ApplicationContextRunner / AssertJ for the real-Spring-context opt-in test. Same exclusions as
+			     react4j-core's own spring-boot-starter-test: spring-boot-starter-logging would put a second Slf4j binding next to
+			     CommonsLog's log4j-slf4j2-impl, and the junit-jupiter aggregator is already supplied by CommonsTest. -->
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<version>${spring-boot.version}</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.junit.jupiter</groupId>
+					<artifactId>junit-jupiter</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<!-- plan-281: the opt-in test starts a real embedded Ignite 3 node. Ignite reaches into JDK internals, so the forked
+				     JVM needs the same JDK opens (add-opens options) CommonsDataGrid's own surefire argLine carries (without them the node fails with
+				     NoClassDefFoundError: Could not initialize class ...SerializableInstantiation). java.io.tmpdir is redirected under
+				     target/ because CommonsDataGrid.newLocalInstance() creates its Ignite work directory with Files.createTempDirectory;
+				     the redirect keeps every file of the test inside target/. A JVM does not create the directory named by
+				     -Djava.io.tmpdir, hence the create-surefire-java-io-tmpdir execution below (same idiom and reason as in
+				     react4j-ui-test, see the Known defect classes table in react4j-core/CLAUDE.md). The plugin versions are pinned to the
+				     ones Maven resolves for this module anyway (3.5.4 / 3.4.0): unlike react4j-ui-test this module has no Spring Boot parent managing them,
+				     and an unpinned declaration only adds a build warning. -->
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.5.4</version>
+				<configuration>
+					<argLine>--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED -Dio.netty.tryReflectionSetAccessible=true -Djava.io.tmpdir=${project.build.directory}/surefire-java-io-tmpdir</argLine>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.4.0</version>
+				<executions>
+					<execution>
+						<id>create-surefire-java-io-tmpdir</id>
+						<phase>generate-test-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/surefire-java-io-tmpdir</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.basedir}/src/test</directory>
+									<includes>
+										<include>no-file-is-ever-copied</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>

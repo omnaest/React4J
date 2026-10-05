@@ -26,8 +26,14 @@ import org.omnaest.react4j.data.provider.RepositoryProvider;
 import org.springframework.context.annotation.Import;
 
 /**
- * This enables the {@link ReactUI} support for a default {@link RepositoryProvider} based on the linked react4j-data-* dependency like e.g.
- * react4j-data-datagrid.
+ * Enables the repository support of the ReactUI by component scanning the whole <code>org.omnaest.react4j.data</code> package tree of the classpath:
+ * every <b>stereotyped</b> configuration found there is registered. With react4j-data-inmemory on the classpath (as it is on the
+ * react4j-app-starter-parent) this registers the default in-memory {@link RepositoryProvider} unless another one is already registered.
+ * <br>
+ * <br>
+ * This annotation does <b>not</b> enable the data grid provider of react4j-data-datagrid, even when that dependency is on the classpath: its
+ * configuration is deliberately not stereotyped, so this scan cannot find it. To use the data grid provider, declare the react4j-data-datagrid
+ * dependency and add <code>EnableReactUIDataGridRepository</code>.
  * <br>
  * 
  * @author omnaest

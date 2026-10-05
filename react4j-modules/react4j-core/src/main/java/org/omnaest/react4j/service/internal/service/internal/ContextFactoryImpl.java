@@ -42,7 +42,7 @@ public class ContextFactoryImpl implements ContextFactory
     {
         if (this.repositoryProvider == null)
         {
-            throw new IllegalStateException("No RepositoryProvider is available, you cannot use a DataContext without it. Please consider adding a repository providing dependency like react4j-data-datagrid or any custom provider.");
+            throw new IllegalStateException("No RepositoryProvider is available, you cannot use a DataContext without it. Please register one: annotate the application class with @EnableReactUIInMemoryRepository (react4j-data-inmemory, part of the react4j-app-starter-parent) or with @EnableReactUIDataGridRepository (react4j-data-datagrid, an opt-in dependency the application has to declare itself, which starts an embedded data grid), or provide a custom RepositoryProvider bean.");
         }
     }
 
