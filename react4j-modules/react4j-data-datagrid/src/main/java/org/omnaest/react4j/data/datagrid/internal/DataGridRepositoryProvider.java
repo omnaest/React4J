@@ -110,7 +110,7 @@ public class DataGridRepositoryProvider implements RepositoryProvider
                         {
                             try
                             {
-                                long id = NumberUtils.toLong(((PutEntry) entry).getId());
+                                long id = NumberUtils.toLong(((RemoveEntry) entry).getId());
                                 elementRepository.remove(id);
                                 return EntryOperationResult.success("" + id, entry);
                             }
