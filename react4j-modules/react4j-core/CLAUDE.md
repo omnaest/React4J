@@ -156,6 +156,12 @@ accent `#4f46e5`, radius 8px) and **stock** Bootstrap.
   "-Dspring.profiles.active=theme-tabler" "-Dit.test=*IT,!ShowcaseScreenshotModernIT"` (the `*IT` include is required: an exclusion-only `it.test`
   makes failsafe run every `*Test` class too, without surefire's tmpdir argLine); `ModernThemeIT` is expected red there. Server-side showcase state
   (an open modal or offcanvas) is shared by every IT of one Spring context, so an IT that opens one must close it in a `finally`.
+
+  * Surefire never matches `*IT` classes — `mvn test -DexcludedGroups=` selects zero `*IT`.
+  * Right invocation: `mvn verify "-DexcludedGroups="`, or per-class `mvn test -Dtest=<IT class>`.
+  * The tell is an identical class count — counting cannot distinguish two surefire runs.
+  * Concrete check: list `*IT` classes in `target/failsafe-reports` vs `target/surefire-reports`.
+
   **Showcase screenshots (plan-277 section 8, kanban 8f49dd56)** are the whole page (no height cap: `ShowcaseScreenshotSupport` grows the viewport until
   no element above the lowest card hides vertical overflow, refuses to write otherwise, captures in 8000 px sections because Chromium cannot render
   more than 16384 px into one image, and stitches them) and byte-deterministic: every screenshot IT pins the marker profile

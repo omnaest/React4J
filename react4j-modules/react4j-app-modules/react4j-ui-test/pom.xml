@@ -15,7 +15,12 @@
          surefire-excludedgroups-property-not-config-literal). Both surefire (default-test,
          phase test) and failsafe (integration-test/verify) read ${excludedGroups} by default, so
          one property gates both. Run on demand with -DexcludedGroups= (clears it) or
-         -Dgroups=browser. -->
+         -Dgroups=browser.
+
+          Surefire never matches `*IT` classes — `mvn test -DexcludedGroups=` selects zero `*IT`.
+          Right invocation: `mvn verify "-DexcludedGroups="`, or per-class `mvn test -Dtest=<IT class>`.
+          The tell is an identical class count — counting cannot distinguish two surefire runs.
+          Concrete check: list `*IT` classes in `target/failsafe-reports` vs `target/surefire-reports`. -->
     <properties>
         <excludedGroups>browser</excludedGroups>
     </properties>

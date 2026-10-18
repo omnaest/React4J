@@ -59,5 +59,11 @@ Only Tabler's Sass sources are used. Nothing from `@tabler/core/dist` (including
 2. Rebuild `react4j-core-ui` (`mvn install`, or `npm run build`). The build guards above must pass; a failing guard names the offending source, string or custom property.
 3. Run `TablerTokenCssSheetGuardTest` in `react4j-core` (every variable the Java token writer can emit is still read by the sheet, the selector and the radius, shadow and colour constants still match the compiled sheet).
 4. Run, in `react4j-ui-test`, `TablerThemeIT` and `TablerTokenThemeIT`, and the whole suite on Tabler: `mvn verify "-DexcludedGroups=" "-Dspring.profiles.active=theme-tabler" "-Dit.test=*IT,!ShowcaseScreenshotModernIT"`. `ModernThemeIT` is expected to fail in that run (it asserts the modern sheet); `ShowcaseScreenshotModernIT` is excluded because it has no profile of its own and would write a Tabler page over the committed MODERN screenshot. Then run `mvn verify "-DexcludedGroups="` without a profile; it must be green.
+
+* Surefire never matches `*IT` classes — `mvn test -DexcludedGroups=` selects zero `*IT`.
+* Right invocation: `mvn verify "-DexcludedGroups="`, or per-class `mvn test -Dtest=<IT class>`.
+* The tell is an identical class count — counting cannot distinguish two surefire runs.
+* Concrete check: list `*IT` classes in `target/failsafe-reports` vs `target/surefire-reports`.
+
 5. Regenerate and review `docs/theme-screenshots/tabler/` (written by the default run), and `git checkout` any MODERN screenshot outside `tabler/` that the run rewrote without a real change.
 6. Update the Tabler version in `THIRD-PARTY-NOTICES.md` (and its copyright line, should upstream change it).
