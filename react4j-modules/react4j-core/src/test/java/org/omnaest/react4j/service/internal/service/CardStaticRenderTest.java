@@ -48,10 +48,14 @@ public class CardStaticRenderTest
     }
 
     /**
-     * Pinned BEFORE the static renderer read any optional field: the complete output of a card with content only (policy criterion 2a, the default case).
+     * The complete output of a card with content only, and with it the DELIBERATE CONTRACT CHANGE of plan-320 S16 (user decision 6 of 2026-10-19, kanban
+     * 5f4d3f62): this test replaces the S13 pin {@code testCardWithContentOnlyRendersAsItAlwaysDid}, which held the old default (an {@code h5.card-header}
+     * on EVERY card, carrying the locator id even when it was empty). The static default now follows {@code Card.tsx} (the reference, unchanged): no
+     * header bar unless a header is set, no {@code id} attribute without a locator, the title (if any) as {@code h4.card-title} in the body. The root
+     * and body keep their {@code className=} spelling (kanban 21da417b, out of scope).
      */
     @Test
-    public void testCardWithContentOnlyRendersAsItAlwaysDid() throws Exception
+    public void testCardWithContentOnlyRendersNoHeaderBarAndNoIdAsCardTsxDoes() throws Exception
     {
         ReactUIServiceImpl uiService = this.newUiService();
 
@@ -59,7 +63,97 @@ public class CardStaticRenderTest
                                                                                               .withContent(factory.newText()
                                                                                                                   .addText("Body"))));
 
-        assertEquals("<div className=\"card\">\n\t<h5 id=\"\" className=\"card-header\"></h5>\n\t<div className=\"card-body\">\n\t\t<div>Body</div>\n\t</div>\n</div>", this.render(uiService));
+        assertEquals("<div className=\"card\">\n\t<div className=\"card-body\">\n\t\t<div>Body</div>\n\t</div>\n</div>", this.render(uiService));
+    }
+
+    /**
+     * Card.tsx line 61: the title (what {@code withTitle} sets on a card WITH an image) is an {@code h4.card-title} in the body, after the image and before
+     * the content; there is no header bar at all unless a header is set.
+     */
+    @Test
+    public void testTitleOfAnImageCardRendersAsH4InTheBodyAfterTheImage() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newCard()
+                                                                                              .withImage(image -> image.withName("Alt")
+                                                                                                                       .withImage("pic.png"))
+                                                                                              .withTitle("T")
+                                                                                              .withContent(factory.newText()
+                                                                                                                  .addText("Body"))));
+
+        String html = this.render(uiService);
+
+        assertTrue(html.contains("<h4 class=\"card-title\">T</h4>"), () -> "expected the title as h4.card-title in: " + html);
+        assertTrue(html.indexOf("<img") < html.indexOf("<h4") && html.indexOf("<h4") < html.indexOf("Body"),
+                   () -> "expected the image, then the title, then the body content in: " + html);
+        assertFalse(html.contains("card-header"), () -> "expected no header bar without a header in: " + html);
+        assertFalse(html.contains("<h5"), () -> "expected no h5 element in: " + html);
+    }
+
+    /**
+     * A title that renders empty emits no {@code h4} (the featured title precedent); the card is then the same as one without a title.
+     */
+    @Test
+    public void testAnEmptyTitleOfAnImageCardRendersNoH4() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newCard()
+                                                                                              .withImage(image -> image.withName("Alt")
+                                                                                                                       .withImage("pic.png"))
+                                                                                              .withTitle("")
+                                                                                              .withContent(factory.newText()
+                                                                                                                  .addText("Body"))));
+
+        String html = this.render(uiService);
+
+        assertFalse(html.contains("<h4"), () -> "expected no h4 for an empty title in: " + html);
+        assertTrue(html.contains("<img"), () -> "expected the image to be rendered in: " + html);
+    }
+
+    /**
+     * Card.tsx line 54: the locator is the {@code id} of the card ROOT ({@code BSCard id=...}), after the class attribute and before the region attributes,
+     * and it is the only {@code id} in the output.
+     */
+    @Test
+    public void testLocatorIsTheIdOfTheCardRoot() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newCard()
+                                                                                              .withLinkLocator("loc")
+                                                                                              .withContent(factory.newText()
+                                                                                                                  .addText("Body"))));
+
+        String html = this.render(uiService);
+
+        assertTrue(html.startsWith("<div className=\"card\" id=\"loc\">"), () -> "expected the locator as id of the root div in: " + html);
+        assertEquals(1, html.split("id=", -1).length - 1, () -> "expected exactly one id attribute in: " + html);
+    }
+
+    /**
+     * Without a locator there is no {@code id} attribute anywhere (the old template wrote {@code id=""} on the header bar of every card); an EMPTY locator
+     * is no locator either, because an empty id is invalid HTML.
+     */
+    @Test
+    public void testNoLocatorOrAnEmptyLocatorRendersNoIdAttribute() throws Exception
+    {
+        ReactUIServiceImpl unsetLocator = this.newUiService();
+        unsetLocator.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newCard()
+                                                                                                 .withContent(factory.newText()
+                                                                                                                     .addText("Body"))));
+        ReactUIServiceImpl emptyLocator = this.newUiService();
+        emptyLocator.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newCard()
+                                                                                                 .withLinkLocator("")
+                                                                                                 .withContent(factory.newText()
+                                                                                                                     .addText("Body"))));
+
+        String withoutLocator = this.render(unsetLocator);
+        String withEmptyLocator = this.render(emptyLocator);
+
+        assertFalse(withoutLocator.contains("id="), () -> "expected no id attribute without a locator in: " + withoutLocator);
+        assertFalse(withEmptyLocator.contains("id="), () -> "expected no id attribute for an empty locator in: " + withEmptyLocator);
     }
 
     /**
@@ -218,9 +312,8 @@ public class CardStaticRenderTest
                                                                                               .withFooter(factory.newText()
                                                                                                                  .addText("FOOT"))));
 
-        assertEquals("<div class=\"card h-100\" role=\"region\" aria-label=\"Panel\">\n" //
+        assertEquals("<div class=\"card h-100\" id=\"loc\" role=\"region\" aria-label=\"Panel\">\n" //
                      + "\t<div class=\"card-header\">HEAD</div>\n" //
-                     + "\t<h5 id=\"loc\" className=\"card-header\"></h5>\n" //
                      + "\t<div className=\"card-body\">\n" //
                      + "\t\t<div class=\"card-title h5\">Featured</div>\n" //
                      + "\t\t<h6 class=\"card-subtitle mb-2 text-muted\">Sub</h6>\n" //
@@ -231,8 +324,42 @@ public class CardStaticRenderTest
     }
 
     /**
-     * Every text or attribute value the card writes is HTML-escaped: the sub title, the aria label, the image name and the image file name. A value with
-     * {@code <}, {@code "} and {@code &} must not break out of its element or attribute.
+     * An image AND a title (plus header, sub title, locator and footer) at once, to pin the order image, title, sub title (Card.tsx lines 59-62), the title
+     * as {@code h4.card-title}, the locator on the root and the header as the only header bar.
+     */
+    @Test
+    public void testImageTitleSubTitleHeaderLocatorAndFooterTogetherRenderInTheOrderOfTheClientComponent() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newCard()
+                                                                                              .withLinkLocator("loc")
+                                                                                              .withImage(image -> image.withName("Alt")
+                                                                                                                       .withImage("pic.png"))
+                                                                                              .withTitle("T")
+                                                                                              .withSubTitle("Sub")
+                                                                                              .withHeader(factory.newText()
+                                                                                                                 .addText("HEAD"))
+                                                                                              .withContent(factory.newText()
+                                                                                                                  .addText("Body"))
+                                                                                              .withFooter(factory.newText()
+                                                                                                                 .addText("FOOT"))));
+
+        assertEquals("<div className=\"card\" id=\"loc\">\n" //
+                     + "\t<div class=\"card-header\">HEAD</div>\n" //
+                     + "\t<div className=\"card-body\">\n" //
+                     + "\t\t<img class=\"card-img-top\" src=\"/images/pic.png\" alt=\"Alt\" width=\"100%\" />\n" //
+                     + "\t\t<h4 class=\"card-title\">T</h4>\n" //
+                     + "\t\t<h6 class=\"card-subtitle mb-2 text-muted\">Sub</h6>\n" //
+                     + "\t\t<div>Body</div>\n" //
+                     + "\t</div>\n" //
+                     + "\t<div class=\"card-footer\">FOOT</div>\n" //
+                     + "</div>", this.render(uiService));
+    }
+
+    /**
+     * Every text or attribute value the card writes is HTML-escaped: the title, the sub title, the aria label, the locator, the image name and the image file
+     * name. A value with {@code <}, {@code "} and {@code &} must not break out of its element or attribute.
      */
     @Test
     public void testHostileValuesAreEscapedInTextAndInAttributes() throws Exception
@@ -244,13 +371,17 @@ public class CardStaticRenderTest
         uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newCard()
                                                                                               .withSubTitle(hostile)
                                                                                               .withAriaLabel(hostile)
+                                                                                              .withLinkLocator(hostile)
                                                                                               .withImage(image -> image.withName(hostile)
                                                                                                                        .withImage("a\"b<c&d.png"))
+                                                                                              .withTitle(hostile)
                                                                                               .withContent(factory.newText()
                                                                                                                   .addText("Body"))));
 
         String html = this.render(uiService);
 
+        assertTrue(html.contains("<h4 class=\"card-title\">" + escaped + "</h4>"), () -> "expected the escaped title in: " + html);
+        assertTrue(html.contains(" id=\"" + escaped + "\""), () -> "expected the escaped locator in: " + html);
         assertTrue(html.contains("<h6 class=\"card-subtitle mb-2 text-muted\">" + escaped + "</h6>"), () -> "expected the escaped sub title in: " + html);
         assertTrue(html.contains(" aria-label=\"" + escaped + "\""), () -> "expected the escaped aria label in: " + html);
         assertTrue(html.contains(" alt=\"" + escaped + "\""), () -> "expected the escaped image name in: " + html);

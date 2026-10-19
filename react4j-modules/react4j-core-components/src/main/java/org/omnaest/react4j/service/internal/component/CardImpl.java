@@ -132,8 +132,6 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
                     {
                         PreparableTemplateProcessor template = TemplateUtils.builder()
                                                                             .useTemplateClassResource(this.getClass(), "/render/templates/html/card.html")
-                                                                            .add("locator", node.getLocator())
-                                                                            .add("title", nodeRenderingProcessor.render(node.getTitle()))
                                                                             .add("content", Optional.ofNullable(node.getContent())
                                                                                                     .map(nodeRenderingProcessor::render)
                                                                                                     .orElse(""))
@@ -141,11 +139,24 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
                                                                             .add("adjust", node.isAdjust());
 
                         // The optional parts stay absent from the template model while unset, so that the template emits no element or attribute for them and
-                        // a card without any of them renders as it always did (plan-261 policy criterion 2a). What each one renders as is what Card.tsx emits.
+                        // a card without any of them renders no markup for them. What each one renders as is what Card.tsx emits. Since plan-320 S16 (kanban
+                        // 5f4d3f62) that includes the locator, which is the id of the root and not of a header bar, and the title, which is an h4 in the body.
                         if (node.getAriaLabel() != null && !node.getAriaLabel()
                                                                 .isEmpty())
                         {
                             template.add("ariaLabel", StringEscapeUtils.escapeHtml4(node.getAriaLabel()));
+                        }
+                        if (node.getLocator() != null && !node.getLocator()
+                                                              .isEmpty())
+                        {
+                            template.add("locator", StringEscapeUtils.escapeHtml4(node.getLocator()));
+                        }
+                        String title = Optional.ofNullable(node.getTitle())
+                                               .map(nodeRenderingProcessor::render)
+                                               .orElse("");
+                        if (!title.isEmpty())
+                        {
+                            template.add("title", title);
                         }
                         String featuredTitle = Optional.ofNullable(node.getFeaturedTitle())
                                                        .map(nodeRenderingProcessor::render)
