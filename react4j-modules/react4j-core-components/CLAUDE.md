@@ -165,6 +165,15 @@ Failing any one makes it a cliff requiring an option evaluation (R15) before pro
   exactly the escape hatch this module's design has consistently avoided (see the typed-CSS-value reasoning
   on `DiagramViewer`'s own sizing methods).
 
+## Published API and `internal` types (plan-320 S8, kanban fd9f338f)
+
+`EventHandler` moved from `org.omnaest.react4j.service.internal.handler.domain` to `org.omnaest.react4j.domain`, beside the
+components that speak it (`Button`, `Modal`, `DropTarget.DropEvent`, ...). A package move of a type is breaking for an explicit
+importer or implementor; it was accepted at 1.0.0-SNAPSHOT because the guideline gives `internal` importers no compatibility claim.
+Lambda callers (every known consumer) are source-compatible. `PublicApiInternalTypeExposureTest` ratchets the rest: a public type
+outside `internal` that mentions an `internal` type on a public or protected member fails the build unless that type is on the test's
+allowlist, and a stale allowlist entry fails too. The remaining entries are tracked on kanban card `cdeb180d`.
+
 ## NavigationBar dropdowns (plan-277 section 8, kanban bcfd7e44)
 
 `NavigationBar#addDropdown(Consumer<NavigationBarDropdown>)` adds a toggle with a menu of `NavigationBarEntry` items beside the plain

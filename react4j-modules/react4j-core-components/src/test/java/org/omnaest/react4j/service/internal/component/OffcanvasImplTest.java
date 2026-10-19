@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.omnaest.react4j.domain.EventHandler;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.Offcanvas.Placement;
 import org.omnaest.react4j.domain.UIComponent;
@@ -23,7 +24,6 @@ import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer;
 import org.omnaest.react4j.domain.rendering.UIComponentRenderer.EventHandlerRegistrationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.nodes.OffcanvasNode;
 import org.omnaest.react4j.service.internal.nodes.handler.ServerHandler;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;

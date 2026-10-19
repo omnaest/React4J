@@ -102,7 +102,7 @@ public class DraggableImplTest
         java.util.concurrent.atomic.AtomicBoolean registered = new java.util.concurrent.atomic.AtomicBoolean(false);
         UIComponentRenderer.EventHandlerRegistrationSupport support = new UIComponentRenderer.EventHandlerRegistrationSupport() {
             @Override
-            public UIComponentRenderer.EventHandlerRegistrationSupport register(org.omnaest.react4j.service.internal.handler.domain.EventHandler eventHandler)
+            public UIComponentRenderer.EventHandlerRegistrationSupport register(org.omnaest.react4j.domain.EventHandler eventHandler)
             {
                 registered.set(true);
                 return this;

@@ -18,8 +18,6 @@ package org.omnaest.react4j.domain;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
-
 public interface Breadcrumb extends UIComponent<Breadcrumb>
 {
     public Breadcrumb addEntry(Consumer<BreadcrumbEntry> breadcrumbEntryConsumer);

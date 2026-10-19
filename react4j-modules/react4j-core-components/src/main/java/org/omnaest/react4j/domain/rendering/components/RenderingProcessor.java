@@ -17,12 +17,12 @@ package org.omnaest.react4j.domain.rendering.components;
 
 import java.util.Optional;
 
+import org.omnaest.react4j.domain.EventHandler;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.raw.Node;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.handler.Handler;
 

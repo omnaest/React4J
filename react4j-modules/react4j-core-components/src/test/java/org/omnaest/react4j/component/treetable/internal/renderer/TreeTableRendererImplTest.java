@@ -28,6 +28,7 @@ import org.omnaest.react4j.component.treetable.provider.SortColumn;
 import org.omnaest.react4j.component.treetable.provider.TreeTableColumn;
 import org.omnaest.react4j.component.treetable.provider.TreeTableDataProvider;
 import org.omnaest.react4j.component.treetable.provider.TreeTableQuery;
+import org.omnaest.react4j.domain.EventHandler;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.UIComponentFactory;
@@ -41,7 +42,6 @@ import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.service.internal.component.ComponentContext;
 import org.omnaest.react4j.service.internal.component.RerenderingContainerImpl;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.nodes.RerenderingContainerNode;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService;
 

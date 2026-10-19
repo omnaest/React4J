@@ -17,6 +17,7 @@ import org.omnaest.react4j.component.form.Form.FileUploadFormElement;
 import org.omnaest.react4j.component.form.internal.renderer.node.element.FormElementNode;
 import org.omnaest.react4j.component.form.upload.ByteArrayChannel;
 import org.omnaest.react4j.component.form.upload.UploadChannel;
+import org.omnaest.react4j.domain.EventHandler;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.domain.context.data.DataContext;
@@ -24,7 +25,6 @@ import org.omnaest.react4j.domain.context.data.DataContext.PersistResult;
 import org.omnaest.react4j.domain.context.data.TypedDataContext;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.upload.UploadChannelRegistry;
 

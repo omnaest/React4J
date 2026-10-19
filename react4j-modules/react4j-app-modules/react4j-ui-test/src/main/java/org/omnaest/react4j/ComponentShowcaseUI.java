@@ -646,7 +646,7 @@ public class ComponentShowcaseUI
     /**
      * Server-driven show/hide (plan-12/13/14 pattern): a trigger {@link org.omnaest.react4j.domain.Button} flips
      * {@link #modalVisible} and the {@link Modal} itself renders from that same server-side flag, closing it back via
-     * {@link Modal#onClose(org.omnaest.react4j.service.internal.handler.domain.EventHandler)}.
+     * {@link Modal#onClose(org.omnaest.react4j.domain.EventHandler)}.
      */
     private UIComponentFactoryFunction createModalProvider()
     {
@@ -684,7 +684,7 @@ public class ComponentShowcaseUI
 
     /**
      * Server-driven pressed state (plan-12/13/14 pattern): the {@link ToggleButton} renders {@link #toggleButtonPressed} and
-     * flips it on every {@link ToggleButton#onChange(org.omnaest.react4j.service.internal.handler.domain.EventHandler)}.
+     * flips it on every {@link ToggleButton#onChange(org.omnaest.react4j.domain.EventHandler)}.
      */
     private UIComponentFactoryFunction createToggleButtonProvider()
     {

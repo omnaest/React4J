@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.omnaest.react4j.domain.EventHandler;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.NavigationBar;
 import org.omnaest.react4j.domain.NavigationBar.NavigationBarConsumer;
@@ -50,7 +51,6 @@ import org.omnaest.react4j.service.internal.configuration.ProfileFlagConfigurati
 import org.omnaest.react4j.service.internal.domain.ReactUIInternal;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.CompositeNode;
 import org.omnaest.react4j.service.internal.nodes.HomePageNode;

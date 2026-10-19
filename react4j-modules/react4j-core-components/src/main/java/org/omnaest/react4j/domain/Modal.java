@@ -20,7 +20,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.omnaest.react4j.domain.support.UIComponentWithContent;
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 
 public interface Modal extends UIComponentWithContent<Modal>
 {

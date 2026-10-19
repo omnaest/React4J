@@ -20,8 +20,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
-
 public interface Dropdown extends UIComponent<Dropdown>
 {
     public Dropdown withTitle(String title);

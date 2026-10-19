@@ -63,7 +63,7 @@ public class LineBreakImplTest
 
         EventHandlerRegistrationSupport support = mock(EventHandlerRegistrationSupport.class);
         renderer.manageEventHandler(support);
-        verify(support, never()).register(any(org.omnaest.react4j.service.internal.handler.domain.EventHandler.class));
+        verify(support, never()).register(any(org.omnaest.react4j.domain.EventHandler.class));
         verify(support, never()).registerAsRerenderingNode();
     }
 

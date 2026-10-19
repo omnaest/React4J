@@ -19,8 +19,6 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
-
 public interface ToggleButton extends UIComponent<ToggleButton>
 {
     public ToggleButton withText(String text);

@@ -18,6 +18,7 @@ package org.omnaest.react4j.service.internal.component;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.omnaest.react4j.domain.EventHandler;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.ToggleButton;
 import org.omnaest.react4j.domain.context.data.Data;
@@ -29,7 +30,6 @@ import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.domain.rendering.node.NodeRendererRegistry;
 import org.omnaest.react4j.domain.support.UIComponentProvider;
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.ToggleButtonNode;
 import org.omnaest.react4j.service.internal.nodes.handler.Handler;

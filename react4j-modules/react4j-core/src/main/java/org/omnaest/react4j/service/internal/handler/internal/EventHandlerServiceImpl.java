@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.omnaest.react4j.domain.EventHandler;
 import org.omnaest.react4j.domain.context.data.Data;
 import org.omnaest.react4j.service.internal.component.NamedComponentRegistry;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
@@ -39,7 +40,6 @@ import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler.MappedData;
 import org.omnaest.react4j.service.internal.handler.domain.DataWithContext;
 import org.omnaest.react4j.service.internal.handler.domain.EventBody;
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.ResponseBody;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.handler.domain.TargetNode;

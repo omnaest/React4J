@@ -17,8 +17,6 @@ package org.omnaest.react4j.domain;
 
 import java.util.function.Consumer;
 
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
-
 public interface Pagination extends UIComponent<Pagination>
 {
     public Pagination addItem(Consumer<PaginationItem> paginationItemConsumer);

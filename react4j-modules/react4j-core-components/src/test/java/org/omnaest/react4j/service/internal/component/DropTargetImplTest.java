@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.omnaest.react4j.domain.DropTarget.DropEvent;
 import org.omnaest.react4j.domain.DropTarget.DropRelation;
+import org.omnaest.react4j.domain.EventHandler;
 import org.omnaest.react4j.domain.Location;
 import org.omnaest.react4j.domain.UIComponent;
 import org.omnaest.react4j.domain.context.data.Data;
@@ -26,7 +27,6 @@ import org.omnaest.react4j.domain.rendering.UIComponentRenderer.EventHandlerRegi
 import org.omnaest.react4j.domain.rendering.components.LocationSupport;
 import org.omnaest.react4j.domain.rendering.components.RenderingProcessor;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.DropTargetNode;
 import org.omnaest.react4j.service.internal.nodes.ParagraphNode;

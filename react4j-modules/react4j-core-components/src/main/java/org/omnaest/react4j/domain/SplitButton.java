@@ -19,7 +19,6 @@ import java.util.function.Consumer;
 
 import org.omnaest.react4j.domain.Dropdown.DropdownItem;
 import org.omnaest.react4j.domain.Dropdown.Style;
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 
 public interface SplitButton extends UIComponent<SplitButton>
 {

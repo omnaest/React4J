@@ -15,8 +15,8 @@
  ******************************************************************************/
 package org.omnaest.react4j.domain.rendering.components;
 
+import org.omnaest.react4j.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.handler.Handler;
 

@@ -15,10 +15,10 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.service.internal;
 
+import org.omnaest.react4j.domain.EventHandler;
 import org.omnaest.react4j.domain.rendering.components.HandlerEmitter;
 import org.omnaest.react4j.service.internal.handler.EventHandlerRegistry;
 import org.omnaest.react4j.service.internal.handler.domain.DataEventHandler;
-import org.omnaest.react4j.service.internal.handler.domain.EventHandler;
 import org.omnaest.react4j.service.internal.handler.domain.Target;
 import org.omnaest.react4j.service.internal.nodes.handler.Handler;
 import org.omnaest.react4j.service.internal.nodes.handler.ServerHandler;
