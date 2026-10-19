@@ -39,7 +39,13 @@ export class NavigationBar extends React.Component<Props, {}>
 
     private static href(entry: NavigationBarEntry): string | undefined
     {
-        return entry.linkedId ? "#" + entry.linkedId : entry.link;
+        return entry.linkedId ? "#" + entry.linkedId : (entry.link ? entry.link : undefined);
+    }
+
+    /** `_blank` iff the resolved href is the external `link`: link set and linkedId unset (empty string = unset). */
+    private static target(entry: NavigationBarEntry): "_blank" | "_self"
+    {
+        return entry.link && !entry.linkedId ? "_blank" : "_self";
     }
 
     private static renderPlainEntry(entry: NavigationBarEntry, index: number): JSX.Element
@@ -49,7 +55,7 @@ export class NavigationBar extends React.Component<Props, {}>
                 <a
                     className={"nav-link" + (entry.active ? " active" : "") + (entry.disabled ? " disabled" : "")}
                     href={NavigationBar.href(entry)}
-                    target={entry.link ? "_blank" : "_self"}
+                    target={NavigationBar.target(entry)}
                 >{I18nRenderer.render(entry.text)}</a>
             </li>
         );
@@ -72,8 +78,9 @@ export class NavigationBar extends React.Component<Props, {}>
                         (
                             <Dropdown.Item
                                 key={itemIndex}
+                                as={NavigationBar.href(item) ? undefined : "a"}
                                 href={NavigationBar.href(item)}
-                                target={item.link ? "_blank" : "_self"}
+                                target={NavigationBar.target(item)}
                                 active={item.active}
                                 disabled={item.disabled}
                             >{I18nRenderer.render(item.text)}</Dropdown.Item>

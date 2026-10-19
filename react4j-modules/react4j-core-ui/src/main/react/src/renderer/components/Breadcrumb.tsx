@@ -39,8 +39,9 @@ export class Breadcrumb extends React.Component<Props, {}> {
                     const onClick = entry.onClick
                         ? HandlerFactory.onClick(entry.onClick as Handler, renderingSupport?.uiContextAccessor, renderingSupport?.nodeContextAccessor)
                         : undefined;
+                    // Neither href nor onClick: render a bare <a> - the default Anchor would rewrite the missing href to "#".
                     return (
-                        <BSBreadcrumb.Item key={index} active={entry.active} href={href} linkProps={{ onClick: onClick }}>
+                        <BSBreadcrumb.Item key={index} active={entry.active} href={href} linkAs={href || onClick ? undefined : "a"} linkProps={{ onClick: onClick }}>
                             {I18nRenderer.render(entry.text)}
                         </BSBreadcrumb.Item>
                     );

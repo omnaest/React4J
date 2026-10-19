@@ -2,18 +2,18 @@
 	<ul class="nav nav-pills page-navigation flex-nowrap flex-row">
 		<#list entries as entry>
 		<#if entry.dropdown>
-		<li class="nav-item dropdown"><a class="nav-link dropdown-toggle"
+		<li class="nav-item dropdown"><a class="nav-link dropdown-toggle<#if entry.active> active</#if><#if entry.disabled> disabled</#if>"
 			href="#" role="button" data-bs-toggle="dropdown"
 			aria-expanded="false">${entry.text}</a>
 			<ul class="dropdown-menu">
 				<#list entry.items as item>
-				<li><a class="dropdown-item" href="${item.link}"
-					target="_self">${item.text}</a></li>
+				<li><a class="dropdown-item<#if item.active> active</#if><#if item.disabled> disabled</#if>"<#if item.href??> href="${item.href}"</#if>
+					target="${item.target}">${item.text}</a></li>
 				</#list>
 			</ul></li>
 		<#else>
-		<li class="nav-item"><a class="nav-link" href="${entry.link}"
-			target="_self">${entry.text}</a></li>
+		<li class="nav-item"><a class="nav-link<#if entry.active> active</#if><#if entry.disabled> disabled</#if>"<#if entry.href??> href="${entry.href}"</#if>
+			target="${entry.target}">${entry.text}</a></li>
 		</#if>
 		</#list>
 	</ul>

@@ -34,12 +34,37 @@ public interface NavigationBar extends UIComponent<NavigationBar>
      */
     public NavigationBar addDropdown(Consumer<NavigationBarDropdown> dropdownConsumer);
 
+    /**
+     * One entry of the bar, or one item of a dropdown's menu. The static HTML render and the interactive React renderer treat an entry identically, with
+     * these rules:
+     * <ul>
+     * <li><b>href</b>: a {@link #withLinkedLocator(String) linked locator} wins, rendering {@code href="#id"}; otherwise the {@link #withLink(String) link}
+     * is the href; with neither set the anchor carries no {@code href} attribute at all (never {@code href="null"} or an empty one). An empty string counts
+     * as not set.</li>
+     * <li><b>target</b>: {@code _blank} if and only if the resolved href is the external link, that is a link is set and no linked locator overrides it;
+     * otherwise {@code _self}. An in-page anchor therefore never opens a new tab, even when a link is set as well.</li>
+     * <li><b>state</b>: {@link #withActiveState(boolean) active} and {@link #withDisabledState(boolean) disabled} render as the {@code active} and
+     * {@code disabled} classes on the entry's anchor, a dropdown item's anchor and a dropdown toggle.</li>
+     * </ul>
+     * <b>Remaining renderer divergences, both structural.</b> A {@link org.omnaest.react4j.domain.rendering.node.NodeRenderType#HTML} static render has no
+     * script, so a dropdown's toggle is Bootstrap {@code data-bs-toggle} markup that opens its menu only if the page that embeds the static HTML loads
+     * Bootstrap's JavaScript (the interactive renderer opens it itself); and the static toggle is an anchor with {@code href="#"} where the interactive
+     * renderer uses a {@code button}.
+     */
     public static interface NavigationBarEntry
     {
         public NavigationBarEntry withText(String text);
 
+        /**
+         * The external link of the entry, opened in a new tab unless a {@link #withLinkedLocator(String) linked locator} is set too, which wins. See the
+         * rules on {@link NavigationBarEntry}.
+         */
         public NavigationBarEntry withLink(String link);
 
+        /**
+         * Links the entry to the component carrying the given link locator, as {@code href="#id"}, in the same page ({@code _self}). Wins over
+         * {@link #withLink(String)}. See the rules on {@link NavigationBarEntry}.
+         */
         public NavigationBarEntry withLinkedLocator(String id);
 
         public NavigationBarEntry withLinked(UIComponent component);

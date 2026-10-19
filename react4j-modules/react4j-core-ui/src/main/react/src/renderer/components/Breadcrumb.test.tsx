@@ -126,6 +126,17 @@ test("link beats linkedId: href resolves to link when both are set", () => {
     expect(screen.getByText("LinkWins").closest("a")).toHaveAttribute("href", "/preferred");
 });
 
+// Javadoc rule: neither link nor linkedId (and no onClick) -> no href attribute.
+test("a non-active entry with neither link, linkedId nor onClick has no href attribute", () => {
+    const node = createNode([
+        { text: { DEFAULT: "Bare" }, link: undefined as unknown as string, linkedId: undefined as unknown as string, active: false }
+    ]);
+
+    render(<Breadcrumb node={node} />);
+
+    expect(screen.getByText("Bare").closest("a")).not.toHaveAttribute("href");
+});
+
 // AC-6, React half - the criterion-2a drift guard: for a node with locator and onClick both unset, the
 // <nav> must carry NO id attribute at all (not an empty one), and the anchor must carry no click behaviour.
 test("with locator and onClick both unset, the nav has no id attribute at all and the anchor has no click behaviour", () => {

@@ -79,6 +79,46 @@ test("a dropdown renders a toggle inside the list and its items, with the hrefs 
     expect(items[2]).toHaveClass("disabled", "active");
 });
 
+// S3b: href = linkedId ? "#"+linkedId : link; target is _blank iff the resolved href is the external link (link set, linkedId unset).
+test("a plain entry with both link and linkedId gets the in-page href and stays in this tab", () => {
+    render(<NavigationBar node={createNode([
+        { text: text("Both"), link: "https://example.org/", linkedId: "section-1" }
+    ])} />);
+
+    const anchor = screen.getByText("Both");
+    expect(anchor).toHaveAttribute("href", "#section-1");
+    expect(anchor).toHaveAttribute("target", "_self");
+});
+
+test("a dropdown item with both link and linkedId gets the in-page href and stays in this tab", () => {
+    render(<NavigationBar node={createNode([
+        { text: text("Menu"), dropdownEntries: [{ text: text("Both"), link: "https://example.org/", linkedId: "section-1" }] }
+    ])} />);
+
+    fireEvent.click(screen.getByText("Menu"));
+
+    const item = screen.getByText("Both");
+    expect(item).toHaveAttribute("href", "#section-1");
+    expect(item).toHaveAttribute("target", "_self");
+});
+
+test("a plain entry and a dropdown item with neither link nor linkedId (or empty strings) have no href attribute", () => {
+    render(<NavigationBar node={createNode([
+        { text: text("Nothing") },
+        { text: text("Empty"), link: "", linkedId: "" },
+        { text: text("Menu"), dropdownEntries: [{ text: text("Item nothing") }, { text: text("Item empty"), link: "", linkedId: "" }] }
+    ])} />);
+
+    expect(screen.getByText("Nothing")).not.toHaveAttribute("href");
+    expect(screen.getByText("Empty")).not.toHaveAttribute("href");
+    expect(screen.getByText("Empty")).toHaveAttribute("target", "_self");
+
+    fireEvent.click(screen.getByText("Menu"));
+
+    expect(screen.getByText("Item nothing")).not.toHaveAttribute("href");
+    expect(screen.getByText("Item empty")).not.toHaveAttribute("href");
+});
+
 test("an empty dropdown renders its toggle and an open menu without items", () => {
     render(<NavigationBar node={createNode([
         { text: text("Nothing yet"), dropdownEntries: [] }

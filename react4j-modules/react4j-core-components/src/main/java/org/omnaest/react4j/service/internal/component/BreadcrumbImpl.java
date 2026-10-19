@@ -102,10 +102,15 @@ public class BreadcrumbImpl extends AbstractUIComponentWithSubComponents<Breadcr
                 registry.register(BreadcrumbEntryNode.class, NodeRenderType.HTML, (entryNode, nodeRenderingProcessor) ->
                 {
                     String text = nodeRenderingProcessor.render(entryNode.getText());
-                    String link = Optional.ofNullable(entryNode.getLinkedId())
-                                          .map(linkedId -> "#" + linkedId)
-                                          .orElse(entryNode.getLink());
-                    String body = entryNode.isActive() ? text : "<a href=\"" + link + "\">" + text + "</a>";
+                    // precedence of Breadcrumb.tsx without its onClick channel: link beats linkedId; neither set renders the anchor without a href
+                    String href = Optional.ofNullable(entryNode.getLink())
+                                          .filter(link -> !link.isEmpty())
+                                          .or(() -> Optional.ofNullable(entryNode.getLinkedId())
+                                                            .filter(linkedId -> !linkedId.isEmpty())
+                                                            .map(linkedId -> "#" + linkedId))
+                                          .map(resolvedHref -> " href=\"" + resolvedHref + "\"")
+                                          .orElse("");
+                    String body = entryNode.isActive() ? text : "<a" + href + ">" + text + "</a>";
                     return "<li class=\"breadcrumb-item" + (entryNode.isActive() ? " active" : "") + "\">" + body + "</li>";
                 });
             }

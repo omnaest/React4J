@@ -76,6 +76,71 @@ public class BreadcrumbStaticRenderTest
     }
 
     /**
+     * plan-320 S3a, property 4: the static href precedence is {@code link > linkedId} (the interactive renderer's frozen order is
+     * {@code active > onClick > link > linkedId}, and a static render has no onClick). An entry with only a linked locator links to the in-page anchor, an
+     * entry with only a link links to it, and with both the link wins.
+     */
+    @Test
+    public void testLinkBeatsLinkedIdAndLinkedIdAloneLinksToTheAnchor() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newBreadcrumb()
+                                                                                              .addEntry(entry -> entry.withText("OnlyLink")
+                                                                                                                      .withLink("/only-link"))
+                                                                                              .addEntry(entry -> entry.withText("OnlyLinkedId")
+                                                                                                                      .withLinkedLocator("section-a"))
+                                                                                              .addEntry(entry -> entry.withText("Both")
+                                                                                                                      .withLink("/both-link")
+                                                                                                                      .withLinkedLocator("section-b"))));
+
+        String html = uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML);
+
+        assertTrue(html.contains("<a href=\"/only-link\">OnlyLink</a>"), () -> "expected the link entry in: " + html);
+        assertTrue(html.contains("<a href=\"#section-a\">OnlyLinkedId</a>"), () -> "expected the linked-locator-only entry to point at the anchor in: " + html);
+        assertTrue(html.contains("<a href=\"/both-link\">Both</a>"), () -> "expected the link to win over the linked locator in: " + html);
+        assertFalse(html.contains("#section-b"), () -> "the linked locator of an entry that also has a link must not surface in: " + html);
+    }
+
+    /**
+     * plan-320 S3a, property 4: an active entry beats link and linked locator alike and renders no anchor at all.
+     */
+    @Test
+    public void testAnActiveEntryRendersNoAnchorEvenWithLinkAndLinkedId() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newBreadcrumb()
+                                                                                              .addEntry(entry -> entry.withText("Current")
+                                                                                                                      .withLink("/current")
+                                                                                                                      .withLinkedLocator("section-a")
+                                                                                                                      .withActiveState(true))));
+
+        String html = uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML);
+
+        assertTrue(html.contains("<li class=\"breadcrumb-item active\">Current</li>"), () -> "expected the active entry as bare text in: " + html);
+        assertFalse(html.contains("<a"), () -> "an active entry must not be an anchor in: " + html);
+    }
+
+    /**
+     * plan-320 S3a, property 4: a non-active entry with neither link nor linked locator renders its anchor without any {@code href} attribute (never
+     * {@code href="null"}), as {@code Breadcrumb.tsx} sets no href then.
+     */
+    @Test
+    public void testAnEntryWithNeitherLinkNorLinkedIdRendersNoHrefAttribute() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newBreadcrumb()
+                                                                                              .addEntry(entry -> entry.withText("Nowhere"))));
+
+        String html = uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML);
+
+        assertTrue(html.contains("<li class=\"breadcrumb-item\"><a>Nowhere</a></li>"), () -> "expected an anchor without href in: " + html);
+        assertFalse(html.contains("href"), () -> "expected no href attribute at all in: " + html);
+    }
+
+    /**
      * plan-262 AC-6 (S1), the criterion-2a drift guard: a {@code Breadcrumb} that calls neither
      * {@code withLinkLocator} nor {@code onClick} must render its {@code <nav>} with NO {@code id} attribute at
      * all - not {@code id=""}, not {@code id="null"}. Demonstrated to actually bite: temporarily emitting the

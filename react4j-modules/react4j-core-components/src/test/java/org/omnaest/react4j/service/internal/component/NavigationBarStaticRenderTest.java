@@ -51,10 +51,11 @@ public class NavigationBarStaticRenderTest
 
         String html = this.renderStatic(navigationBar);
 
-        assertTrue(html.contains("<li class=\"nav-item\"><a class=\"nav-link\" href=\"/first\" target=\"_self\">First</a></li>"),
-                   () -> "a plain entry renders as before: " + html);
+        // plan-320 S3a deliberate contract change: an external link used to render target="_self", it now opens in a new tab like NavigationBar.tsx
+        assertTrue(html.contains("<li class=\"nav-item\"><a class=\"nav-link\" href=\"/first\" target=\"_blank\">First</a></li>"),
+                   () -> "a plain entry renders as before, except that its external link opens in a new tab: " + html);
         assertTrue(html.contains("<li class=\"nav-item dropdown\"><a class=\"nav-link dropdown-toggle\" href=\"#\" role=\"button\" data-bs-toggle=\"dropdown\" aria-expanded=\"false\">More</a>"
-                                 + "<ul class=\"dropdown-menu\">" + "<li><a class=\"dropdown-item\" href=\"/reports\" target=\"_self\">Reports</a></li>"
+                                 + "<ul class=\"dropdown-menu\">" + "<li><a class=\"dropdown-item\" href=\"/reports\" target=\"_blank\">Reports</a></li>"
                                  + "<li><a class=\"dropdown-item\" href=\"#section-id\" target=\"_self\">Section</a></li>" + "</ul></li>"),
                    () -> "a dropdown renders as toggle plus menu, items with the href of a plain entry (a linked locator becomes #id): " + html);
         assertTrue(html.contains("<li class=\"nav-item\"><a class=\"nav-link\" href=\"#last-id\" target=\"_self\">Last</a></li>"),
@@ -73,6 +74,149 @@ public class NavigationBarStaticRenderTest
         assertTrue(html.contains("class=\"nav-link dropdown-toggle\""), () -> html);
         assertTrue(html.contains("<ul class=\"dropdown-menu\"></ul>"), () -> html);
         assertFalse(html.contains("dropdown-item"), () -> html);
+    }
+
+    /**
+     * Property 1 (plan-320 S3a): the static render carries the {@code active} and {@code disabled} classes exactly where {@code NavigationBar.tsx} puts them,
+     * on a plain entry, on a dropdown toggle and on a dropdown item, and puts none where the state is not set.
+     */
+    @Test
+    public void testActiveAndDisabledStateRenderAsClassesOnPlainEntriesTogglesAndItems()
+    {
+        NavigationBarImpl navigationBar = this.newNavigationBar();
+        navigationBar.addEntry(entry -> entry.withText("PlainActive")
+                                             .withLinkedLocator("pa")
+                                             .withActiveState(true));
+        navigationBar.addEntry(entry -> entry.withText("PlainDisabled")
+                                             .withLinkedLocator("pd")
+                                             .withDisabledState(true));
+        navigationBar.addEntry(entry -> entry.withText("PlainBoth")
+                                             .withLinkedLocator("pb")
+                                             .withActiveState(true)
+                                             .withDisabledState(true));
+        navigationBar.addEntry(entry -> entry.withText("PlainNeutral")
+                                             .withLinkedLocator("pn"));
+        navigationBar.addDropdown(dropdown -> dropdown.withText("ToggleActive")
+                                                      .withActiveState(true)
+                                                      .addEntry(item -> item.withText("ItemActive")
+                                                                            .withLinkedLocator("ia")
+                                                                            .withActiveState(true))
+                                                      .addEntry(item -> item.withText("ItemDisabled")
+                                                                            .withLinkedLocator("id")
+                                                                            .withDisabledState(true))
+                                                      .addEntry(item -> item.withText("ItemBoth")
+                                                                            .withLinkedLocator("ib")
+                                                                            .withActiveState(true)
+                                                                            .withDisabledState(true))
+                                                      .addEntry(item -> item.withText("ItemNeutral")
+                                                                            .withLinkedLocator("in")));
+        navigationBar.addDropdown(dropdown -> dropdown.withText("ToggleDisabled")
+                                                      .withDisabledState(true));
+        navigationBar.addDropdown(dropdown -> dropdown.withText("ToggleBoth")
+                                                      .withActiveState(true)
+                                                      .withDisabledState(true));
+        navigationBar.addDropdown(dropdown -> dropdown.withText("ToggleNeutral"));
+
+        String html = this.renderStatic(navigationBar);
+
+        this.assertContains(html, "<a class=\"nav-link active\" href=\"#pa\" target=\"_self\">PlainActive</a>");
+        this.assertContains(html, "<a class=\"nav-link disabled\" href=\"#pd\" target=\"_self\">PlainDisabled</a>");
+        this.assertContains(html, "<a class=\"nav-link active disabled\" href=\"#pb\" target=\"_self\">PlainBoth</a>");
+        this.assertContains(html, "<a class=\"nav-link\" href=\"#pn\" target=\"_self\">PlainNeutral</a>");
+        this.assertContains(html, "<a class=\"nav-link dropdown-toggle active\" href=\"#\" role=\"button\" data-bs-toggle=\"dropdown\" aria-expanded=\"false\">ToggleActive</a>");
+        this.assertContains(html, "<a class=\"nav-link dropdown-toggle disabled\" href=\"#\" role=\"button\" data-bs-toggle=\"dropdown\" aria-expanded=\"false\">ToggleDisabled</a>");
+        this.assertContains(html, "<a class=\"nav-link dropdown-toggle active disabled\" href=\"#\" role=\"button\" data-bs-toggle=\"dropdown\" aria-expanded=\"false\">ToggleBoth</a>");
+        this.assertContains(html, "<a class=\"nav-link dropdown-toggle\" href=\"#\" role=\"button\" data-bs-toggle=\"dropdown\" aria-expanded=\"false\">ToggleNeutral</a>");
+        this.assertContains(html, "<a class=\"dropdown-item active\" href=\"#ia\" target=\"_self\">ItemActive</a>");
+        this.assertContains(html, "<a class=\"dropdown-item disabled\" href=\"#id\" target=\"_self\">ItemDisabled</a>");
+        this.assertContains(html, "<a class=\"dropdown-item active disabled\" href=\"#ib\" target=\"_self\">ItemBoth</a>");
+        this.assertContains(html, "<a class=\"dropdown-item\" href=\"#in\" target=\"_self\">ItemNeutral</a>");
+    }
+
+    /**
+     * Property 2 (plan-320 S3a), first facet: an entry holding only a linked locator links to the in-page anchor and stays in the page.
+     */
+    @Test
+    public void testAnEntryWithOnlyALinkedLocatorLinksToTheAnchorAndTargetsSelf()
+    {
+        NavigationBarImpl navigationBar = this.newNavigationBar();
+        navigationBar.addEntry(entry -> entry.withText("Anchored")
+                                             .withLinkedLocator("section-a"));
+        navigationBar.addDropdown(dropdown -> dropdown.withText("More")
+                                                      .addEntry(item -> item.withText("AnchoredItem")
+                                                                            .withLinkedLocator("section-b")));
+
+        String html = this.renderStatic(navigationBar);
+
+        this.assertContains(html, "<a class=\"nav-link\" href=\"#section-a\" target=\"_self\">Anchored</a>");
+        this.assertContains(html, "<a class=\"dropdown-item\" href=\"#section-b\" target=\"_self\">AnchoredItem</a>");
+    }
+
+    /**
+     * Property 2, second facet: an entry holding only an external link opens it in a new tab.
+     */
+    @Test
+    public void testAnEntryWithOnlyALinkOpensItInANewTab()
+    {
+        NavigationBarImpl navigationBar = this.newNavigationBar();
+        navigationBar.addEntry(entry -> entry.withText("External")
+                                             .withLink("https://example.org/"));
+        navigationBar.addDropdown(dropdown -> dropdown.withText("More")
+                                                      .addEntry(item -> item.withText("ExternalItem")
+                                                                            .withLink("https://example.org/docs")));
+
+        String html = this.renderStatic(navigationBar);
+
+        this.assertContains(html, "<a class=\"nav-link\" href=\"https://example.org/\" target=\"_blank\">External</a>");
+        this.assertContains(html, "<a class=\"dropdown-item\" href=\"https://example.org/docs\" target=\"_blank\">ExternalItem</a>");
+    }
+
+    /**
+     * Property 2, third facet: with both set the linked locator wins the href, and because the resolved href is then not the external link the target is
+     * {@code _self} (an in-page anchor must not open a new tab).
+     */
+    @Test
+    public void testAnEntryWithBothTheLinkedLocatorWinsTheHrefAndTargetsSelf()
+    {
+        NavigationBarImpl navigationBar = this.newNavigationBar();
+        navigationBar.addEntry(entry -> entry.withText("Both")
+                                             .withLink("https://example.org/")
+                                             .withLinkedLocator("section-a"));
+        navigationBar.addDropdown(dropdown -> dropdown.withText("More")
+                                                      .addEntry(item -> item.withText("BothItem")
+                                                                            .withLinkedLocator("section-b")
+                                                                            .withLink("https://example.org/docs")));
+
+        String html = this.renderStatic(navigationBar);
+
+        this.assertContains(html, "<a class=\"nav-link\" href=\"#section-a\" target=\"_self\">Both</a>");
+        this.assertContains(html, "<a class=\"dropdown-item\" href=\"#section-b\" target=\"_self\">BothItem</a>");
+        assertFalse(html.contains("target=\"_blank\""), () -> "no entry resolved to its external link, so none may open a new tab: " + html);
+    }
+
+    /**
+     * Property 3 (plan-320 S3a): an entry with neither link nor linked locator renders without error and its anchor carries no {@code href} attribute at all
+     * (not {@code href="null"}, not {@code href=""}), exactly as {@code NavigationBar.tsx} passes {@code href={undefined}}.
+     */
+    @Test
+    public void testAnEntryWithNeitherLinkNorLinkedLocatorRendersNoHrefAttribute()
+    {
+        NavigationBarImpl navigationBar = this.newNavigationBar();
+        navigationBar.addEntry(entry -> entry.withText("Nowhere"));
+        navigationBar.addDropdown(dropdown -> dropdown.withText("More")
+                                                      .addEntry(item -> item.withText("NowhereItem")));
+
+        String html = this.renderStatic(navigationBar);
+
+        this.assertContains(html, "<a class=\"nav-link\" target=\"_self\">Nowhere</a>");
+        this.assertContains(html, "<a class=\"dropdown-item\" target=\"_self\">NowhereItem</a>");
+        assertFalse(html.contains("href=\"null\""), () -> html);
+        assertFalse(html.contains("href=\"\""), () -> html);
+    }
+
+    private void assertContains(String html, String expectedFragment)
+    {
+        assertTrue(html.contains(expectedFragment), () -> "expected <" + expectedFragment + "> in: " + html);
     }
 
     private NavigationBarImpl newNavigationBar()

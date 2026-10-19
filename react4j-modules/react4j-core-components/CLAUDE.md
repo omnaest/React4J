@@ -173,7 +173,10 @@ the bar's entries (text, link, linked locator, linked component, active, disable
 codes against: `NavigationBarNode.Entry#dropdownEntries` is `null` on a plain entry and a (possibly empty) list on a dropdown, whose
 `text`/`active`/`disabled` describe the toggle and whose `link`/`linkedId` are `null`; one level only (an item is a plain entry). The
 static HTML template renders a dropdown as `li.nav-item.dropdown > a.nav-link.dropdown-toggle + ul.dropdown-menu > li > a.dropdown-item`;
-plain entries render exactly as before. Tests: `NavigationBarImplTest` (API to node, JSON shape) and `NavigationBarStaticRenderTest`.
+plain entries render as before. Plan-320 S3a made the static render follow `NavigationBar.tsx` for entries, toggles and items alike: `active` /
+`disabled` classes, `target="_blank"` only when the href is the external link (a linked locator wins the href and gives `_self`), and no `href`
+attribute when neither is set (the rules are written once on `NavigationBar.NavigationBarEntry`). Tests: `NavigationBarImplTest` (API to node, JSON
+shape) and `NavigationBarStaticRenderTest`; the React half is `NavigationBar.test.tsx` in `react4j-core-ui`.
 
 ## Testing note
 
@@ -183,3 +186,11 @@ the *unbuffered* transport actually avoids a temp file spill, against a real ser
 `react4j-ui-test` (`UnbufferedUploadTransportEndToEndTest`) rather than here - this module has no embedded
 servlet container on its classpath and does not need one for what it owns (the node/builder contract, not the
 HTTP transport).
+
+## Known defect classes
+
+Recorded by the orchestrator, keyed by the property that was violated, not the symptom. Look up a new defect here by its property before diagnosing it.
+
+| Class (property) | Occurrences | Guard | Status |
+|---|---|---|---|
+| A node field is honoured identically by every renderer the component registers (static HTML and React). The two renderers are independent hand-written implementations with nothing comparing them, so a field wired on one side only passes every test. | plan-262 Breadcrumb linkedId (React ignored it); df581d4c NavigationBar linkedId (fixed by plan-277); plan-320 S3 sweep 2026-10-19: Breadcrumb link/linkedId precedence and href="null", NavigationBar active/disabled/target (fixed here); 7 more components with 17 field-level gaps plus 4 undocumented structural ones (kanban card 3277cf97). | Per-component static render tests and jest only; no cross-renderer guard. A field-parity guard (rung ii) is proposed, unscheduled (plan-320, kanban card fb604efe). | third+ occurrence; fix-at-source proposed |

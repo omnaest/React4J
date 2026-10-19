@@ -43,12 +43,32 @@ public interface Breadcrumb extends UIComponent<Breadcrumb>
      */
     public Breadcrumb withLinkLocator(String locator);
 
+    /**
+     * One entry of the trail. How its anchor is resolved:
+     * <ul>
+     * <li><b>active</b> beats everything: an {@link #withActiveState(boolean) active} entry is the current page, rendered as plain text and never as an
+     * anchor.</li>
+     * <li><b>href</b>: the {@link #withLink(String) link} wins over the {@link #withLinkedLocator(String) linked locator} ({@code href="#id"}); with neither
+     * set the anchor carries no {@code href} attribute at all (never {@code href="null"}). An empty string counts as not set.</li>
+     * <li>On the interactive React renderer an {@link #onClick(EventHandler) onClick} handler additionally ranks between active and link, so the full order
+     * there is active, then onClick, then link, then linked locator. The static HTML render has no event channel (see {@code onClick}), so its order is
+     * active, then link, then linked locator.</li>
+     * </ul>
+     * Apart from that structural onClick difference the two renderers resolve an entry identically.
+     */
     public static interface BreadcrumbEntry extends UIComponent<BreadcrumbEntry>
     {
         public BreadcrumbEntry withText(String text);
 
+        /**
+         * The link of the entry, which wins over {@link #withLinkedLocator(String)}. See the rules on {@link BreadcrumbEntry}.
+         */
         public BreadcrumbEntry withLink(String link);
 
+        /**
+         * Points the entry at the component carrying the given link locator, as {@code href="#id"}, unless a {@link #withLink(String) link} is set, which
+         * wins. See the rules on {@link BreadcrumbEntry}.
+         */
         public BreadcrumbEntry withLinkedLocator(String id);
 
         public BreadcrumbEntry withLinked(UIComponent component);

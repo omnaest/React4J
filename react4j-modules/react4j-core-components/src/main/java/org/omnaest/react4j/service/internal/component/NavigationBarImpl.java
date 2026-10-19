@@ -96,6 +96,8 @@ public class NavigationBarImpl extends AbstractUIComponent<NavigationBar> implem
                     {
                         Map<String, Object> model = new HashMap<>();
                         model.put("text", nodeRenderingProcessor.render(entry.getText()));
+                        model.put("active", entry.isActive());
+                        model.put("disabled", entry.isDisabled());
                         if (entry.getDropdownEntries() != null)
                         {
                             // the toggle of a dropdown links nowhere, only its items carry a href
@@ -108,9 +110,9 @@ public class NavigationBarImpl extends AbstractUIComponent<NavigationBar> implem
                         else
                         {
                             model.put("dropdown", false);
-                            model.put("link", Optional.ofNullable(entry.getLinkedId())
-                                                      .map(linkedId -> "#" + linkedId)
-                                                      .orElse(entry.getLink()));
+                            // no "href" key when the entry links nowhere: the template then omits the attribute, as NavigationBar.tsx passes href={undefined}
+                            resolveHref(entry).ifPresent(href -> model.put("href", href));
+                            model.put("target", resolveTarget(entry));
                         }
                         return model;
                     }
@@ -144,6 +146,34 @@ public class NavigationBarImpl extends AbstractUIComponent<NavigationBar> implem
                                                                                                           .map(item -> this.toNodeEntry(item, location))
                                                                                                           .collect(Collectors.toList())
                                                     : null);
+    }
+
+    /**
+     * The href of an entry, mirroring {@code NavigationBar.tsx}: {@code "#" + linkedId} when a linked id is set, otherwise the link, otherwise none. Like
+     * the client, an empty string counts as not set.
+     */
+    private static Optional<String> resolveHref(NavigationBarNode.Entry entry)
+    {
+        if (isSet(entry.getLinkedId()))
+        {
+            return Optional.of("#" + entry.getLinkedId());
+        }
+        return Optional.ofNullable(entry.getLink())
+                       .filter(NavigationBarImpl::isSet);
+    }
+
+    /**
+     * {@code _blank} if and only if the resolved href is the entry's external link, that is a link is set and no linked id overrides it, otherwise
+     * {@code _self}: an in-page anchor must not open a new tab.
+     */
+    private static String resolveTarget(NavigationBarNode.Entry entry)
+    {
+        return !isSet(entry.getLinkedId()) && isSet(entry.getLink()) ? "_blank" : "_self";
+    }
+
+    private static boolean isSet(String value)
+    {
+        return value != null && !value.isEmpty();
     }
 
     @Override
