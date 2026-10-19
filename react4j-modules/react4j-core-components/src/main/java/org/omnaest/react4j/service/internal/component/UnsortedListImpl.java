@@ -87,8 +87,13 @@ public class UnsortedListImpl extends AbstractUIComponent<UnsortedList> implemen
                     @Override
                     public String render(UnsortedListNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
+                        // UnorderedList.tsx drops the list-unstyled class when bullet points are enabled. The two lists are two templates, not one with a
+                        // conditional class: an FTL tag or interpolation before the first text of a template changes how FreeMarker strips the indentation
+                        // of the list line below it, which would change the whitespace of every existing list (plan-261 policy criterion 2a).
+                        String template = node.isEnableBulletPoints() ? "/render/templates/html/unsorted_list_with_bullets.html"
+                                : "/render/templates/html/unsorted_list.html";
                         return TemplateUtils.builder()
-                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/unsorted_list.html")
+                                            .useTemplateClassResource(this.getClass(), template)
                                             .add("items", node.getElements()
                                                               .stream()
                                                               .map(nodeRenderingProcessor::render)

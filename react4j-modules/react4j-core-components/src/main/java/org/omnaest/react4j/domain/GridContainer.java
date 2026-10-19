@@ -98,7 +98,15 @@ public interface GridContainer extends UIComponent<GridContainer>
     {
         /**
          * Defines how many columns are spanned within the 12 columns grid system
-         * 
+         * <p>
+         * The interactive renderer wraps each row in a Bootstrap {@code row} and each cell in a {@code col-md-N}
+         * element, which is what makes the span lay the cells out side by side. The static HTML render
+         * ({@code NodeRenderType.HTML}) has never emitted those wrappers: it writes the cells' content one after the
+         * other inside the grid container, so the span has no effect there. A cell always has a span (the default is an
+         * even share of the 12 columns), so honouring it statically would put wrappers around every cell of every
+         * existing grid and change all of their output. This is a structural difference of the static render, not a
+         * missing field.
+         *
          * @param numberOfColumns
          * @return
          */
@@ -109,6 +117,16 @@ public interface GridContainer extends UIComponent<GridContainer>
 
     public GridContainer withLinkLocator(String locator);
 
+    /**
+     * Keeps the cells of every row on one line, however many there are, instead of wrapping them below each other
+     * when they no longer fit the width; the grid then scrolls sideways.
+     * <p>
+     * Both renderers add the {@code unlimited-columns} class to the grid container. The stylesheet rules behind it
+     * select the grid's {@code row} and {@code column} elements, which only the interactive renderer emits (see
+     * {@link Cell#withColumnSpan(int)}), so in the static HTML render the class is present but selects nothing.
+     *
+     * @return this
+     */
     public GridContainer withUnlimitedColumns();
 
 }

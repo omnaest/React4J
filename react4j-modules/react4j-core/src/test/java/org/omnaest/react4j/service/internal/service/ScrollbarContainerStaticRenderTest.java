@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.react4j.service.internal.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -71,5 +72,59 @@ public class ScrollbarContainerStaticRenderTest
         assertTrue(html.contains("overflow-auto"), () -> "expected the overflow-auto class in: " + html);
         assertTrue(html.contains("v-box-full-parent-height"), () -> "expected the vertical box mode class in: " + html);
         assertTrue(html.contains("Scrollable"), () -> "expected the composed content in: " + html);
+    }
+
+    /**
+     * plan-320 S13 (kanban 3277cf97): pinned BEFORE the static renderer read {@code announcedUpdates} (plan-261 policy criterion 2a), the complete output
+     * of a scrollbar container with the default modes and no announced updates.
+     */
+    @Test
+    public void testContainerWithoutAnnouncedUpdatesRendersAsItAlwaysDid() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newScrollbarContainer()
+                                                                                              .withContent(factory.newText()
+                                                                                                                  .addText("Scrollable"))));
+
+        assertEquals("<div class=\"overflow-auto v-box-default-height h-box-default-width\">Scrollable</div>",
+                     uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML));
+    }
+
+    /**
+     * plan-320 S13, ScrollbarContainer.tsx lines 69-75: announced updates put the live region attributes on a div around the content INSIDE the scroll
+     * container (not on the scroll container itself), exactly as the client component does.
+     */
+    @Test
+    public void testAnnouncedUpdatesRenderALiveRegionAroundTheContent() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newScrollbarContainer()
+                                                                                              .withAnnouncedUpdates(true)
+                                                                                              .withContent(factory.newText()
+                                                                                                                  .addText("Scrollable"))));
+
+        assertEquals("<div class=\"overflow-auto v-box-default-height h-box-default-width\">"
+                     + "<div role=\"log\" aria-live=\"polite\" aria-relevant=\"additions\">Scrollable</div></div>",
+                     uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML));
+    }
+
+    /**
+     * Announced updates switched off again are the unset state: no live region.
+     */
+    @Test
+    public void testAnnouncedUpdatesSwitchedOffAgainRenderNoLiveRegion() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newScrollbarContainer()
+                                                                                              .withAnnouncedUpdates(true)
+                                                                                              .withAnnouncedUpdates(false)
+                                                                                              .withContent(factory.newText()
+                                                                                                                  .addText("Scrollable"))));
+
+        assertFalse(uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML)
+                             .contains("role=\"log\""));
     }
 }

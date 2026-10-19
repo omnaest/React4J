@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.omnaest.react4j.component.value.TextValueSource;
 import org.omnaest.react4j.domain.Card;
 import org.omnaest.react4j.domain.Image;
@@ -41,6 +42,7 @@ import org.omnaest.react4j.service.internal.nodes.CardNode;
 import org.omnaest.react4j.service.internal.nodes.ImageNode;
 import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService.LocationAwareTextResolver;
 import org.omnaest.utils.template.TemplateUtils;
+import org.omnaest.utils.template.TemplateUtils.PreparableTemplateProcessor;
 
 public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implements Card
 {
@@ -128,15 +130,59 @@ public class CardImpl extends AbstractUIComponentAndContentHolder<Card> implemen
                     @Override
                     public String render(CardNode node, NodeRenderingProcessor nodeRenderingProcessor)
                     {
-                        return TemplateUtils.builder()
-                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/card.html")
-                                            .add("locator", node.getLocator())
-                                            .add("title", nodeRenderingProcessor.render(node.getTitle()))
-                                            .add("content", Optional.ofNullable(node.getContent())
-                                                                    .map(nodeRenderingProcessor::render)
-                                                                    .orElse(""))
-                                            .build()
-                                            .get();
+                        PreparableTemplateProcessor template = TemplateUtils.builder()
+                                                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/card.html")
+                                                                            .add("locator", node.getLocator())
+                                                                            .add("title", nodeRenderingProcessor.render(node.getTitle()))
+                                                                            .add("content", Optional.ofNullable(node.getContent())
+                                                                                                    .map(nodeRenderingProcessor::render)
+                                                                                                    .orElse(""))
+                                                                            .add("fullHeight", node.isFullHeight())
+                                                                            .add("adjust", node.isAdjust());
+
+                        // The optional parts stay absent from the template model while unset, so that the template emits no element or attribute for them and
+                        // a card without any of them renders as it always did (plan-261 policy criterion 2a). What each one renders as is what Card.tsx emits.
+                        if (node.getAriaLabel() != null && !node.getAriaLabel()
+                                                                .isEmpty())
+                        {
+                            template.add("ariaLabel", StringEscapeUtils.escapeHtml4(node.getAriaLabel()));
+                        }
+                        String featuredTitle = Optional.ofNullable(node.getFeaturedTitle())
+                                                       .map(nodeRenderingProcessor::render)
+                                                       .orElse("");
+                        if (!featuredTitle.isEmpty())
+                        {
+                            template.add("featuredTitle", featuredTitle);
+                        }
+                        if (node.getSubTitle() != null)
+                        {
+                            template.add("subTitle", nodeRenderingProcessor.render(node.getSubTitle()));
+                        }
+                        if (node.getImage() != null)
+                        {
+                            template.add("image", this.renderImage(node.getImage(), nodeRenderingProcessor));
+                        }
+                        if (node.getHeader() != null)
+                        {
+                            template.add("header", nodeRenderingProcessor.render(node.getHeader()));
+                        }
+                        if (node.getFooter() != null)
+                        {
+                            template.add("footer", nodeRenderingProcessor.render(node.getFooter()));
+                        }
+                        return template.build()
+                                       .get();
+                    }
+
+                    /**
+                     * The image as {@code BSCard.Img variant="top"} emits it in Card.tsx. The file name is escaped here, the alternative text is escaped by the
+                     * node rendering processor like every other text.
+                     */
+                    private String renderImage(ImageNode image, NodeRenderingProcessor nodeRenderingProcessor)
+                    {
+                        return "<img class=\"card-img-top\" src=\"/images/" + StringEscapeUtils.escapeHtml4(Optional.ofNullable(image.getImage())
+                                                                                                                    .orElse(""))
+                               + "\" alt=\"" + nodeRenderingProcessor.render(image.getName()) + "\" width=\"100%\" />";
                     }
                 });
             }

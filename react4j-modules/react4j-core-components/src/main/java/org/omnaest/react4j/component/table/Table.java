@@ -79,10 +79,39 @@ public interface Table extends UIComponent<Table>
 
     public Table fromCSV(String csv);
 
+    /**
+     * Chooses the viewport width up to which a responsive table scrolls sideways instead of overflowing: the table is
+     * wrapped in a {@code table-responsive-<size>} element. Has an effect only on a table that is
+     * {@link #withResponsiveness(boolean) responsive} (the default); {@link TableSize#REGULAR} (the default) and
+     * {@code null} choose no size.
+     *
+     * @param tableSize
+     *            the size, or {@code null} to leave it unchanged
+     * @return this
+     */
     public Table withSize(TableSize tableSize);
 
+    /**
+     * Wraps the table in a scrolling element so that it scrolls sideways on a narrow screen instead of overflowing.
+     * Default is {@code true}.
+     * <p>
+     * The two renderers differ in one case. The interactive renderer always wraps a responsive table, with
+     * {@code table-responsive} when no {@link #withSize(TableSize) size} is chosen. The static HTML render
+     * ({@code NodeRenderType.HTML}) has never wrapped a table without a size, and keeps not doing so, because wrapping
+     * the default would change the output of every existing table; it wraps a responsive table that has a size, in
+     * {@code table-responsive-<size>}, as the interactive renderer does. So in static output an explicit
+     * {@code withResponsiveness(true)} is the same as the default: no wrapper. This is a structural difference of the
+     * static render, not a missing field.
+     *
+     * @param responsive
+     *            {@code false} to render the table without the scrolling wrapper
+     * @return this
+     */
     public Table withResponsiveness(boolean responsive);
 
+    /**
+     * @see #withResponsiveness(boolean)
+     */
     public Table withDisabledResponsiveness();
 
     public Table fromDataTable(org.omnaest.utils.table.Table table);

@@ -119,6 +119,40 @@ public class AnkerStaticRenderTest
         assertEquals("<a href=\"https://example.org/c\" target=\"_blank\" rel=\"noopener noreferrer\"><em>only</em></a>\n", this.render(uiService));
     }
 
+    /**
+     * plan-320 S13 (kanban 3277cf97), Anker.tsx line 31: the title is the anchor's {@code title} attribute, the tooltip. It follows {@code rel}, as in the
+     * client component.
+     */
+    @Test
+    public void testTitleRendersAsTheTitleAttribute() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newAnker()
+                                                                                              .withLink("https://example.org/t")
+                                                                                              .withText("label")
+                                                                                              .withTitle("Tip")));
+
+        assertEquals("<a href=\"https://example.org/t\" target=\"_blank\" rel=\"noopener noreferrer\" title=\"Tip\">label</a>\n", this.render(uiService));
+    }
+
+    /**
+     * plan-320 S13: a title with {@code <}, {@code "} and {@code &} is escaped like the label text, so it can neither close the attribute nor open an element.
+     */
+    @Test
+    public void testHostileTitleIsEscapedInTheAttribute() throws Exception
+    {
+        ReactUIServiceImpl uiService = this.newUiService();
+
+        uiService.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newAnker()
+                                                                                              .withLink("https://example.org/t")
+                                                                                              .withText("label")
+                                                                                              .withTitle("<b>\"x\" & y")));
+
+        assertEquals("<a href=\"https://example.org/t\" target=\"_blank\" rel=\"noopener noreferrer\" title=\"&lt;b&gt;&quot;x&quot; &amp; y\">label</a>\n",
+                     this.render(uiService));
+    }
+
     private String render(ReactUIServiceImpl uiService) throws Exception
     {
         return uiService.renderDefaultNodeHierarchyAsStatic(NodeRenderType.HTML)

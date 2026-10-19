@@ -26,6 +26,10 @@ public interface ScrollbarContainer extends UIComponentWithContent<ScrollbarCont
     /**
      * Opt-in: enables auto-scrolling the container's viewport to the bottom whenever its content updates. Default is
      * disabled (off), so existing usages are unaffected unless this method is called.
+     * <p>
+     * Scrolling is client-side script that runs after the browser has rendered an update. The static HTML render
+     * ({@code NodeRenderType.HTML}) is a single snapshot that is never updated and has no script, so this setting has
+     * no effect there. This is a structural difference of the static render, not a missing field.
      *
      * @return this
      */

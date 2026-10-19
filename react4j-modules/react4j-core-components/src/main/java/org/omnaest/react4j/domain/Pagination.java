@@ -44,6 +44,18 @@ public interface Pagination extends UIComponent<Pagination>
          */
         public PaginationItem withAriaLabel(String ariaLabel);
 
+        /**
+         * Registers the handler that runs on the server when the user clicks this item.
+         * <p>
+         * The click travels over the event channel ({@code POST /ui/event}), which only the interactive renderer
+         * has. The static HTML render ({@code NodeRenderType.HTML}) has no such channel and no script, so it renders
+         * the item as a plain, non-clickable {@code page-link} and the handler is never called there. This is a
+         * structural difference of the static render, not a missing field.
+         *
+         * @param eventHandler
+         *            the handler, or {@code null} for an item that does nothing when clicked
+         * @return this
+         */
         public PaginationItem onClick(EventHandler eventHandler);
     }
 }

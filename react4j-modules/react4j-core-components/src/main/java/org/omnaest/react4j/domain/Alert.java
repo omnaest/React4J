@@ -25,6 +25,20 @@ public interface Alert extends UIComponentWithContent<Alert>
 {
     public Alert withStyle(Style style);
 
+    /**
+     * Adds a close button with which the user can dismiss the alert.
+     * <p>
+     * Dismissing is client-side script: the interactive renderer keeps the alert's visibility as state in the browser
+     * and hides the alert when the button is pressed, without any round trip to the server. The static HTML render
+     * ({@code NodeRenderType.HTML}) has no script to run and no channel back to the server, so it renders the same
+     * close button (and the {@code alert-dismissible} class) but the button does nothing there. This is a structural
+     * difference of the static render, not a missing field: do not rely on a dismissible alert being dismissable in
+     * static output.
+     *
+     * @param dismissible
+     *            {@code true} to add the close button
+     * @return this
+     */
     public Alert withDismissible(boolean dismissible);
 
     public static enum Style

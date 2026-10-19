@@ -95,6 +95,7 @@ public class JumbotronImpl extends AbstractUIComponentAndContentHolder<Jumbotron
                                             .add("title", nodeRenderingProcessor.render(node.getTitle()))
                                             .add("subTitle", nodeRenderingProcessor.render(node.getSubTitle()))
                                             .add("content", nodeRenderingProcessor.render(node.getContent()))
+                                            .add("fullWidth", node.isFullWidth())
                                             .build()
                                             .get();
                     }

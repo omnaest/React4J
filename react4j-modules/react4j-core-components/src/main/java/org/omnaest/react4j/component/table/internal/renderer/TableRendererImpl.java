@@ -5,6 +5,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.omnaest.react4j.component.table.internal.TableImpl.CellImpl;
 import org.omnaest.react4j.component.table.internal.TableImpl.RowImpl;
 import org.omnaest.react4j.component.table.internal.data.TableData;
@@ -92,22 +93,41 @@ public class TableRendererImpl implements UIComponentRenderer
             @Override
             public String render(TableNode node, NodeRenderingProcessor nodeRenderingProcessor)
             {
-                return TemplateUtils.builder()
-                                    .useTemplateClassResource(this.getClass(), "/render/templates/html/table.html")
-                                    .add("columns", node.getColumnTitles()
-                                                        .stream()
-                                                        .map(nodeRenderingProcessor::render)
-                                                        .collect(Collectors.toList()))
-                                    .add("rows", node.getRows()
-                                                     .stream()
-                                                     .map(rowNode -> rowNode.getCells()
-                                                                            .stream()
-                                                                            .map(CellNode::getContent)
-                                                                            .map(nodeRenderingProcessor::render)
-                                                                            .collect(Collectors.toList()))
-                                                     .collect(Collectors.toList()))
-                                    .build()
-                                    .get();
+                String table = TemplateUtils.builder()
+                                            .useTemplateClassResource(this.getClass(), "/render/templates/html/table.html")
+                                            .add("columns", node.getColumnTitles()
+                                                                .stream()
+                                                                .map(nodeRenderingProcessor::render)
+                                                                .collect(Collectors.toList()))
+                                            .add("rows", node.getRows()
+                                                             .stream()
+                                                             .map(rowNode -> rowNode.getCells()
+                                                                                    .stream()
+                                                                                    .map(CellNode::getContent)
+                                                                                    .map(nodeRenderingProcessor::render)
+                                                                                    .collect(Collectors.toList()))
+                                                             .collect(Collectors.toList()))
+                                            .build()
+                                            .get();
+                // The wrapper is added here and not in the template: an FTL tag before the first text of a template changes how FreeMarker strips the
+                // indentation of the list lines below it, which would change the whitespace of every existing table (plan-261 policy criterion 2a).
+                return this.resolveResponsiveWrapperClass(node)
+                           .map(wrapperClass -> "<div class=\"" + wrapperClass + "\">" + table + "</div>")
+                           .orElse(table);
+            }
+
+            /**
+             * Table.tsx wraps a responsive table in {@code div.table-responsive<-size>}. The static render emits that wrapper only for a table that has a
+             * size: the default options (responsive, no size) have never been wrapped here, and wrapping them would change the output of every existing
+             * table (plan-261 policy criterion 2a). That remaining difference is written on {@code Table#withResponsiveness}.
+             */
+            private Optional<String> resolveResponsiveWrapperClass(TableNode node)
+            {
+                return Optional.ofNullable(node.getOptions())
+                               .filter(OptionsNode::isResponsive)
+                               .map(OptionsNode::getSize)
+                               .filter(size -> !size.isEmpty())
+                               .map(size -> "table-responsive-" + StringEscapeUtils.escapeHtml4(size));
             }
 
         });

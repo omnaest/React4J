@@ -89,13 +89,19 @@ public class ScrollbarContainerImpl extends AbstractUIComponentAndContentHolder<
             @Override
             public void manageNodeRenderers(NodeRendererRegistry registry)
             {
-                registry.register(ScrollbarContainerNode.class, NodeRenderType.HTML,
-                                  (node, nodeRenderingProcessor) -> "<div class=\"overflow-auto v-box-" + node.getVerticalBoxMode() + " h-box-"
-                                                                    + node.getHorizontalBoxMode() + "\">"
-                                                                    + Optional.ofNullable(node.getContent())
-                                                                              .map(nodeRenderingProcessor::render)
-                                                                              .orElse("")
-                                                                    + "</div>");
+                registry.register(ScrollbarContainerNode.class, NodeRenderType.HTML, (node, nodeRenderingProcessor) ->
+                {
+                    String content = Optional.ofNullable(node.getContent())
+                                             .map(nodeRenderingProcessor::render)
+                                             .orElse("");
+                    // As in ScrollbarContainer.tsx, the live region attributes sit on a div around the content INSIDE the scroll container, never on the scroll
+                    // container itself: a screen reader announces what changes inside the region, and the scroll container's scroll position changes on every
+                    // update. Without announced updates there is no such div, so the output is what it always was.
+                    String liveRegion = node.isAnnouncedUpdates() ? "<div role=\"log\" aria-live=\"polite\" aria-relevant=\"additions\">" + content + "</div>"
+                            : content;
+                    return "<div class=\"overflow-auto v-box-" + node.getVerticalBoxMode() + " h-box-" + node.getHorizontalBoxMode() + "\">" + liveRegion
+                           + "</div>";
+                });
             }
 
             @Override

@@ -25,6 +25,7 @@ import org.omnaest.react4j.service.internal.service.LocalizedTextResolverService
 import org.omnaest.utils.MapperUtils;
 import org.omnaest.utils.functional.Provider;
 import org.omnaest.utils.template.TemplateUtils;
+import org.omnaest.utils.template.TemplateUtils.PreparableTemplateProcessor;
 
 import lombok.RequiredArgsConstructor;
 
@@ -66,18 +67,27 @@ public class AnkerRenderer implements UIComponentRenderer
             @Override
             public String render(AnkerNode node, NodeRenderingProcessor nodeRenderingProcessor)
             {
-                return TemplateUtils.builder()
-                                    .useTemplateClassResource(this.getClass(), "/render/templates/html/anker.html")
-                                    .add("link", node.getLink())
-                                    .add("text", nodeRenderingProcessor.render(node.getText()))
-                                    .add("elements", Optional.ofNullable(node.getElements())
-                                                             .orElse(Collections.emptyList())
-                                                             .stream()
-                                                             .map(nodeRenderingProcessor::render)
-                                                             .collect(Collectors.toList()))
-                                    .add("target", AnkerNode.Page.SELF.equals(node.getPage()) ? "_self" : "_blank")
-                                    .build()
-                                    .get();
+                PreparableTemplateProcessor template = TemplateUtils.builder()
+                                                                    .useTemplateClassResource(this.getClass(), "/render/templates/html/anker.html")
+                                                                    .add("link", node.getLink())
+                                                                    .add("text", nodeRenderingProcessor.render(node.getText()))
+                                                                    .add("elements", Optional.ofNullable(node.getElements())
+                                                                                             .orElse(Collections.emptyList())
+                                                                                             .stream()
+                                                                                             .map(nodeRenderingProcessor::render)
+                                                                                             .collect(Collectors.toList()))
+                                                                    .add("target", AnkerNode.Page.SELF.equals(node.getPage()) ? "_self" : "_blank");
+                // The title is the tooltip (Anker.tsx emits it as the title attribute). The rendering processor escapes it like every text, quotes included.
+                // The key stays absent without a title, so that an anker without one renders as it always did (plan-261 policy criterion 2a).
+                String title = Optional.ofNullable(node.getTitle())
+                                       .map(nodeRenderingProcessor::render)
+                                       .orElse("");
+                if (!title.isEmpty())
+                {
+                    template.add("title", title);
+                }
+                return template.build()
+                               .get();
             }
         });
     }

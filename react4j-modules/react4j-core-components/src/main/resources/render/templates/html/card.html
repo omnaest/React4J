@@ -1,6 +1,21 @@
-<div className="card">
+<div<#if fullHeight> class="card h-100"<#else> className="card"</#if><#if ariaLabel??> role="region" aria-label="${ariaLabel}"</#if>>
+<#if header??>
+	<div class="card-header">${header}</div>
+</#if>
 	<h5 id="${locator}" className="card-header">${title}</h5>
 	<div className="card-body">
-		<div>${content}</div>
+<#if image??>
+		${image}
+</#if>
+<#if featuredTitle??>
+		<div class="card-title h5">${featuredTitle}</div>
+</#if>
+<#if subTitle??>
+		<h6 class="card-subtitle mb-2 text-muted">${subTitle}</h6>
+</#if>
+		<div<#if adjust> class="card-inner-body width-max-content"</#if>>${content}</div>
 	</div>
+<#if footer??>
+	<div class="card-footer">${footer}</div>
+</#if>
 </div>

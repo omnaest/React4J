@@ -182,6 +182,7 @@ public class GridContainerImpl extends AbstractUIComponentWithSubComponents<Grid
                         return TemplateUtils.builder()
                                             .useTemplateClassResource(this.getClass(), "/render/templates/html/container_grid.html")
                                             .add("locator", node.getLocator())
+                                            .add("unlimitedColumns", node.isUnlimitedColumns())
                                             .add("rows", node.getRows()
                                                              .stream()
                                                              .map(row -> row.getCells()
