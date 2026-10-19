@@ -65,7 +65,9 @@ export class Button extends React.Component<Props, State> {
             <BusyScopeContext.Consumer>
                 {(busyScope) => (
                     <BSButton
-                        variant={(this.props.node.style ? " btn-" + this.props.node.style : "")}
+                        // react-bootstrap builds "btn-<variant>" itself, so pass the bare token. An unset style stays
+                        // "" (not undefined, which react-bootstrap would default to "primary") so no btn-* class is added.
+                        variant={this.props.node.style || ""}
                         aria-label={this.props.node.ariaLabel || undefined}
                         disabled={this.state.busy}
                         // Tells assistive technology that this control is working, which a visual spinner

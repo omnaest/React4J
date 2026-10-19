@@ -45,6 +45,32 @@ function createNode(onClick: ButtonNode["onClick"]): ButtonNode {
     };
 }
 
+// The server serialises Button.Style as the LOWER-CASE enum name (ButtonImpl: style.name().toLowerCase()).
+const SERVER_STYLE_TOKENS = ["primary", "secondary", "success", "danger", "warning", "info", "light", "dark", "link"];
+
+describe("Button variant class list", () => {
+    test.each(SERVER_STYLE_TOKENS)("style '%s' renders btn, its btn-<token> class and no bare 'btn-' token", (token) => {
+        const node = { ...createNode(undefined), style: token };
+
+        render(<Button node={node} />);
+
+        const classes = Array.from(screen.getByRole("button").classList);
+        expect(classes).toContain("btn");
+        expect(classes).toContain("btn-" + token);
+        expect(classes).not.toContain("btn-");
+    });
+
+    test.each([undefined, null, ""])("unset style (%p) renders plain btn with no btn-* variant class", (unset) => {
+        const node = { ...createNode(undefined), style: unset as unknown as string };
+
+        render(<Button node={node} />);
+
+        const classes = Array.from(screen.getByRole("button").classList);
+        expect(classes).toContain("btn");
+        expect(classes.filter((c) => c.startsWith("btn-"))).toEqual([]);
+    });
+});
+
 test("clicking a Button whose node.onClick is null does not throw and does not call Backend.sendEvent", async () => {
     const node = createNode(null as unknown as ButtonNode["onClick"]);
 
