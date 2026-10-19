@@ -54,7 +54,25 @@
                             <arguments>run build</arguments>
                         </configuration>
                     </execution>
-                    <!-- 
+                    <!-- plan-320, card 9215b956: the jest suite (~260 tests) runs HERE, in the Maven `test` phase, after
+                    `npm run build` (generate-resources). Without this execution no `mvn install` ever ran jest, and
+                    "an execution exists, so we assume it runs" hid that twice. It is a single non-watch run
+                    (watchAll=false); CI=true is deliberately NOT set, because it would also turn the pre-existing eslint
+                    warnings of `npm run build` into a hard failure. A failing jest test fails the build. Skipping: the
+                    npm goal honours -DskipTests natively (only when it runs in the test phase, which this one does), and
+                    -Dmaven.test.skip=true is wired through <skip> below because the plugin does not read that property. -->
+                    <execution>
+                        <id>npm test</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>test</phase>
+                        <configuration>
+                            <arguments>test -- --watchAll=false</arguments>
+                            <skip>${maven.test.skip}</skip>
+                        </configuration>
+                    </execution>
+                    <!--
                     <execution>
                         <id>webpack build</id>
                         <goals>

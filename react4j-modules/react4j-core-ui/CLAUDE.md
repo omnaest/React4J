@@ -23,6 +23,9 @@ memory) for why automocking `Backend`/axios needs an explicit factory mock rathe
 `jest.mock(path)` with no factory - axios's real ESM build is not transformable by CRA's default Jest
 config.
 
+`mvn install` on this module now runs the jest suite in the Maven `test` phase (`npm test -- --watchAll=false`, execution
+`npm test` in the pom); `-DskipTests` or `-Dmaven.test.skip=true` skips it, and a red jest test fails the build.
+
 The Bootstrap stylesheets are **not** in the bundle any more: the `prebuild` npm script (`scripts/build-theme.js`, Sass
 1.105) compiles `src/theme/react4j-modern.scss` into `public/css/theme/` (modern plus a stock `bootstrap.min.css`), and
 `react4j-core`'s `IndexHtmlController` links one of them (see "Theme" in its CLAUDE.md). `src/main/react/.npmrc` sets
