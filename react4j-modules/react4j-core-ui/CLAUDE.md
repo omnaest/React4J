@@ -1,10 +1,12 @@
 # react4j-core-ui
 
-The browser client of React4J (`org.omnaest.react4j`): the TypeScript/React renderer
+The browser client of React4J (Maven groupId `org.omnaest.react`; the Java packages are
+`org.omnaest.react4j`): the TypeScript/React renderer
 (`src/main/react/src/renderer`) and the `Backend`/`InFlightTracker` wrapper around Axios
 (`src/main/react/src/backend`) that talks to `react4j-core`'s `/ui`, `/ui/event` and `/ui/upload*`
-endpoints. Built as a CRA bundle and packaged into `react4j-core`'s static resources by the Maven
-build.
+endpoints. Built as a CRA bundle into this module's own `src/main/resources/public/` and packaged in
+this module's jar under `public/` (not into `react4j-core`'s jar); it reaches consumers transitively
+through `react4j-core`, which depends on this module.
 
 ## Build / test
 
