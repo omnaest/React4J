@@ -51,8 +51,10 @@ public class CardStaticRenderTest
      * The complete output of a card with content only, and with it the DELIBERATE CONTRACT CHANGE of plan-320 S16 (user decision 6 of 2026-10-19, kanban
      * 5f4d3f62): this test replaces the S13 pin {@code testCardWithContentOnlyRendersAsItAlwaysDid}, which held the old default (an {@code h5.card-header}
      * on EVERY card, carrying the locator id even when it was empty). The static default now follows {@code Card.tsx} (the reference, unchanged): no
-     * header bar unless a header is set, no {@code id} attribute without a locator, the title (if any) as {@code h4.card-title} in the body. The root
-     * and body keep their {@code className=} spelling (kanban 21da417b, out of scope).
+     * header bar unless a header is set, no {@code id} attribute without a locator, the title (if any) as {@code h4.card-title} in the body.
+     * The root, the body and the inner body carry their {@code class} attributes as {@code Card.tsx} does (plan-320 S19, kanban 45da782b and 21da417b):
+     * {@code card}, {@code card-body} and {@code card-inner-body}, where the template used to write the JSX name {@code className=} (inert in HTML) on the
+     * root and body and no class on the inner body unless adjusted.
      */
     @Test
     public void testCardWithContentOnlyRendersNoHeaderBarAndNoIdAsCardTsxDoes() throws Exception
@@ -63,7 +65,7 @@ public class CardStaticRenderTest
                                                                                               .withContent(factory.newText()
                                                                                                                   .addText("Body"))));
 
-        assertEquals("<div className=\"card\">\n\t<div className=\"card-body\">\n\t\t<div>Body</div>\n\t</div>\n</div>", this.render(uiService));
+        assertEquals("<div class=\"card\">\n\t<div class=\"card-body\">\n\t\t<div class=\"card-inner-body\">Body</div>\n\t</div>\n</div>", this.render(uiService));
     }
 
     /**
@@ -128,7 +130,7 @@ public class CardStaticRenderTest
 
         String html = this.render(uiService);
 
-        assertTrue(html.startsWith("<div className=\"card\" id=\"loc\">"), () -> "expected the locator as id of the root div in: " + html);
+        assertTrue(html.startsWith("<div class=\"card\" id=\"loc\">"), () -> "expected the locator as id of the root div in: " + html);
         assertEquals(1, html.split("id=", -1).length - 1, () -> "expected exactly one id attribute in: " + html);
     }
 
@@ -255,7 +257,7 @@ public class CardStaticRenderTest
     }
 
     /**
-     * Card.tsx line 54: full height adds Bootstrap's {@code h-100} to the card itself.
+     * Card.tsx line 54: full height adds Bootstrap's {@code h-100} to the card itself, and the body keeps its {@code card-body} class.
      */
     @Test
     public void testFullHeightAddsH100ToTheCard() throws Exception
@@ -269,7 +271,7 @@ public class CardStaticRenderTest
 
         String html = this.render(uiService);
 
-        assertTrue(html.startsWith("<div class=\"card h-100\">"), () -> "expected the card with h-100 in: " + html);
+        assertEquals("<div class=\"card h-100\">\n\t<div class=\"card-body\">\n\t\t<div class=\"card-inner-body\">Body</div>\n\t</div>\n</div>", html);
     }
 
     /**
@@ -287,7 +289,7 @@ public class CardStaticRenderTest
 
         String html = this.render(uiService);
 
-        assertTrue(html.startsWith("<div className=\"card\" role=\"region\" aria-label=\"Panel\">"), () -> "expected the region card in: " + html);
+        assertTrue(html.startsWith("<div class=\"card\" role=\"region\" aria-label=\"Panel\">"), () -> "expected the region card in: " + html);
     }
 
     /**
@@ -314,7 +316,7 @@ public class CardStaticRenderTest
 
         assertEquals("<div class=\"card h-100\" id=\"loc\" role=\"region\" aria-label=\"Panel\">\n" //
                      + "\t<div class=\"card-header\">HEAD</div>\n" //
-                     + "\t<div className=\"card-body\">\n" //
+                     + "\t<div class=\"card-body\">\n" //
                      + "\t\t<div class=\"card-title h5\">Featured</div>\n" //
                      + "\t\t<h6 class=\"card-subtitle mb-2 text-muted\">Sub</h6>\n" //
                      + "\t\t<div class=\"card-inner-body width-max-content\">Body</div>\n" //
@@ -345,13 +347,13 @@ public class CardStaticRenderTest
                                                                                               .withFooter(factory.newText()
                                                                                                                  .addText("FOOT"))));
 
-        assertEquals("<div className=\"card\" id=\"loc\">\n" //
+        assertEquals("<div class=\"card\" id=\"loc\">\n" //
                      + "\t<div class=\"card-header\">HEAD</div>\n" //
-                     + "\t<div className=\"card-body\">\n" //
+                     + "\t<div class=\"card-body\">\n" //
                      + "\t\t<img class=\"card-img-top\" src=\"/images/pic.png\" alt=\"Alt\" width=\"100%\" />\n" //
                      + "\t\t<h4 class=\"card-title\">T</h4>\n" //
                      + "\t\t<h6 class=\"card-subtitle mb-2 text-muted\">Sub</h6>\n" //
-                     + "\t\t<div>Body</div>\n" //
+                     + "\t\t<div class=\"card-inner-body\">Body</div>\n" //
                      + "\t</div>\n" //
                      + "\t<div class=\"card-footer\">FOOT</div>\n" //
                      + "</div>", this.render(uiService));
@@ -387,5 +389,54 @@ public class CardStaticRenderTest
         assertTrue(html.contains(" alt=\"" + escaped + "\""), () -> "expected the escaped image name in: " + html);
         assertTrue(html.contains(" src=\"/images/a&quot;b&lt;c&amp;d.png\""), () -> "expected the escaped image file name in: " + html);
         assertFalse(html.contains("<b>"), () -> "expected no unescaped markup from a value in: " + html);
+    }
+
+    /**
+     * plan-320 S19 (kanban 45da782b, 21da417b): {@code className} is a JSX attribute name, not an HTML one, and an HTML parser keeps it as an inert attribute
+     * that styles nothing. No static Card output may contain it in any spelling, whichever of the class branches is taken: the default card, a full-height
+     * one, an adjusted one and one with every optional field set.
+     */
+    @Test
+    public void testNoRenderedCardContainsClassNameInAnySpelling() throws Exception
+    {
+        ReactUIServiceImpl defaultCard = this.newUiService();
+        defaultCard.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newCard()
+                                                                                                .withContent(factory.newText()
+                                                                                                                    .addText("Body"))));
+        ReactUIServiceImpl fullHeightCard = this.newUiService();
+        fullHeightCard.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newCard()
+                                                                                                   .withFullHeight(true)
+                                                                                                   .withContent(factory.newText()
+                                                                                                                       .addText("Body"))));
+        ReactUIServiceImpl adjustedCard = this.newUiService();
+        adjustedCard.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newCard()
+                                                                                                 .withAdjustment(true)
+                                                                                                 .withContent(factory.newText()
+                                                                                                                     .addText("Body"))));
+        ReactUIServiceImpl allFieldsCard = this.newUiService();
+        allFieldsCard.getOrCreateDefaultRoot(reactUI -> reactUI.addNewComponent(factory -> factory.newCard()
+                                                                                                  .withLinkLocator("loc")
+                                                                                                  .withImage(image -> image.withName("Alt")
+                                                                                                                           .withImage("pic.png"))
+                                                                                                  .withTitle("T")
+                                                                                                  .withSubTitle("Sub")
+                                                                                                  .withAdjustment(true)
+                                                                                                  .withFullHeight(true)
+                                                                                                  .withAriaLabel("Panel")
+                                                                                                  .withHeader(factory.newText()
+                                                                                                                     .addText("HEAD"))
+                                                                                                  .withContent(factory.newText()
+                                                                                                                      .addText("Body"))
+                                                                                                  .withFooter(factory.newText()
+                                                                                                                     .addText("FOOT"))));
+
+        for (String html : new String[] {this.render(defaultCard), this.render(fullHeightCard), this.render(adjustedCard), this.render(allFieldsCard)})
+        {
+            assertFalse(html.toLowerCase()
+                            .contains("classname"),
+                        () -> "expected no className attribute in any spelling in: " + html);
+            assertTrue(html.startsWith("<div class=\"card") && html.contains("<div class=\"card-body\">") && html.contains("<div class=\"card-inner-body"),
+                       () -> "expected the root, body and inner body class attributes in: " + html);
+        }
     }
 }
