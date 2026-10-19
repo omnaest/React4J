@@ -121,7 +121,7 @@ public class DiagramViewerImpl extends AbstractUIComponent<DiagramViewer> implem
             {
                 registry.register(DiagramViewerNode.class, NodeRenderType.HTML,
                                   (node, nodeRenderingProcessor) -> "<div style=\"width:" + node.getWidth() + ";max-height:" + node.getMaxHeight()
-                                                                    + (node.getHeight() != null ? ";height:" + node.getHeight() : "") + ";overflow:hidden;\">"
+                                                                    + (node.getHeight() != null ? ";height:" + node.getHeight() : "") + ";overflow:auto;\">"
                                                                     + Optional.ofNullable(node.getSvg())
                                                                               .orElse("")
                                                                     + "</div>");

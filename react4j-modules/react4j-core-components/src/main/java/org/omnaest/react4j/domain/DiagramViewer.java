@@ -24,6 +24,9 @@ package org.omnaest.react4j.domain;
  * drag traverse it on both axes - which is what lets a long edge be followed from one end to the other.
  * Reset returns to the fitted view. The {@code viewBox} is read once on mount and never rewritten.
  * <p>
+ * The static HTML rendering ({@code NodeRenderType.HTML}) has none of this: no fitting and no zoom. Its box is a
+ * plain {@code div} with {@code overflow:auto}, so a diagram larger than the box is scrollable rather than clipped.
+ * <p>
  * Own node type ({@code DIAGRAMVIEWER}), own client renderer - unlike {@link SVGContainer}, which is a thin
  * delegation to {@link NativeHtml}'s raw-HTML escape hatch and therefore cannot host any client-side
  * interaction (a script inserted via {@code dangerouslySetInnerHTML} never executes).
